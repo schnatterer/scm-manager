@@ -88,12 +88,12 @@ def printChangeset(repo, ctx):
 
   # branches
   if branch != 'default':
-    print '      <branches>' + branch + '</branches>'
+    print '      <branches>' + escape(branch) + '</branches>'
 
   # tags
   if tags:
     for t in tags:
-      print '      <tags>' + t + '</tags>'
+      print '      <tags>' + escape(t) + '</tags>'
     
   # modifications
   print '      <modifications>'
@@ -102,21 +102,21 @@ def printChangeset(repo, ctx):
   if added:
     print '        <added>'
     for add in added:
-      print '          <file>' + add + '</file>'
+      print '          <file>' + escape(add) + '</file>'
     print '        </added>'
 
   # files modified
   if mods:
     print '        <modified>'
     for mod in mods:
-      print '          <file>' + mod + '</file>'
+      print '          <file>' + escape(mod) + '</file>'
     print '        </modified>'
 
   # files deleted
   if deleted:
     print '        <deleted>'
     for dele in deleted:
-      print '          <file>' + dele + '</file>'
+      print '          <file>' + escape(dele) + '</file>'
     print '        </deleted>'    
     
   print '      </modifications>'

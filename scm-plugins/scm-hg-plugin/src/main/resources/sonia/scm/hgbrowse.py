@@ -93,8 +93,8 @@ print '  <revision>' + revision + '</revision>'
 print '  <files>'
 for dir in directories:
   print '  <file>'
-  print '    <name>' + getName(dir) + '</name>'
-  print '    <path>' + dir + '</path>'
+  print '    <name>' + escape(getName(dir)) + '</name>'
+  print '    <path>' + escape(dir) + '</path>'
   print '    <directory>true</directory>'
   print '  </file>'
     
@@ -102,9 +102,11 @@ for file in files:
   linkrev = repo[file.linkrev()]
   time = int(linkrev.date()[0]) * 1000
   desc = linkrev.description()
+  path = file.path()
+  name = getName(path)
   print '  <file>'
-  print '    <name>' + getName(file.path()) + '</name>'
-  print '    <path>' + file.path() + '</path>'
+  print '    <name>' + escape(name) + '</name>'
+  print '    <path>' + escape(path) + '</path>'
   print '    <directory>false</directory>'
   print '    <length>' + str(file.size()) + '</length>'
   print '    <lastModified>' + str(time).split('.')[0] + '</lastModified>'
