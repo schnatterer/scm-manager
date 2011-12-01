@@ -74,7 +74,6 @@ def printChangeset(repo, ctx):
   
   print '    <changeset>'
   print '      <id>' + str(ctx.rev()) + ':' + hex(ctx.node()[:6]) + '</id>'
-  print '      <author>' + escape(ctx.user()) + '</author>'
   print '      <description>' + escape(ctx.description()) + '</description>'
   print '      <date>' + str(time).split('.')[0] + '</date>'
 
