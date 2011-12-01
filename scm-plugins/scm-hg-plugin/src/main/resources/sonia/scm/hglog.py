@@ -80,9 +80,9 @@ def printChangeset(repo, ctx):
   # author
   if authorName:
     print '      <author>'
-    print '        <name>' + authorName + '</name>'
+    print '        <name>' + escape(authorName) + '</name>'
     if authorMail:
-      print '        <mail>' + authorMail + '</mail>'
+      print '        <mail>' + escape(authorMail) + '</mail>'
     print '      </author>'
 
   # branches
