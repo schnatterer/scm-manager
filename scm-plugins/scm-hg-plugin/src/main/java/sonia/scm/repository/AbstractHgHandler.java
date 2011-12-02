@@ -188,7 +188,6 @@ public class AbstractHgHandler
   {
     Map<String, String> env = new HashMap<String, String>();
 
-    env.put(ENV_ENCODING, ENCODING);
     env.put(ENV_REVISION, HgUtil.getRevision(revision));
     env.put(ENV_PATH, Util.nonNull(path));
 
@@ -446,6 +445,7 @@ public class AbstractHgHandler
       }
     }
 
+    env.put(ENV_ENCODING, ENCODING);
     env.put(ENV_PYTHON_PATH, Util.nonNull(config.getPythonPath()));
     env.put(ENV_REPOSITORY_PATH, directory.getAbsolutePath());
     env.putAll(extraEnv);
