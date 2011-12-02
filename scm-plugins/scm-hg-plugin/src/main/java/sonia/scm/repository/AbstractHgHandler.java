@@ -69,6 +69,12 @@ public class AbstractHgHandler
 {
 
   /** Field description */
+  public static final String ENCODING = "UTF-8";
+
+  /** Field description */
+  public static final String ENV_ENCODING = "HGENCODING";
+
+  /** Field description */
   public static final String ENV_NODE = "HG_NODE";
 
   /** Field description */
@@ -182,6 +188,7 @@ public class AbstractHgHandler
   {
     Map<String, String> env = new HashMap<String, String>();
 
+    env.put(ENV_ENCODING, ENCODING);
     env.put(ENV_REVISION, HgUtil.getRevision(revision));
     env.put(ENV_PATH, Util.nonNull(path));
 
