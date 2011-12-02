@@ -44,6 +44,8 @@ import sonia.scm.web.HgUtil;
 
 //~--- JDK imports ------------------------------------------------------------
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -335,7 +337,16 @@ public class AbstractHgHandler
       IOUtil.copy(resource, output);
       output.close();
       handleErrorStream(p.getErrorStream());
-      input = p.getInputStream();
+
+      if (logger.isTraceEnabled())
+      {
+        input = logProcessOutout(p);
+      }
+      else
+      {
+        input = p.getInputStream();
+      }
+
       result = (T) jaxbContext.createUnmarshaller().unmarshal(input);
       input.close();
     }
@@ -449,6 +460,40 @@ public class AbstractHgHandler
     }
 
     return pb.start();
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param p
+   *
+   * @return
+   */
+  private InputStream logProcessOutout(Process p)
+  {
+    InputStream result = null;
+    InputStream input = null;
+    ByteArrayOutputStream baos = null;
+
+    try
+    {
+      input = p.getInputStream();
+      baos = new ByteArrayOutputStream();
+      IOUtil.copy(input, baos);
+      logger.trace("output of process execution: {}", baos.toString());
+      result = new ByteArrayInputStream(baos.toByteArray());
+    }
+    catch (IOException ex)
+    {
+      logger.error("error durring process output logging", ex);
+    }
+    finally
+    {
+      IOUtil.close(input);
+    }
+
+    return result;
   }
 
   //~--- fields ---------------------------------------------------------------
