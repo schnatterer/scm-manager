@@ -96,6 +96,17 @@ public class HgConfig extends SimpleRepositoryConfig
    *
    * @return
    */
+  public boolean isEnableHg4j()
+  {
+    return enableHg4j;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
   public boolean isUseOptimizedBytecode()
   {
     return useOptimizedBytecode;
@@ -115,6 +126,17 @@ public class HgConfig extends SimpleRepositoryConfig
   }
 
   //~--- set methods ----------------------------------------------------------
+
+  /**
+   * Method description
+   *
+   *
+   * @param enableHg4j
+   */
+  public void setEnableHg4j(boolean enableHg4j)
+  {
+    this.enableHg4j = enableHg4j;
+  }
 
   /**
    * Method description
@@ -161,6 +183,9 @@ public class HgConfig extends SimpleRepositoryConfig
   }
 
   //~--- fields ---------------------------------------------------------------
+
+  /** enable support for hg4j (experimental) */
+  private boolean enableHg4j;
 
   /** Field description */
   private String hgBinary;

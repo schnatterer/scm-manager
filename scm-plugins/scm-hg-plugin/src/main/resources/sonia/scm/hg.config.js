@@ -43,6 +43,8 @@ Sonia.hg.ConfigPanel = Ext.extend(Sonia.config.ConfigForm, {
   useOptimizedBytecodeText: 'Optimized Bytecode (.pyo)',
   configWizardText: 'Start Configuration Wizard',
   configWizardLabelText: 'Start Configuration Wizard',
+  
+  enableHg4jText: 'Enable H4j (Experimental)',
 
   // helpText
   hgBinaryHelpText: 'Location of Mercurial binary.',
@@ -50,6 +52,8 @@ Sonia.hg.ConfigPanel = Ext.extend(Sonia.config.ConfigForm, {
   pythonPathHelpText: 'Python Module Search Path (PYTHONPATH).',
   repositoryDirectoryHelpText: 'Location of the Mercurial repositories.',
   useOptimizedBytecodeHelpText: 'Use the Python "-O" switch.',
+  enableHg4jHelpText: 'Use Hg4j for source and commit browsing. This function is experimental. \n\
+                       Hg4j is pure Java implementation of Mercurial.',
 
   initComponent: function(){
 
@@ -84,6 +88,12 @@ Sonia.hg.ConfigPanel = Ext.extend(Sonia.config.ConfigForm, {
         fieldLabel: this.useOptimizedBytecodeText,
         inputValue: 'true',
         helpText: this.useOptimizedBytecodeHelpText
+      },{
+        xtype: 'checkbox',
+        name: 'enableHg4j',
+        fieldLabel: this.enableHg4jText,
+        inputValue: 'true',
+        helpText: this.enableHg4jHelpText
       },{
         xtype: 'button',
         text: this.configWizardText,
