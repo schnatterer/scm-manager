@@ -237,7 +237,7 @@ public class HgRepositoryHandler
   @Override
   public ChangesetViewer getChangesetViewer(Repository repository)
   {
-    HgChangesetViewer changesetViewer = null;
+    DefaultHgChangesetViewer changesetViewer = null;
 
     AssertUtil.assertIsNotNull(repository);
 
@@ -247,7 +247,7 @@ public class HgRepositoryHandler
 
     if (TYPE_NAME.equals(type))
     {
-      changesetViewer = new HgChangesetViewer(this,
+      changesetViewer = new DefaultHgChangesetViewer(this,
               changesetPagingResultContext, hgContextProvider.get(),
               repository);
     }
@@ -337,7 +337,7 @@ public class HgRepositoryHandler
       throw new IllegalStateException("directory not found");
     }
 
-    return new HgChangesetViewer(this, changesetPagingResultContext,
+    return new DefaultHgChangesetViewer(this, changesetPagingResultContext,
                                  hgContextProvider.get(), repositoryDirectory);
   }
 
