@@ -237,7 +237,7 @@ public class HgRepositoryHandler
   @Override
   public ChangesetViewer getChangesetViewer(Repository repository)
   {
-    DefaultHgChangesetViewer changesetViewer = null;
+    HgChangesetViewer changesetViewer = null;
 
     AssertUtil.assertIsNotNull(repository);
 
@@ -247,9 +247,17 @@ public class HgRepositoryHandler
 
     if (TYPE_NAME.equals(type))
     {
-      changesetViewer = new DefaultHgChangesetViewer(this,
-              changesetPagingResultContext, hgContextProvider.get(),
-              repository);
+      if (config.isEnableHg4j())
+      {
+        changesetViewer = new Hg4jChangesetViewer(this,
+                hgContextProvider.get(), repository);
+      }
+      else
+      {
+        changesetViewer = new DefaultHgChangesetViewer(this,
+                changesetPagingResultContext, hgContextProvider.get(),
+                repository);
+      }
     }
     else
     {
@@ -337,8 +345,21 @@ public class HgRepositoryHandler
       throw new IllegalStateException("directory not found");
     }
 
-    return new DefaultHgChangesetViewer(this, changesetPagingResultContext,
-                                 hgContextProvider.get(), repositoryDirectory);
+    HgChangesetViewer changesetViewer = null;
+
+    if (config.isEnableHg4j())
+    {
+      changesetViewer = new Hg4jChangesetViewer(hgContextProvider.get(),
+              baseDirectory);
+    }
+    else
+    {
+      changesetViewer = new DefaultHgChangesetViewer(this,
+              changesetPagingResultContext, hgContextProvider.get(),
+              repositoryDirectory);
+    }
+
+    return changesetViewer;
   }
 
   //~--- methods --------------------------------------------------------------
