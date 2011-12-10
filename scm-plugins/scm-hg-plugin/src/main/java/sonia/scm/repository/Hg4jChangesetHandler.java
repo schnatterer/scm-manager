@@ -168,26 +168,25 @@ public abstract class Hg4jChangesetHandler
       changeset.setBranches(branches);
     }
 
-    Modifications modifications = new Modifications();
     List<HgFileRevision> hgAdded = hgc.getAddedFiles();
 
     if (Util.isNotEmpty(hgAdded))
     {
-      modifications.setAdded(convertFileRevision(hgAdded));
+      changeset.getModifications().setAdded(convertFileRevision(hgAdded));
     }
 
     List<HgFileRevision> hgModified = hgc.getModifiedFiles();
 
     if (Util.isNotEmpty(hgModified))
     {
-      modifications.setModified(convertFileRevision(hgModified));
+      changeset.getModifications().setModified(convertFileRevision(hgModified));
     }
 
     List<Path> hgRemoved = hgc.getRemovedFiles();
 
     if (Util.isNotEmpty(hgModified))
     {
-      modifications.setRemoved(convertPath(hgRemoved));
+      changeset.getModifications().setRemoved(convertPath(hgRemoved));
     }
 
     return changeset;
