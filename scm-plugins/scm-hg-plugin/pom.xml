@@ -24,6 +24,12 @@
       <version>${servlet.version}</version>
       <scope>provided</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>sonia.hg4j</groupId>
+      <artifactId>hg4j</artifactId>
+      <version>0.7.1-SNAPSHOT</version>
+    </dependency>
 
     <!-- test scope -->
 
