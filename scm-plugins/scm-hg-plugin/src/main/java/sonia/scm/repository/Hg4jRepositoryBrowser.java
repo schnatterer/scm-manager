@@ -130,7 +130,7 @@ public class Hg4jRepositoryBrowser implements RepositoryBrowser
       {
         Nodeid nodeid = Nodeid.fromAscii(revision);
 
-        cat.revision(nodeid);
+        cat.changeset(nodeid);
       }
 
       cat.file(Path.create(path)).execute(new OutputStreamChannel(output));
