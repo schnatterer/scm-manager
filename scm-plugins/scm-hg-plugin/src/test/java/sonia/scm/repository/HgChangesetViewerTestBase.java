@@ -79,7 +79,7 @@ public abstract class HgChangesetViewerTestBase
    *
    * @return
    */
-  protected abstract HgChangesetViewer createChangesetViewer(
+  protected abstract ChangesetViewer createChangesetViewer(
           HgRepositoryHandler handler, File repositoryDirectory);
 
   /**
@@ -133,32 +133,68 @@ public abstract class HgChangesetViewerTestBase
     client.add(a1, a2);
     client.commit("added files a1 and a2");
 
-    HgChangesetViewer viewer = createChangesetViewer(handler,
-                                 repositoryDirectory);
+    ChangesetViewer viewer = createChangesetViewer(handler,
+                               repositoryDirectory);
     ChangesetPagingResult result = viewer.getChangesets(0, 1);
 
+    checkPagingResult(result, 1);
+
+    Changeset changeset = result.iterator().next();
+
+    checkChangeset(changeset, "added files a1 and a2");
+
+    List<String> added = changeset.getModifications().getAdded();
+
+    checkModificationList(added, "a1", "a2");
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param changeset
+   * @param description
+   */
+  private void checkChangeset(Changeset changeset, String description)
+  {
+    assertNotNull(changeset);
+    assertNotNull(changeset.getId());
+    assertEquals(description, changeset.getDescription());
+    assertNotNull(changeset.getDate());
+    assertNotNull(changeset.getModifications());
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param mods
+   * @param files
+   */
+  private void checkModificationList(List<String> mods, String... files)
+  {
+    assertNotNull(mods);
+    assertEquals(files.length, mods.size());
+
+    for (String f : files)
+    {
+      assertTrue(mods.contains(f));
+    }
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param result
+   * @param total
+   */
+  private void checkPagingResult(ChangesetPagingResult result, int total)
+  {
     assertNotNull(result);
     assertEquals(result.getTotal(), 1);
     assertNotNull(result.getChangesets());
     assertNotNull(result.iterator());
-
-    Changeset changeset = result.iterator().next();
-
-    assertNotNull(changeset);
-    assertNotNull(changeset.getId());
-    assertEquals("added files a1 and a2", changeset.getDescription());
-    assertNotNull(changeset.getDate());
-
-    Modifications mods = changeset.getModifications();
-
-    assertNotNull(mods);
-
-    List<String> added = mods.getAdded();
-
-    assertNotNull(added);
-    assertEquals(2, added.size());
-    assertTrue(added.contains("a1"));
-    assertTrue(added.contains("a2"));
   }
 
   /**
