@@ -43,6 +43,8 @@ import org.tmatesoft.hg.core.HgManifestCommand.Handler;
 import org.tmatesoft.hg.core.HgRepoFacade;
 import org.tmatesoft.hg.core.Nodeid;
 import org.tmatesoft.hg.repo.HgChangelog.RawChangeset;
+import org.tmatesoft.hg.repo.HgDataFile;
+import org.tmatesoft.hg.repo.HgRepository;
 import org.tmatesoft.hg.util.Path;
 
 import sonia.scm.util.Util;
@@ -77,7 +79,7 @@ public class FileObjectManifestHandler implements Handler
    */
   public FileObjectManifestHandler(HgRepoFacade facade, String directory)
   {
-    this.facade = facade;
+    this.repository = facade.getRepository();
     this.directory = Util.nonNull(directory);
     this.fileObjects = new ArrayList<FileObject>();
   }
@@ -164,20 +166,18 @@ public class FileObjectManifestHandler implements Handler
         try
         {
           FileObject fo = createFilObject(file.getPath(), false);
+          HgDataFile data = repository.getFileNode(path);
+          Nodeid node = data.getChangesetRevision(file.getRevision());
+          RawChangeset changeset = repository.getChangelog().changeset(node);
+          Date date = changeset.date();
 
-          /*
-           * Nodeid rev = file.getRevision();
-           * RawChangeset changeset =
-           * facade.getRepository().getChangelog().changeset(rev);
-           * Date date = changeset.date();
-           *
-           * if (date != null)
-           * {
-           * fo.setLastModified(date.getTime());
-           * }
-           *
-           * fo.setDescription(changeset.comment());
-           */
+          if (date != null)
+          {
+            fo.setLastModified(date.getTime());
+          }
+
+          fo.setLength(data.length(file.getRevision()));
+          fo.setDescription(changeset.comment());
           fileObjects.add(fo);
         }
         catch (Exception ex)
@@ -270,8 +270,8 @@ public class FileObjectManifestHandler implements Handler
   private String directory;
 
   /** Field description */
-  private HgRepoFacade facade;
+  private List<FileObject> fileObjects;
 
   /** Field description */
-  private List<FileObject> fileObjects;
+  private HgRepository repository;
 }
