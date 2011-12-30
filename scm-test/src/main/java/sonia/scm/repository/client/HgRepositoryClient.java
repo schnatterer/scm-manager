@@ -59,9 +59,10 @@ public class HgRepositoryClient extends AbstractRepositoryClient
    * @param remoteRepository
    * @param username
    * @param password
+   * @param autoPush
    */
   HgRepositoryClient(File localRepository, String remoteRepository,
-                     String username, String password)
+                     String username, String password, boolean autoPush)
   {
     super(localRepository, remoteRepository);
 
@@ -73,6 +74,7 @@ public class HgRepositoryClient extends AbstractRepositoryClient
     buffer.append(remoteRepository.substring(scheme.length()));
     remoteURL = buffer.toString();
     hg = IOUtil.search("hg");
+    this.autoPush = autoPush;
   }
 
   //~--- methods --------------------------------------------------------------
@@ -143,9 +145,10 @@ public class HgRepositoryClient extends AbstractRepositoryClient
       pendingCommit = false;
     }
 
-    cmd = new SimpleCommand(hg, "-R", localRepository.getAbsolutePath(),
-                            "push", remoteURL);
-    execute(cmd);
+    if (autoPush)
+    {
+      push();
+    }
   }
 
   /**
@@ -159,6 +162,21 @@ public class HgRepositoryClient extends AbstractRepositoryClient
   {
     SimpleCommand cmd = new SimpleCommand(hg, "init",
                           localRepository.getAbsolutePath());
+
+    execute(cmd);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @throws RepositoryClientException
+   */
+  @Override
+  public void push() throws RepositoryClientException
+  {
+    SimpleCommand cmd = new SimpleCommand(hg, "-R",
+                          localRepository.getAbsolutePath(), "push", remoteURL);
 
     execute(cmd);
   }
@@ -220,6 +238,9 @@ public class HgRepositoryClient extends AbstractRepositoryClient
   }
 
   //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private boolean autoPush = true;
 
   /** Field description */
   private String hg;

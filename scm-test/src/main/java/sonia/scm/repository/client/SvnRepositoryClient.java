@@ -192,6 +192,19 @@ public class SvnRepositoryClient extends AbstractRepositoryClient
    * Method description
    *
    *
+   * @throws RepositoryClientException
+   */
+  @Override
+  public void push() throws RepositoryClientException
+  {
+
+    // do nothing
+  }
+
+  /**
+   * Method description
+   *
+   *
    *
    * @param files
    *

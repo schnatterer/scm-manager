@@ -94,13 +94,14 @@ public class GitRepositoryClient extends AbstractRepositoryClient
    * @param remoteRepository
    * @param username
    * @param password
+   * @param autoPush
    *
    *
    * @throws IOException
    * @throws URISyntaxException
    */
   GitRepositoryClient(File localRepository, String remoteRepository,
-                      String username, String password)
+                      String username, String password, boolean autoPush)
           throws URISyntaxException, IOException
   {
     super(localRepository, remoteRepository);
@@ -116,6 +117,7 @@ public class GitRepositoryClient extends AbstractRepositoryClient
 
     this.repository = new FileRepository(new File(localRepository,
             Constants.DOT_GIT));
+    this.autoPush = autoPush;
   }
 
   //~--- methods --------------------------------------------------------------
@@ -209,6 +211,53 @@ public class GitRepositoryClient extends AbstractRepositoryClient
       cmd.setMessage(message);
       callCommand(cmd);
 
+      if (autoPush)
+      {
+        push();
+      }
+    }
+    catch (RepositoryClientException ex)
+    {
+      throw ex;
+    }
+    catch (Exception ex)
+    {
+      throw new RepositoryClientException(ex);
+    }
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @throws RepositoryClientException
+   */
+  @Override
+  public void init() throws RepositoryClientException
+  {
+    try
+    {
+      repository.create(false);
+      addRemote("origin", new URIish(remoteRepository), "master", null, true,
+                null);
+    }
+    catch (Exception ex)
+    {
+      throw new RepositoryClientException(ex);
+    }
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @throws RepositoryClientException
+   */
+  @Override
+  public void push() throws RepositoryClientException
+  {
+    try
+    {
       List<Transport> transports = Transport.openAll(repository, "origin",
                                      Transport.Operation.PUSH);
 
@@ -264,31 +313,6 @@ public class GitRepositoryClient extends AbstractRepositoryClient
           transport.close();
         }
       }
-    }
-    catch (RepositoryClientException ex)
-    {
-      throw ex;
-    }
-    catch (Exception ex)
-    {
-      throw new RepositoryClientException(ex);
-    }
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @throws RepositoryClientException
-   */
-  @Override
-  public void init() throws RepositoryClientException
-  {
-    try
-    {
-      repository.create(false);
-      addRemote("origin", new URIish(remoteRepository), "master", null, true,
-                null);
     }
     catch (Exception ex)
     {
@@ -545,10 +569,10 @@ public class GitRepositoryClient extends AbstractRepositoryClient
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
-  private CredentialsProvider credentialsProvider;
+  private boolean autoPush = true;
 
   /** Field description */
-  private RemoteConfig remoteConfig;
+  private CredentialsProvider credentialsProvider;
 
   /** Field description */
   private FileRepository repository;

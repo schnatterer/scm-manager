@@ -31,7 +31,7 @@
 
 
 
-package sonia.scm.repository.client;
+package sonia.scm.repository;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -41,70 +41,24 @@ import java.io.File;
  *
  * @author Sebastian Sdorra
  */
-public interface RepositoryClient
+public class DefaultHgChangesetViewerTest extends HgChangesetViewerTestBase
 {
 
   /**
    * Method description
    *
    *
-   * @param file
-   * @param others
-   *
-   * @throws RepositoryClientException
-   */
-  public void add(String file, String... others)
-          throws RepositoryClientException;
-
-  /**
-   * Method description
-   *
-   *
-   * @throws RepositoryClientException
-   */
-  public void checkout() throws RepositoryClientException;
-
-  /**
-   * Method description
-   *
-   *
-   * @param message
-   *
-   * @throws RepositoryClientException
-   */
-  public void commit(String message) throws RepositoryClientException;
-
-  /**
-   * Method description
-   *
-   *
-   * @throws RepositoryClientException
-   */
-  public void init() throws RepositoryClientException;
-
-  /**
-   * Method description
-   *
-   *
-   * @throws RepositoryClientException
-   */
-  public void push() throws RepositoryClientException;
-
-  //~--- get methods ----------------------------------------------------------
-
-  /**
-   * Method description
-   *
+   * @param handler
+   * @param repositoryDirectory
    *
    * @return
    */
-  public File getLocalRepository();
-
-  /**
-   * Method description
-   *
-   *
-   * @return
-   */
-  public String getRemoteRepository();
+  @Override
+  protected HgChangesetViewer createChangesetViewer(
+          HgRepositoryHandler handler, File repositoryDirectory)
+  {
+    return new DefaultHgChangesetViewer(handler,
+            handler.getChangesetPagingResultContext(), handler.getHgContext(),
+            repositoryDirectory);
+  }
 }

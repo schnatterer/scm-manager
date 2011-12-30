@@ -198,6 +198,17 @@ public class HgRepositoryHandler
    * Method description
    *
    *
+   * @return
+   */
+  public JAXBContext getBlameResultContext()
+  {
+    return blameResultContext;
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param repository
    *
    * @return
@@ -224,6 +235,28 @@ public class HgRepositoryHandler
     }
 
     return blameViewer;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  public JAXBContext getBrowserResultContext()
+  {
+    return browserResultContext;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  public JAXBContext getChangesetPagingResultContext()
+  {
+    return changesetPagingResultContext;
   }
 
   /**
@@ -299,6 +332,17 @@ public class HgRepositoryHandler
     }
 
     return diffViewer;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  public HgContext getHgContext()
+  {
+    return hgContextProvider.get();
   }
 
   /**

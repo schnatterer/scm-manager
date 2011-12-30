@@ -82,6 +82,30 @@ public class RepositoryClientFactory
           String password)
           throws RepositoryClientException
   {
+    return createClient(type, localRepository, remoteRepository, username,
+                        password, true);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param type
+   * @param localRepository
+   * @param remoteRepository
+   * @param username
+   * @param password
+   * @param autoPush
+   *
+   * @return
+   *
+   * @throws RepositoryClientException
+   */
+  public static RepositoryClient createClient(String type,
+          File localRepository, String remoteRepository, String username,
+          String password, boolean autoPush)
+          throws RepositoryClientException
+  {
     RepositoryClient client = null;
 
     try
@@ -89,7 +113,7 @@ public class RepositoryClientFactory
       if ("git".equals(type))
       {
         client = new GitRepositoryClient(localRepository, remoteRepository,
-                                         username, password);
+                                         username, password, autoPush);
       }
       else if ("svn".equals(type))
       {
@@ -99,7 +123,7 @@ public class RepositoryClientFactory
       else if ("hg".equals(type))
       {
         client = new HgRepositoryClient(localRepository, remoteRepository,
-                                        username, password);
+                                        username, password, autoPush);
       }
     }
     catch (Exception ex)
