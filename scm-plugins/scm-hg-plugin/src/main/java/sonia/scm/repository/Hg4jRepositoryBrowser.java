@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.tmatesoft.hg.core.HgCatCommand;
+import org.tmatesoft.hg.core.HgInvalidControlFileException;
 import org.tmatesoft.hg.core.HgManifestCommand;
 import org.tmatesoft.hg.core.HgRepoFacade;
 import org.tmatesoft.hg.core.Nodeid;
@@ -170,16 +171,8 @@ public class Hg4jRepositoryBrowser implements RepositoryBrowser
       facade.initFrom(directory);
 
       HgManifestCommand cmd = facade.createManifestCommand();
-      cmd.dirs(true);
 
-      if (Util.isNotEmpty(revision))
-      {
-        Nodeid nodeid = Nodeid.fromAscii(revision);
-        int rev =
-          facade.getRepository().getChangelog().getLocalRevision(nodeid);
-
-        cmd.revision(rev);
-      }
+      cmd.dirs(true).revision(getRevision(facade, revision));
 
       FileObjectManifestHandler handler = new FileObjectManifestHandler(facade,
                                             path);
@@ -203,6 +196,39 @@ public class Hg4jRepositoryBrowser implements RepositoryBrowser
     }
 
     return result;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param facade
+   * @param revision
+   *
+   * @return
+   *
+   * @throws HgInvalidControlFileException
+   * @throws RepositoryException
+   */
+  private int getRevision(HgRepoFacade facade, String revision)
+          throws HgInvalidControlFileException, RepositoryException
+  {
+    int rev = -1;
+
+    if (Util.isNotEmpty(revision))
+    {
+
+      // TODO find revision for short notation
+      Nodeid nodeid = Nodeid.fromAscii(revision);
+
+      rev = facade.getRepository().getChangelog().getLocalRevision(nodeid);
+    }
+    else
+    {
+      rev = facade.getRepository().getChangelog().getLastRevision();
+    }
+
+    return rev;
   }
 
   //~--- fields ---------------------------------------------------------------

@@ -153,7 +153,7 @@ public abstract class Hg4jChangesetHandler
   {
     Changeset changeset = new Changeset();
 
-    changeset.setId(hgc.getNodeid().shortNotation());
+    changeset.setId(hgc.getNodeid().toString());
     changeset.setDate(hgc.getDate().getRawTime());
     changeset.setDescription(hgc.getComment());
     changeset.setAuthor(Person.toPerson(hgc.getUser()));
