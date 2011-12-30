@@ -69,7 +69,7 @@ public class FileObjectManifestHandler implements Handler
   //~--- constructors ---------------------------------------------------------
 
   /**
-   * TODO use begin, dir and end methods
+   * Constructs ...
    *
    *
    * @param facade
@@ -100,7 +100,32 @@ public class FileObjectManifestHandler implements Handler
    * @param path
    */
   @Override
-  public void dir(Path path) {}
+  public void dir(Path path)
+  {
+    String value = path.toString();
+
+    if (Util.isNotEmpty(value))
+    {
+      int length = directory.length();
+
+      value = value.substring(length);
+
+      if (value.startsWith("/"))
+      {
+        length++;
+        value = value.substring(1);
+      }
+
+      int index = value.indexOf("/");
+
+      if (index > 0)
+      {
+        String dir = path.toString().substring(0, length + index);
+
+        directories.add(dir);
+      }
+    }
+  }
 
   /**
    * Method description
@@ -134,12 +159,7 @@ public class FileObjectManifestHandler implements Handler
 
       int index = value.indexOf("/");
 
-      if (index > 0)
-      {
-        directories.add(new Directory(path.toString(),
-                                      value.substring(0, index)));
-      }
-      else
+      if (index <= 0)
       {
         try
         {
@@ -178,13 +198,13 @@ public class FileObjectManifestHandler implements Handler
    */
   public List<FileObject> getFileObjects()
   {
-    for (Directory dir : directories)
+    for (String dir : directories)
     {
       FileObject fo = new FileObject();
 
       fo.setDirectory(true);
-      fo.setPath(dir.path);
-      fo.setName(extractName(dir.name));
+      fo.setPath(dir);
+      fo.setName(extractName(dir));
       fileObjects.add(fo);
     }
 
@@ -241,108 +261,10 @@ public class FileObjectManifestHandler implements Handler
     return name;
   }
 
-  //~--- inner classes --------------------------------------------------------
-
-  /**
-   * Class description
-   *
-   *
-   * @version        Enter version here..., 11/12/30
-   * @author         Enter your name here...
-   */
-  private static class Directory
-  {
-
-    /**
-     * Constructs ...
-     *
-     *
-     * @param path
-     * @param name
-     */
-    public Directory(String path, String name)
-    {
-      this.path = path;
-      this.name = name;
-    }
-
-    //~--- methods ------------------------------------------------------------
-
-    /**
-     * Method description
-     *
-     *
-     * @param obj
-     *
-     * @return
-     */
-    @Override
-    public boolean equals(Object obj)
-    {
-      if (obj == null)
-      {
-        return false;
-      }
-
-      if (getClass() != obj.getClass())
-      {
-        return false;
-      }
-
-      final Directory other = (Directory) obj;
-
-      if ((this.path == null)
-          ? (other.path != null)
-          : !this.path.equals(other.path))
-      {
-        return false;
-      }
-
-      if ((this.name == null)
-          ? (other.name != null)
-          : !this.name.equals(other.name))
-      {
-        return false;
-      }
-
-      return true;
-    }
-
-    /**
-     * Method description
-     *
-     *
-     * @return
-     */
-    @Override
-    public int hashCode()
-    {
-      int hash = 5;
-
-      hash = 71 * hash + ((this.path != null)
-                          ? this.path.hashCode()
-                          : 0);
-      hash = 71 * hash + ((this.name != null)
-                          ? this.name.hashCode()
-                          : 0);
-
-      return hash;
-    }
-
-    //~--- fields -------------------------------------------------------------
-
-    /** Field description */
-    private String name;
-
-    /** Field description */
-    private String path;
-  }
-
-
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
-  private Set<Directory> directories = new HashSet<Directory>();
+  private Set<String> directories = new HashSet<String>();
 
   /** Field description */
   private String directory;
