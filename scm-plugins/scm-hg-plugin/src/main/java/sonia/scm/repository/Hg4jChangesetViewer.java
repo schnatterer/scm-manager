@@ -52,6 +52,8 @@ import org.tmatesoft.hg.repo.HgRepository;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -175,7 +177,15 @@ public class Hg4jChangesetViewer implements HgChangesetViewer
           logger.debug("fetch changesets from {} to {}", startRev, endRev);
         }
 
-        return lc.range(startRev, endRev).execute();
+        List<HgChangeset> changesets = lc.range(endRev, startRev).execute();
+
+        if (changesets != null)
+        {
+          changesets = new ArrayList<HgChangeset>(changesets);
+          Collections.reverse(changesets);
+        }
+
+        return changesets;
       }
     }.getChangesets();
   }
