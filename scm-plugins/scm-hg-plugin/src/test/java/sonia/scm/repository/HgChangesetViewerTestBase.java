@@ -60,6 +60,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -124,6 +125,45 @@ public abstract class HgChangesetViewerTestBase
    * @throws RepositoryException
    */
   @Test
+  public void simpleOrderTest()
+          throws IOException, RepositoryClientException, RepositoryException
+  {
+    String a1 = createDummyFile("a1").getName();
+    String a2 = createDummyFile("a2").getName();
+
+    client.add(a1, a2);
+    client.commit("added files a1 and a2");
+
+    String a3 = createDummyFile("a3").getName();
+
+    client.add(a3);
+    client.commit("added file a3");
+
+    ChangesetViewer viewer = createChangesetViewer(handler,
+                               repositoryDirectory);
+    ChangesetPagingResult result = viewer.getChangesets(0, 2);
+
+    checkPagingResult(result, 2);
+
+    Iterator<Changeset> it = result.iterator();
+    Changeset changeset = it.next();
+
+    checkChangeset(changeset, "added file a3");
+    checkModificationList(changeset.getModifications().getAdded(), "a3");
+    changeset = it.next();
+    checkChangeset(changeset, "added files a1 and a2");
+    checkModificationList(changeset.getModifications().getAdded(), "a1", "a2");
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @throws IOException
+   * @throws RepositoryClientException
+   * @throws RepositoryException
+   */
+  @Test
   public void simpleTest()
           throws RepositoryClientException, IOException, RepositoryException
   {
@@ -142,10 +182,7 @@ public abstract class HgChangesetViewerTestBase
     Changeset changeset = result.iterator().next();
 
     checkChangeset(changeset, "added files a1 and a2");
-
-    List<String> added = changeset.getModifications().getAdded();
-
-    checkModificationList(added, "a1", "a2");
+    checkModificationList(changeset.getModifications().getAdded(), "a1", "a2");
   }
 
   /**
@@ -192,7 +229,7 @@ public abstract class HgChangesetViewerTestBase
   private void checkPagingResult(ChangesetPagingResult result, int total)
   {
     assertNotNull(result);
-    assertEquals(result.getTotal(), 1);
+    assertEquals(result.getTotal(), total);
     assertNotNull(result.getChangesets());
     assertNotNull(result.iterator());
   }
