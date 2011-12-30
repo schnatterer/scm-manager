@@ -31,106 +31,66 @@
 
 
 
-package sonia.scm.repository;
+package sonia.scm.util;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import sonia.scm.util.IOUtil;
-import sonia.scm.util.Util;
-import sonia.scm.web.HgUtil;
+import org.tmatesoft.hg.util.ByteChannel;
+import org.tmatesoft.hg.util.CancelledException;
 
 //~--- JDK imports ------------------------------------------------------------
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
-import java.util.Map;
-
-import javax.xml.bind.JAXBContext;
+import java.nio.ByteBuffer;
 
 /**
  *
  * @author Sebastian Sdorra
  */
-public class HgRepositoryBrowser extends AbstractHgHandler
-        implements RepositoryBrowser
+public class OutputStreamChannel implements ByteChannel
 {
-
-  /** Field description */
-  public static final String RESOURCE_BROWSE = "/sonia/scm/hgbrowse.py";
-
-  //~--- constructors ---------------------------------------------------------
 
   /**
    * Constructs ...
    *
    *
-   * @param handler
-   * @param context
-   * @param repository
-   * @param browserResultContext
-   */
-  public HgRepositoryBrowser(HgRepositoryHandler handler,
-                             JAXBContext browserResultContext,
-                             HgContext context, Repository repository)
-  {
-    super(handler, browserResultContext, context, repository);
-  }
-
-  //~--- get methods ----------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @param revision
-   * @param path
    * @param output
-   *
-   *
-   * @throws IOException
-   * @throws RepositoryException
    */
-  @Override
-  public void getContent(String revision, String path, OutputStream output)
-          throws IOException, RepositoryException
+  public OutputStreamChannel(OutputStream output)
   {
-    revision = HgUtil.getRevision(revision);
-
-    Process p = createHgProcess("cat", "-r", revision, Util.nonNull(path));
-    InputStream input = null;
-
-    try
-    {
-      handleErrorStream(p.getErrorStream());
-      input = p.getInputStream();
-      IOUtil.copy(input, output);
-    }
-    finally
-    {
-      IOUtil.close(input);
-    }
+    this.output = output;
   }
+
+  //~--- methods --------------------------------------------------------------
 
   /**
    * Method description
    *
    *
-   * @param revision
-   * @param path
+   * @param buffer
    *
    * @return
    *
+   * @throws CancelledException
    * @throws IOException
-   * @throws RepositoryException
    */
   @Override
-  public BrowserResult getResult(String revision, String path)
-          throws IOException, RepositoryException
+  public int write(ByteBuffer buffer) throws IOException, CancelledException
   {
-    Map<String, String> env = createEnvironment(revision, path);
+    int count = buffer.remaining();
 
-    return getResultFromScript(BrowserResult.class, RESOURCE_BROWSE, env);
+    while (buffer.hasRemaining())
+    {
+      output.write(buffer.get());
+    }
+
+    return count;
   }
+
+  //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private OutputStream output;
 }

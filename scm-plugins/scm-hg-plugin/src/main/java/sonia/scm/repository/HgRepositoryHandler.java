@@ -272,29 +272,18 @@ public class HgRepositoryHandler
   {
     HgChangesetViewer changesetViewer = null;
 
-    AssertUtil.assertIsNotNull(repository);
+    assertHgRepository(repository);
 
-    String type = repository.getType();
-
-    AssertUtil.assertIsNotEmpty(type);
-
-    if (TYPE_NAME.equals(type))
+    if (config.isEnableHg4j())
     {
-      if (config.isEnableHg4j())
-      {
-        changesetViewer = new Hg4jChangesetViewer(this,
-                hgContextProvider.get(), repository);
-      }
-      else
-      {
-        changesetViewer = new DefaultHgChangesetViewer(this,
-                changesetPagingResultContext, hgContextProvider.get(),
-                repository);
-      }
+      changesetViewer = new Hg4jChangesetViewer(this, hgContextProvider.get(),
+              repository);
     }
     else
     {
-      throw new IllegalArgumentException("mercurial repository is required");
+      changesetViewer = new DefaultHgChangesetViewer(this,
+              changesetPagingResultContext, hgContextProvider.get(),
+              repository);
     }
 
     return changesetViewer;
@@ -314,24 +303,9 @@ public class HgRepositoryHandler
   public DiffViewer getDiffViewer(Repository repository)
           throws RepositoryException
   {
-    DiffViewer diffViewer = null;
+    assertHgRepository(repository);
 
-    AssertUtil.assertIsNotNull(repository);
-
-    String type = repository.getType();
-
-    AssertUtil.assertIsNotEmpty(type);
-
-    if (TYPE_NAME.equals(type))
-    {
-      diffViewer = new HgDiffViewer(this, hgContextProvider.get(), repository);
-    }
-    else
-    {
-      throw new IllegalArgumentException("mercurial repository is required");
-    }
-
-    return diffViewer;
+    return new HgDiffViewer(this, hgContextProvider.get(), repository);
   }
 
   /**
@@ -356,8 +330,21 @@ public class HgRepositoryHandler
   @Override
   public RepositoryBrowser getRepositoryBrowser(Repository repository)
   {
-    return new HgRepositoryBrowser(this, browserResultContext,
-                                   hgContextProvider.get(), repository);
+    RepositoryBrowser browser = null;
+
+    assertHgRepository(repository);
+
+    if (config.isEnableHg4j())
+    {
+      browser = new Hg4jRepositoryBrowser(this, repository);
+    }
+    else
+    {
+      browser = new DefaultHgRepositoryBrowser(this, browserResultContext,
+              hgContextProvider.get(), repository);
+    }
+
+    return browser;
   }
 
   /**
@@ -506,6 +493,26 @@ public class HgRepositoryHandler
     }
 
     return write;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param repository
+   */
+  private void assertHgRepository(Repository repository)
+  {
+    AssertUtil.assertIsNotNull(repository);
+
+    String type = repository.getType();
+
+    AssertUtil.assertIsNotEmpty(type);
+
+    if (!TYPE_NAME.equals(type))
+    {
+      throw new IllegalArgumentException("mercurial repository is required");
+    }
   }
 
   /**
