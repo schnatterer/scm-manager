@@ -39,6 +39,9 @@ import sonia.scm.LastModifiedAware;
 
 //~--- JDK imports ------------------------------------------------------------
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -47,6 +50,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @since 1.5
  */
 @XmlRootElement(name = "file")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class FileObject implements LastModifiedAware
 {
 
@@ -104,6 +108,17 @@ public class FileObject implements LastModifiedAware
   public String getPath()
   {
     return path;
+  }
+
+  /**
+   * Method description
+   *
+   * @since 1.10
+   * @return
+   */
+  public SubRepository getSubRepository()
+  {
+    return subRepository;
   }
 
   /**
@@ -185,6 +200,19 @@ public class FileObject implements LastModifiedAware
     this.path = path;
   }
 
+  /**
+   * Method description
+   *
+   *
+   * @since 1.10
+   *
+   * @param subRepository
+   */
+  public void setSubRepository(SubRepository subRepository)
+  {
+    this.subRepository = subRepository;
+  }
+
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
@@ -204,4 +232,8 @@ public class FileObject implements LastModifiedAware
 
   /** Field description */
   private String path;
+
+  /** Field description */
+  @XmlElement(name = "subrepository")
+  private SubRepository subRepository;
 }

@@ -47,6 +47,7 @@ import sonia.scm.util.Util;
 
 //~--- JDK imports ------------------------------------------------------------
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -247,11 +248,14 @@ public class DefaultCGIExecutor extends AbstractCGIExecutor
    */
   private EnvList createEnvironment()
   {
-    String pathInfo = request.getPathInfo();
-    String scriptName = request.getRequestURI().substring(0,
-                          request.getRequestURI().length() - pathInfo.length());
+
+    // remove ;jsessionid
+    String pathInfo = HttpUtil.removeMatrixParameter(request.getPathInfo());
+    String uri = HttpUtil.removeMatrixParameter(request.getRequestURI());
+    String scriptName = uri.substring(0, uri.length() - pathInfo.length());
     String scriptPath = context.getRealPath(scriptName);
-    String pathTranslated = request.getPathTranslated();
+    String pathTranslated =
+      HttpUtil.removeMatrixParameter(request.getPathTranslated());
     int len = request.getContentLength();
     EnvList env = new EnvList();
 
@@ -276,6 +280,15 @@ public class DefaultCGIExecutor extends AbstractCGIExecutor
     else
     {
       env.set(ENV_CONTENT_LENGTH, Integer.toString(len));
+    }
+
+    /**
+     * Decode PATH_INFO
+     * https://bitbucket.org/sdorra/scm-manager/issue/79/hgweb-decoding-issue
+     */
+    if (Util.isNotEmpty(pathInfo))
+    {
+      pathInfo = HttpUtil.decode(pathInfo);
     }
 
     env.set(ENV_CONTENT_TYPE, Util.nonNull(request.getContentType()));
@@ -435,11 +448,13 @@ public class DefaultCGIExecutor extends AbstractCGIExecutor
   {
     if (logger.isWarnEnabled())
     {
-      String error = IOUtil.getContent(in);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-      if (Util.isNotEmpty(error))
+      IOUtil.copy(in, baos);
+
+      if (baos.size() > 0)
       {
-        logger.warn(error.trim());
+        logger.warn(baos.toString());
       }
     }
   }

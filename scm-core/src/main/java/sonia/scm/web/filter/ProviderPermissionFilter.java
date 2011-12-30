@@ -38,6 +38,7 @@ package sonia.scm.web.filter;
 import com.google.inject.Provider;
 
 import sonia.scm.repository.Repository;
+import sonia.scm.repository.RepositoryProvider;
 import sonia.scm.web.security.WebSecurityContext;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -61,7 +62,7 @@ public abstract class ProviderPermissionFilter extends PermissionFilter
    */
   public ProviderPermissionFilter(
           Provider<WebSecurityContext> securityContextProvider,
-          Provider<Repository> repositoryProvider)
+          RepositoryProvider repositoryProvider)
   {
     super(securityContextProvider);
     this.repositoryProvider = repositoryProvider;
@@ -86,5 +87,5 @@ public abstract class ProviderPermissionFilter extends PermissionFilter
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
-  private Provider<Repository> repositoryProvider;
+  private RepositoryProvider repositoryProvider;
 }

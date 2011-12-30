@@ -6,13 +6,13 @@
   <parent>
     <groupId>sonia.scm</groupId>
     <artifactId>scm</artifactId>
-    <version>1.10-SNAPSHOT</version>
+    <version>1.11-SNAPSHOT</version>
   </parent>
 
   <groupId>sonia.scm</groupId>
   <artifactId>scm-webapp</artifactId>
   <packaging>war</packaging>
-  <version>1.10-SNAPSHOT</version>
+  <version>1.11-SNAPSHOT</version>
   <name>scm-webapp</name>
 
   <dependencies>
@@ -33,29 +33,33 @@
       <scope>provided</scope>
     </dependency>
     
+    <!-- scm -->
+    
     <dependency>
       <groupId>sonia.scm</groupId>
       <artifactId>scm-core</artifactId>
-      <version>1.10-SNAPSHOT</version>
+      <version>1.11-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>sonia.scm.plugins</groupId>
       <artifactId>scm-hg-plugin</artifactId>
-      <version>1.10-SNAPSHOT</version>
+      <version>1.11-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>sonia.scm.plugins</groupId>
       <artifactId>scm-svn-plugin</artifactId>
-      <version>1.10-SNAPSHOT</version>
+      <version>1.11-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>sonia.scm.plugins</groupId>
       <artifactId>scm-git-plugin</artifactId>
-      <version>1.10-SNAPSHOT</version>
+      <version>1.11-SNAPSHOT</version>
     </dependency>
+
+    <!-- rest api -->
 
     <dependency>
       <groupId>com.sun.jersey</groupId>
@@ -96,12 +100,16 @@
         </exclusion>
       </exclusions>
     </dependency>
+    
+    <!-- injection -->
 
     <dependency>
       <groupId>com.google.inject.extensions</groupId>
       <artifactId>guice-multibindings</artifactId>
       <version>${guice.version}</version>
     </dependency>
+    
+    <!-- logging -->
 
     <dependency>
       <groupId>ch.qos.logback</groupId>
@@ -114,12 +122,16 @@
       <artifactId>log4j-over-slf4j</artifactId>
       <version>${slf4j.version}</version>
     </dependency>
+    
+    <!-- cache -->
 
     <dependency>
       <groupId>net.sf.ehcache</groupId>
       <artifactId>ehcache-core</artifactId>
       <version>${ehcache.version}</version>
     </dependency>
+    
+    <!-- utils -->
 
     <dependency>
       <groupId>com.google.collections</groupId>
@@ -140,17 +152,19 @@
       <artifactId>commons-collections</artifactId>
       <version>3.2.1</version>
     </dependency>
+    
+    <dependency>
+      <groupId>asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>3.3.1</version>
+    </dependency>
+    
+    <!-- template engine -->
 
     <dependency>
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker</artifactId>
       <version>${freemarker.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>asm</groupId>
-      <artifactId>asm</artifactId>
-      <version>3.3.1</version>
     </dependency>
 
     <!-- aether -->
@@ -181,49 +195,11 @@
 
     <dependency>
       <groupId>org.sonatype.aether</groupId>
-      <artifactId>aether-connector-wagon</artifactId>
+      <artifactId>aether-connector-asynchttpclient</artifactId>
       <version>${aether.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>xbean-reflect</artifactId>
-          <groupId>org.apache.xbean</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>sisu-inject-plexus</artifactId>
-          <groupId>org.sonatype.sisu</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>plexus-classworlds</artifactId>
-          <groupId>org.codehaus.plexus</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
-
-    <dependency>
-      <groupId>org.apache.maven.wagon</groupId>
-      <artifactId>wagon-provider-api</artifactId>
-      <version>${wagon.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.maven.wagon</groupId>
-      <artifactId>wagon-http-lightweight</artifactId>
-      <version>${wagon.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>nekohtml</groupId>
-          <artifactId>nekohtml</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>nekohtml</groupId>
-          <artifactId>xercesMinimal</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+    
+    <!-- rest documentation -->
     
     <dependency>
       <groupId>org.codehaus.enunciate</groupId>
@@ -236,7 +212,7 @@
     <dependency>
       <groupId>sonia.scm</groupId>
       <artifactId>scm-test</artifactId>
-      <version>1.10-SNAPSHOT</version>
+      <version>1.11-SNAPSHOT</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -290,7 +266,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.3</version>
+        <version>2.4</version>
         <executions>
           <execution>
             <phase>compile</phase>
@@ -333,7 +309,7 @@
           <systemProperties>
             <systemProperty>
               <name>scm.home</name>
-              <value>target/scm-it</value>
+              <value>${scm.home}</value>
             </systemProperty>
           </systemProperties>
           <connectors>
@@ -357,12 +333,13 @@
   </build>
 
   <properties>
+    <scm.home>target/scm-it</scm.home>
     <environment.profile>default</environment.profile>
     <enunciate.version>1.24</enunciate.version>
-    <aether.version>1.13</aether.version>
+    <aether.version>1.13.1</aether.version>
     <wagon.version>1.0</wagon.version>
     <maven.version>3.0.3</maven.version>
-    <netbeans.hint.deploy.server>Tomcat</netbeans.hint.deploy.server>
+    <netbeans.hint.deploy.server>gfv3ee6</netbeans.hint.deploy.server>
   </properties>
 
   <profiles>
@@ -422,7 +399,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
-            <version>2.9</version>
+            <version>2.11</version>
             <executions>
               <execution>
                 <id>integration-test</id>

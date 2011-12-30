@@ -38,8 +38,10 @@ Sonia.repository.RepositoryBrowser = Ext.extend(Ext.grid.GridPanel, {
   
   iconFolder: 'resources/images/folder.gif',
   iconDocument: 'resources/images/document.gif',
+  iconSubRepository: 'resources/images/folder-remote.gif',
   templateIcon: '<img src="{0}" alt="{1}" title="{2}" />',
-  templateLink: '<a class="scm-browser" rel="{1}">{0}</a>',
+  templateInternalLink: '<a class="scm-browser" rel="{1}">{0}</a>',
+  templateExternalLink: '<a class="scm-browser" href="{1}" target="_blank">{0}</a>',
   
   emptyText: 'This directory is empty',
 
@@ -54,7 +56,7 @@ Sonia.repository.RepositoryBrowser = Ext.extend(Ext.grid.GridPanel, {
         url: restUrl + 'repositories/' + this.repository.id  + '/browse.json',
         method: 'GET'
       }),
-      fields: ['path', 'name', 'length', 'lastModified', 'directory', 'description'],
+      fields: ['path', 'name', 'length', 'lastModified', 'directory', 'description', 'subrepository'],
       root: 'files',
       idProperty: 'path',
       autoLoad: true,
@@ -108,6 +110,10 @@ Sonia.repository.RepositoryBrowser = Ext.extend(Ext.grid.GridPanel, {
         id: 'description',
         dataIndex: 'description',
         header: 'Description'
+      },{
+        id: 'subrepository',
+        dataIndex: 'subrepository',
+        hidden: true
       }]
     });
     
@@ -174,15 +180,42 @@ Sonia.repository.RepositoryBrowser = Ext.extend(Ext.grid.GridPanel, {
     
     if ( el != null ){
     
-      var rel = el.rel.split(':');
-      var path = rel[1];
-
-      if ( rel[0] == 'dir' ){
-        this.changeDirectory(path);
-      } else {
-        this.openFile(path);
+      var rel = el.rel;
+      var index = rel.indexOf(':');
+      if ( index > 0 ){
+        var prefix = rel.substring(0, index);
+        var path = rel.substring(index + 1);
+        
+        if ( prefix == 'sub' ){
+          this.openSubRepository(path);
+        } else if ( prefix == 'dir' ){
+          this.changeDirectory(path);
+        } else {
+          this.openFile(path);
+        }
       }
     }
+  },
+  
+  openSubRepository: function(subRepository){
+    if (debug){
+      console.debug('open sub repository ' + subRepository);
+    }
+    var id = 'repositoryBrowser;' + subRepository + ';null;null';
+    Sonia.repository.get(subRepository, function(repository){
+      var panel = Ext.getCmp(id);
+      if (! panel){
+        panel = {
+          id: id,
+          xtype: 'repositoryBrowser',
+          repository : repository,
+          revision: null,
+          closable: true,
+          autoScroll: true
+        }
+      }
+      main.addTab(panel);
+    });
   },
   
   appendRepositoryProperties: function(bar){
@@ -278,16 +311,69 @@ Sonia.repository.RepositoryBrowser = Ext.extend(Ext.grid.GridPanel, {
     bbar.doLayout();
   },
   
+  getRepositoryPath: function(url){
+    var ctxPath = Sonia.util.getContextPath();
+    var i = url.indexOf(ctxPath);
+    if ( i > 0 ){
+      url = url.substring( i + ctxPath.length );
+    }
+    if ( url.indexOf('/') == 0 ){
+      url = url.substring(1);
+    }
+    return url;
+  },
+  
+  transformLink: function(url){
+    var link = null;
+    var server = Sonia.util.getServername(url);
+    if ( server == window.location.hostname || server == 'localhost' ){
+      var repositoryPath = this.getRepositoryPath( url );
+      if (repositoryPath){
+        link = 'sub:' + repositoryPath;
+      }
+    }
+    return link;
+  },
+  
   renderName: function(name, p, record){
-    var path = record.data.directory ? 'dir:' : 'file:';
-    path += record.data.path;
-    return String.format(this.templateLink, name, path);
+    var subRepository = record.get('subrepository');
+    var folder = record.get('directory');
+    var path = null;
+    var template = null;
+    if ( subRepository ){
+      // get real revision (.hgsubstate)?
+      var subRepositoryUrl = subRepository['browser-url'];
+      if (!subRepositoryUrl){
+        subRepositoryUrl = subRepository['repository-url'];
+      }
+      path = this.transformLink(subRepositoryUrl);
+      if ( path ){
+        template = this.templateInternalLink;
+      } else {
+        path = subRepositoryUrl;
+        template = this.templateExternalLink;
+      }
+    } else {
+      if (folder){
+        path = 'dir:';
+      } else {
+        path = 'file:';
+      }
+      path += record.get('path');
+      template = this.templateInternalLink;
+    }
+    
+    return String.format(template, name, path);
   },
   
   renderIcon: function(directory, p, record){
     var icon = null;
-    var name = record.data.name;
-    if ( directory ){
+    var subRepository = record.get('subrepository');
+    
+    var name = record.get('name');
+    if ( subRepository ){
+      icon = this.iconSubRepository;
+    } else if (directory){
       icon = this.iconFolder;
     } else {
       icon = this.iconDocument;

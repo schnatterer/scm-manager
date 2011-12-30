@@ -36,14 +36,18 @@ package sonia.scm.web;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 import org.eclipse.jgit.http.server.GitServlet;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import sonia.scm.repository.GitUtil;
+import sonia.scm.repository.RepositoryProvider;
+import sonia.scm.repository.RepositoryRequestListenerUtil;
 import sonia.scm.util.HttpUtil;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -69,6 +73,10 @@ public class ScmGitServlet extends GitServlet
   /** Field description */
   private static final long serialVersionUID = -7712897339207470674L;
 
+  /** the logger for ScmGitServlet */
+  private static final Logger logger =
+    LoggerFactory.getLogger(ScmGitServlet.class);
+
   //~--- constructors ---------------------------------------------------------
 
   /**
@@ -79,15 +87,18 @@ public class ScmGitServlet extends GitServlet
    * @param repositoryResolver
    * @param receivePackFactory
    * @param repositoryProvider
+   * @param repositoryRequestListenerUtil
    */
   @Inject
   public ScmGitServlet(
           GitRepositoryResolver repositoryResolver,
           GitReceivePackFactory receivePackFactory,
-          Provider<sonia.scm.repository.Repository> repositoryProvider)
+          RepositoryProvider repositoryProvider,
+          RepositoryRequestListenerUtil repositoryRequestListenerUtil)
   {
     this.resolver = repositoryResolver;
     this.repositoryProvider = repositoryProvider;
+    this.repositoryRequestListenerUtil = repositoryRequestListenerUtil;
     setRepositoryResolver(repositoryResolver);
     setReceivePackFactory(receivePackFactory);
   }
@@ -113,7 +124,24 @@ public class ScmGitServlet extends GitServlet
 
     if (uri.matches(REGEX_GITHTTPBACKEND))
     {
-      super.service(request, response);
+      sonia.scm.repository.Repository repository = repositoryProvider.get();
+
+      if (repository != null)
+      {
+        if (repositoryRequestListenerUtil.callListeners(request, response,
+                repository))
+        {
+          super.service(request, response);
+        }
+        else if (logger.isDebugEnabled())
+        {
+          logger.debug("request aborted by repository request listener");
+        }
+      }
+      else
+      {
+        super.service(request, response);
+      }
     }
     else
     {
@@ -166,7 +194,10 @@ public class ScmGitServlet extends GitServlet
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
-  private Provider<sonia.scm.repository.Repository> repositoryProvider;
+  private RepositoryProvider repositoryProvider;
+
+  /** Field description */
+  private RepositoryRequestListenerUtil repositoryRequestListenerUtil;
 
   /** Field description */
   private RepositoryResolver<HttpServletRequest> resolver;

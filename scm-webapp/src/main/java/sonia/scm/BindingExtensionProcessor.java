@@ -51,6 +51,7 @@ import sonia.scm.repository.ChangesetPreProcessorFactory;
 import sonia.scm.repository.RepositoryHandler;
 import sonia.scm.repository.RepositoryHook;
 import sonia.scm.repository.RepositoryListener;
+import sonia.scm.repository.RepositoryRequestListener;
 import sonia.scm.resources.ResourceHandler;
 import sonia.scm.security.EncryptionHandler;
 import sonia.scm.user.UserListener;
@@ -62,6 +63,8 @@ import sonia.scm.web.security.XmlAuthenticationHandler;
 
 import java.util.HashSet;
 import java.util.Set;
+import sonia.scm.repository.FileObjectPreProcessor;
+import sonia.scm.repository.FileObjectPreProcessorFactory;
 
 /**
  *
@@ -104,12 +107,20 @@ public class BindingExtensionProcessor implements ExtensionProcessor
       Multibinder.newSetBinder(binder, AuthenticationHandler.class);
     Multibinder<ResourceHandler> resourceHandler =
       Multibinder.newSetBinder(binder, ResourceHandler.class);
+    Multibinder<RepositoryHook> repositoryHookBinder =
+      Multibinder.newSetBinder(binder, RepositoryHook.class);
+    
+    // changeset pre processor
     Multibinder<ChangesetPreProcessor> changesetPreProcessorBinder =
       Multibinder.newSetBinder(binder, ChangesetPreProcessor.class);
     Multibinder<ChangesetPreProcessorFactory> changesetPreProcessorFactoryBinder =
       Multibinder.newSetBinder(binder, ChangesetPreProcessorFactory.class);
-    Multibinder<RepositoryHook> repositoryHookBinder =
-      Multibinder.newSetBinder(binder, RepositoryHook.class);
+    
+    // fileobject pre processor
+    Multibinder<FileObjectPreProcessor> fileObjectPreProcessorBinder =
+      Multibinder.newSetBinder(binder, FileObjectPreProcessor.class);
+    Multibinder<FileObjectPreProcessorFactory> fileObjectPreProcessorFactoryBinder =
+      Multibinder.newSetBinder(binder, FileObjectPreProcessorFactory.class);
 
     // listeners
     Multibinder<RepositoryListener> repositoryListenerBinder =
@@ -120,6 +131,8 @@ public class BindingExtensionProcessor implements ExtensionProcessor
       Multibinder.newSetBinder(binder, GroupListener.class);
     Multibinder<AuthenticationListener> authenticationListenerBinder =
       Multibinder.newSetBinder(binder, AuthenticationListener.class);
+    Multibinder<RepositoryRequestListener> repositoryRequestListenerBinder =
+      Multibinder.newSetBinder(binder, RepositoryRequestListener.class);
 
     authenticators.addBinding().to(XmlAuthenticationHandler.class);
 
@@ -230,6 +243,27 @@ public class BindingExtensionProcessor implements ExtensionProcessor
 
         changesetPreProcessorFactoryBinder.addBinding().to(extensionClass);
       }
+      else if (FileObjectPreProcessor.class.isAssignableFrom(extensionClass))
+      {
+        if (logger.isInfoEnabled())
+        {
+          logger.info("bind FileObjectPreProcessor {}",
+                      extensionClass.getName());
+        }
+
+        fileObjectPreProcessorBinder.addBinding().to(extensionClass);
+      }
+      else if (FileObjectPreProcessorFactory.class.isAssignableFrom(
+              extensionClass))
+      {
+        if (logger.isInfoEnabled())
+        {
+          logger.info("bind FileObjectPreProcessorFactory {}",
+                      extensionClass.getName());
+        }
+
+        fileObjectPreProcessorFactoryBinder.addBinding().to(extensionClass);
+      }
       else if (RepositoryHook.class.isAssignableFrom(extensionClass))
       {
         if (logger.isInfoEnabled())
@@ -238,6 +272,16 @@ public class BindingExtensionProcessor implements ExtensionProcessor
         }
 
         repositoryHookBinder.addBinding().to(extensionClass);
+      }
+      else if (RepositoryRequestListener.class.isAssignableFrom(extensionClass))
+      {
+        if (logger.isInfoEnabled())
+        {
+          logger.info("bind RepositoryRequestListener {}",
+                      extensionClass.getName());
+        }
+
+        repositoryRequestListenerBinder.addBinding().to(extensionClass);
       }
       else
       {
@@ -343,7 +387,6 @@ public class BindingExtensionProcessor implements ExtensionProcessor
    * @param bindingType
    * @param <T>
    *
-   * @return
    */
   private <T> void bind(Binder binder, Class<T> type,
                         Class<? extends T> bindingType)

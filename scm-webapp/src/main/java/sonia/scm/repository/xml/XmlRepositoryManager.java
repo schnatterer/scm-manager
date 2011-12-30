@@ -659,6 +659,9 @@ public class XmlRepositoryManager extends AbstractRepositoryManager
     AssertUtil.assertIsNotEmpty(type);
     AssertUtil.assertIsNotEmpty(uri);
 
+    // remove ;jsessionid, jetty bug?
+    uri = HttpUtil.removeMatrixParameter(uri);
+
     Repository repository = null;
 
     if (handlerMap.containsKey(type))
@@ -669,14 +672,18 @@ public class XmlRepositoryManager extends AbstractRepositoryManager
       {
         if (type.equals(r.getType()) && isNameMatching(r, uri))
         {
-          if (isReader(r))
-          {
-            repository = r.clone();
-          }
+          assertIsReader(r);
+          repository = r.clone();
 
           break;
         }
       }
+    }
+
+    if ((repository == null) && logger.isDebugEnabled())
+    {
+      logger.debug("could not find repository with type {} and uri {}", type,
+                   uri);
     }
 
     return repository;
@@ -701,14 +708,17 @@ public class XmlRepositoryManager extends AbstractRepositoryManager
     }
 
     int typeSeperator = uri.indexOf(HttpUtil.SEPARATOR_PATH);
+    Repository repository = null;
 
-    AssertUtil.assertPositive(typeSeperator);
+    if (typeSeperator > 0)
+    {
+      String type = uri.substring(0, typeSeperator);
 
-    String type = uri.substring(0, typeSeperator);
+      uri = uri.substring(typeSeperator + 1);
+      repository = getFromTypeAndUri(type, uri);
+    }
 
-    uri = uri.substring(typeSeperator + 1);
-
-    return getFromTypeAndUri(type, uri);
+    return repository;
   }
 
   /**

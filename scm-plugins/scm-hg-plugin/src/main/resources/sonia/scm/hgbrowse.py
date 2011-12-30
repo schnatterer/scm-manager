@@ -29,6 +29,10 @@
 #
 #
 
+class SubRepository:
+  url = None
+  revision = None
+
 import sys, os
 
 pythonPath = os.environ['SCM_PYTHON_PATH']
@@ -58,7 +62,33 @@ name = getName(path)
 length = 0
 paths = []
 repo = hg.repository(ui.ui(), path = repositoryPath)
-mf = repo[revision].manifest()
+subrepos = {}
+revCtx = repo[revision]
+mf = revCtx.manifest()
+try:
+  hgsub = revCtx.filectx('.hgsub').data().split('\n')
+  for line in hgsub:
+    parts = line.split('=')
+    if len(parts) > 1:
+      subrepo = SubRepository()
+      subrepo.url = parts[1].strip()
+      subrepos[parts[0].strip()] = subrepo
+  print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+except Exception:
+  # howto drop execptions in python?
+  print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+  
+try:
+  hgsubstate = revCtx.filectx('.hgsubstate').data().split('\n')
+  for line in hgsubstate:
+    parts = line.split(' ')
+    if len(parts) > 1:
+      subrev = parts[0].strip()
+      subrepo = subrepos[parts[1].strip()]
+      subrepo.revision = subrev
+except Exception:
+  # howto drop execptions in python?
+  print ''
 
 if path is "":
   length = 1
@@ -73,6 +103,10 @@ else:
 files = []
 directories = []
 
+for k, v in subrepos.iteritems():
+  if k.startswith(path):
+    directories.append(k)
+
 for p in paths:
   parts = p.split('/')
   depth = len(parts)
@@ -86,7 +120,6 @@ for p in paths:
     if not dirpath in directories:
       directories.append(dirpath)
     
-print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
 print '<browser-result>'
 print '  <revision>' + revision + '</revision>'
 # todo print tag, and branch
@@ -96,7 +129,15 @@ for dir in directories:
   print '    <name>' + escape(getName(dir)) + '</name>'
   print '    <path>' + escape(dir) + '</path>'
   print '    <directory>true</directory>'
+  if dir in subrepos:
+    subrepo = subrepos[dir]
+    print '      <subrepository>'
+    if subrepo.revision != None:
+      print '        <revision>' + subrepo.revision + '</revision>'
+    print '        <repository-url>' + subrepo.url + '</repository-url>'
+    print '      </subrepository>'
   print '  </file>'
+>>>>>>> theirs
     
 for file in files:
   linkrev = repo[file.linkrev()]

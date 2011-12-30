@@ -35,10 +35,18 @@ package sonia.scm.plugin;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
 
+import net.sf.ehcache.CacheManager;
+
 import sonia.scm.ConfigurationException;
+import sonia.scm.plugin.rest.PluginResource;
+import sonia.scm.plugin.rest.url.BitbucketUrlBuilder;
+import sonia.scm.plugin.rest.url.GithubUrlBuilder;
+import sonia.scm.plugin.rest.url.UrlBuilder;
+import sonia.scm.plugin.rest.url.UrlBuilderFactory;
 import sonia.scm.plugin.scanner.DefaultPluginScannerFactory;
 import sonia.scm.plugin.scanner.PluginScannerFactory;
 import sonia.scm.plugin.scanner.PluginScannerScheduler;
@@ -65,6 +73,9 @@ import javax.xml.bind.JAXB;
  */
 public class ScmBackendModule extends ServletModule
 {
+
+  /** Field description */
+  public static final String CACHE_CONFIG = "/config/ehcache.xml";
 
   /** Field description */
   public static final String DIRECTORY_DEFAULT = ".scm-backend";
@@ -118,6 +129,22 @@ public class ScmBackendModule extends ServletModule
     bind(PluginBackend.class).to(DefaultPluginBackend.class);
     bind(PluginScannerFactory.class).to(DefaultPluginScannerFactory.class);
     bind(PluginScannerScheduler.class).to(TimerPluginScannerScheduler.class);
+
+    // cache manager
+    CacheManager cacheManager =
+      new CacheManager(PluginResource.class.getResource(CACHE_CONFIG));
+
+    bind(CacheManager.class).toInstance(cacheManager);
+
+    // compare url builder
+    Multibinder<UrlBuilder> compareUrlBuilderBinder =
+      Multibinder.newSetBinder(binder(), UrlBuilder.class);
+
+    compareUrlBuilderBinder.addBinding().to(BitbucketUrlBuilder.class);
+    compareUrlBuilderBinder.addBinding().to(GithubUrlBuilder.class);
+
+    // compare url builder factory
+    bind(UrlBuilderFactory.class);
 
     // news proxy
     bind(ProxyURLProvider.class).to(NewsProxyURLProvider.class);
