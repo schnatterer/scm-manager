@@ -51,6 +51,7 @@ import sonia.scm.store.MemoryStoreFactory;
 import sonia.scm.util.IOUtil;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 
 import static org.mockito.Mockito.*;
 
@@ -111,6 +112,14 @@ public abstract class HgChangesetViewerTestBase
     handler = new HgRepositoryHandler(new MemoryStoreFactory(),
                                       new DefaultFileSystem(), contextProvider);
     handler.init(context);
+
+    // skip tests if hg not in path
+    if (!handler.isConfigured())
+    {
+      System.out.println("WARNING could not find hg, skipping test");
+      assumeTrue(false);
+    }
+
     client = RepositoryClientFactory.createClient("hg", repositoryDirectory,
             "http://www.scm-manager.de/hg/dummy", null, null, false);
     client.init();
