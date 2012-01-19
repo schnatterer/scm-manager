@@ -41,6 +41,7 @@ import org.tmatesoft.hg.core.HgFileRevision;
 import org.tmatesoft.hg.core.HgInvalidFileException;
 import org.tmatesoft.hg.core.HgLogCommand;
 import org.tmatesoft.hg.core.HgRepoFacade;
+import org.tmatesoft.hg.core.Nodeid;
 import org.tmatesoft.hg.util.Path;
 
 import sonia.scm.util.Util;
@@ -177,6 +178,21 @@ public abstract class Hg4jChangesetHandler
    * Method description
    *
    *
+   * @param changeset
+   * @param parent
+   */
+  private void appendParent(Changeset changeset, Nodeid parent)
+  {
+    if ((parent != null) && (parent != Nodeid.NULL))
+    {
+      changeset.getParents().add(parent.toString());
+    }
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param hgc
    *
    * @return
@@ -189,6 +205,8 @@ public abstract class Hg4jChangesetHandler
     changeset.setDate(hgc.getDate().getRawTime());
     changeset.setDescription(hgc.getComment());
     changeset.setAuthor(Person.toPerson(hgc.getUser()));
+    appendParent(changeset, hgc.getFirstParentRevision());
+    appendParent(changeset, hgc.getSecondParentRevision());
 
     String branch = hgc.getBranch();
 
