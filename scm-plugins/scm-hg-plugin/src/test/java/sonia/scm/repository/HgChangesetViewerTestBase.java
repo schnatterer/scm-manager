@@ -134,6 +134,46 @@ public abstract class HgChangesetViewerTestBase
    * @throws RepositoryException
    */
   @Test
+  public void simpleGetChangesetTest()
+          throws RepositoryClientException, IOException, RepositoryException
+  {
+    String a1 = createDummyFile("a1").getName();
+
+    client.add(a1);
+    client.commit("added file a1");
+
+    ChangesetViewer viewer = createChangesetViewer(handler,
+                               repositoryDirectory);
+    ChangesetPagingResult result = viewer.getChangesets(0, 1);
+
+    checkPagingResult(result, 1);
+
+    Changeset changesetFromPaging = result.iterator().next();
+
+    checkChangeset(changesetFromPaging, "added file a1");
+    checkModificationList(changesetFromPaging.getModifications().getAdded(),
+                          "a1");
+
+    Changeset changeset = viewer.getChangeset(changesetFromPaging.getId());
+
+    checkChangeset(changesetFromPaging, "added file a1");
+    checkModificationList(changesetFromPaging.getModifications().getAdded(),
+                          "a1");
+    assertEquals(changesetFromPaging.getId(), changeset.getId());
+    assertEquals(changesetFromPaging.getDate(), changeset.getDate());
+    assertEquals(changesetFromPaging.getDescription(),
+                 changeset.getDescription());
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @throws IOException
+   * @throws RepositoryClientException
+   * @throws RepositoryException
+   */
+  @Test
   public void simpleOrderTest()
           throws IOException, RepositoryClientException, RepositoryException
   {

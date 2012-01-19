@@ -100,13 +100,45 @@ public abstract class Hg4jChangesetHandler
    * Method description
    *
    *
+   * @return
+   *
+   * @throws RepositoryException
+   */
+  public Changeset getChangeset() throws RepositoryException
+  {
+    Changeset c = null;
+
+    try
+    {
+      HgRepoFacade facade = createRepositoryFacade();
+      HgLogCommand logCommand =
+        facade.createLogCommand().pending(context.isPending());
+      List<HgChangeset> changesets = getChangesets(facade, logCommand, 1);
+
+      if (Util.isNotEmpty(changesets))
+      {
+        c = convertChangeset(changesets.get(0));
+      }
+    }
+    catch (HgException ex)
+    {
+      throw new RepositoryException("could not fetch changesets", ex);
+    }
+
+    return c;
+  }
+
+  /**
+   * Method description
+   *
+   *
    *
    * @return
    *
    * @throws IOException
    * @throws RepositoryException
    */
-  public ChangesetPagingResult getChangesets()
+  public ChangesetPagingResult getChangesetPagingResult()
           throws IOException, RepositoryException
   {
     ChangesetPagingResult result = null;

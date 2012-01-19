@@ -90,8 +90,20 @@ public class HgUtil
    */
   public static String getRevision(String revision)
   {
-    return Util.isEmpty(revision)
-           ? REVISION_TIP
-           : revision;
+    if (Util.isEmpty(revision))
+    {
+      revision = REVISION_TIP;
+    }
+    else
+    {
+      int index = revision.indexOf(":");
+
+      if (index > 0)
+      {
+        revision = revision.substring(index + 1);
+      }
+    }
+
+    return revision;
   }
 }

@@ -110,10 +110,19 @@ public class Hg4jChangesetViewer implements HgChangesetViewer
    * @throws RepositoryException
    */
   @Override
-  public Changeset getChangeset(String revision)
+  public Changeset getChangeset(final String revision)
           throws IOException, RepositoryException
   {
-    return null;
+    return new Hg4jChangesetHandler(context, directory)
+    {
+      @Override
+      protected List<HgChangeset> getChangesets(HgRepoFacade facade,
+              HgLogCommand lc, int total)
+              throws HgInvalidControlFileException, HgDataStreamException
+      {
+        return lc.changeset(Nodeid.fromAscii(revision)).execute();
+      }
+    }.getChangeset();
   }
 
   /**
@@ -152,7 +161,7 @@ public class Hg4jChangesetViewer implements HgChangesetViewer
 
         return lc.range(startRev, endRev).execute();
       }
-    }.getChangesets();
+    }.getChangesetPagingResult();
   }
 
   /**
@@ -205,7 +214,7 @@ public class Hg4jChangesetViewer implements HgChangesetViewer
 
         return changesets;
       }
-    }.getChangesets();
+    }.getChangesetPagingResult();
   }
 
   /**
@@ -257,7 +266,7 @@ public class Hg4jChangesetViewer implements HgChangesetViewer
 
         return changesets;
       }
-    }.getChangesets();
+    }.getChangesetPagingResult();
   }
 
   //~--- fields ---------------------------------------------------------------
