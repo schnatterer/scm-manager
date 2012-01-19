@@ -30,6 +30,12 @@
       <artifactId>hg4j</artifactId>
       <version>0.7.1-SNAPSHOT</version>
     </dependency>
+    
+    <dependency>
+      <groupId>com.googlecode.java-diff-utils</groupId>
+      <artifactId>diffutils</artifactId>
+      <version>1.2.1</version>
+    </dependency>
 
     <!-- test scope -->
 

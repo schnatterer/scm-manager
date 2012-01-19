@@ -49,7 +49,7 @@ import java.io.OutputStream;
  *
  * @author Sebastian Sdorra
  */
-public class HgDiffViewer extends AbstractHgHandler implements DiffViewer
+public class DefaultHgDiffViewer extends AbstractHgHandler implements DiffViewer
 {
 
   /**
@@ -60,7 +60,7 @@ public class HgDiffViewer extends AbstractHgHandler implements DiffViewer
    * @param context
    * @param repository
    */
-  public HgDiffViewer(HgRepositoryHandler handler, HgContext context,
+  public DefaultHgDiffViewer(HgRepositoryHandler handler, HgContext context,
                       Repository repository)
   {
     super(handler, context, repository);

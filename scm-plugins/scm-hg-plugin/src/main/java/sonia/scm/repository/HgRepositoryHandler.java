@@ -300,9 +300,22 @@ public class HgRepositoryHandler
   public DiffViewer getDiffViewer(Repository repository)
           throws RepositoryException
   {
+    DiffViewer diffViewer = null;
+
     assertHgRepository(repository);
 
-    return new HgDiffViewer(this, hgContextProvider.get(), repository);
+    if (config.isEnableHg4j())
+    {
+      diffViewer = new Hg4jDiffViewer(this, hgContextProvider.get(),
+                                      repository);
+    }
+    else
+    {
+      diffViewer = new DefaultHgDiffViewer(this, hgContextProvider.get(),
+              repository);
+    }
+
+    return diffViewer;
   }
 
   /**
