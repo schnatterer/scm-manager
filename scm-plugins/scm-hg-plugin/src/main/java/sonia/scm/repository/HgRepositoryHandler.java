@@ -207,7 +207,7 @@ public class HgRepositoryHandler
   }
 
   /**
-   * TODO create a Hg4j version.
+   * Method description
    *
    *
    * @param repository
@@ -217,10 +217,22 @@ public class HgRepositoryHandler
   @Override
   public BlameViewer getBlameViewer(Repository repository)
   {
+    BlameViewer blameViewer = null;
+
     assertHgRepository(repository);
 
-    return new HgBlameViewer(this, blameResultContext, hgContextProvider.get(),
-                             repository);
+    if (config.isEnableHg4j())
+    {
+      blameViewer = new Hg4jBlameViewer(this, hgContextProvider.get(),
+                                        repository);
+    }
+    else
+    {
+      blameViewer = new DefaultBlameViewer(this, blameResultContext,
+              hgContextProvider.get(), repository);
+    }
+
+    return blameViewer;
   }
 
   /**

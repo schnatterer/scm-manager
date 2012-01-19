@@ -53,7 +53,7 @@ import javax.xml.bind.JAXBContext;
  *
  * @author Sebastian Sdorra
  */
-public class HgBlameViewer extends AbstractHgHandler implements BlameViewer
+public class DefaultBlameViewer extends AbstractHgHandler implements BlameViewer
 {
 
   /** Field description */
@@ -61,7 +61,7 @@ public class HgBlameViewer extends AbstractHgHandler implements BlameViewer
 
   /** the logger for HgBlameViewer */
   private static final Logger logger =
-    LoggerFactory.getLogger(HgBlameViewer.class);
+    LoggerFactory.getLogger(DefaultBlameViewer.class);
 
   //~--- constructors ---------------------------------------------------------
 
@@ -74,7 +74,7 @@ public class HgBlameViewer extends AbstractHgHandler implements BlameViewer
    * @param repository
    * @param blameResultContext
    */
-  public HgBlameViewer(HgRepositoryHandler handler,
+  public DefaultBlameViewer(HgRepositoryHandler handler,
                        JAXBContext blameResultContext, HgContext context,
                        Repository repository)
   {
