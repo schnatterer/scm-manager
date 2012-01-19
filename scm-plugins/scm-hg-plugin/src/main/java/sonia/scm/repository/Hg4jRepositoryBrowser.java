@@ -43,6 +43,8 @@ import org.tmatesoft.hg.core.HgInvalidControlFileException;
 import org.tmatesoft.hg.core.HgManifestCommand;
 import org.tmatesoft.hg.core.HgRepoFacade;
 import org.tmatesoft.hg.core.Nodeid;
+import org.tmatesoft.hg.repo.HgRepository;
+import org.tmatesoft.hg.repo.HgSubrepoLocation;
 import org.tmatesoft.hg.util.Path;
 
 import sonia.scm.util.AssertUtil;
@@ -55,6 +57,8 @@ import sonia.scm.util.Util;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+
+import java.util.List;
 
 /**
  *
@@ -142,7 +146,9 @@ public class Hg4jRepositoryBrowser implements RepositoryBrowser
   }
 
   /**
-   * TODO handle sub repositories
+   * TODO handle sub repositories.
+   * Do not use {@link HgRepository#getSubrepositories()}, because it will only
+   * work with a working copy.
    *
    *
    * @param revision
