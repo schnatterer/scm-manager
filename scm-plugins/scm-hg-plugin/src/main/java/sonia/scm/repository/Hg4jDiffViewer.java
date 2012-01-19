@@ -66,6 +66,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -206,27 +207,54 @@ public class Hg4jDiffViewer implements DiffViewer
     PrintWriter writer = new PrintWriter(output);
     Nodeid parentId = changeset.getFirstParentRevision();
     int revision = changeset.getRevision();
-    int parentRevision = repository.getChangelog().getLocalRevision(parentId);
 
-    if (logger.isDebugEnabled())
+    if (parentId == Nodeid.NULL)
     {
-      logger.debug("create diff for {} and {} with path {}",
-                   new Object[] { parentId,
-                                  revision, filePath });
-    }
+      List<String> empty = Collections.EMPTY_LIST;
 
-    if (Util.isNotEmpty(filePath))
-    {
-      getDiff(repository, Path.create(filePath), parentRevision, revision,
-              writer);
+      if (Util.isNotEmpty(filePath))
+      {
+        Path path = Path.create(filePath);
+        List<String> content = getLines(repository, path, revision);
+
+        getDiff(path, empty, content, writer);
+      }
+      else
+      {
+        List<Path> paths = changeset.getAffectedFiles();
+
+        for (Path path : paths)
+        {
+          List<String> content = getLines(repository, path, revision);
+
+          getDiff(path, empty, content, writer);
+        }
+      }
     }
     else
     {
-      List<Path> paths = changeset.getAffectedFiles();
+      int parentRevision = repository.getChangelog().getLocalRevision(parentId);
 
-      for (Path path : paths)
+      if (logger.isDebugEnabled())
       {
-        getDiff(repository, path, parentRevision, revision, writer);
+        logger.debug("create diff for {} and {} with path {}",
+                     new Object[] { revision,
+                                    parentRevision, filePath });
+      }
+
+      if (Util.isNotEmpty(filePath))
+      {
+        getDiff(repository, Path.create(filePath), parentRevision, revision,
+                writer);
+      }
+      else
+      {
+        List<Path> paths = changeset.getAffectedFiles();
+
+        for (Path path : paths)
+        {
+          getDiff(repository, path, parentRevision, revision, writer);
+        }
       }
     }
 
@@ -255,6 +283,22 @@ public class Hg4jDiffViewer implements DiffViewer
   {
     List<String> content = getLines(repository, path, revision);
     List<String> parentContent = getLines(repository, path, parentRevision);
+
+    getDiff(path, parentContent, content, writer);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param path
+   * @param parentContent
+   * @param content
+   * @param writer
+   */
+  private void getDiff(Path path, List<String> parentContent,
+                       List<String> content, PrintWriter writer)
+  {
     Patch patch = DiffUtils.diff(parentContent, content);
 
     appendDiff(path, content, patch, writer);
