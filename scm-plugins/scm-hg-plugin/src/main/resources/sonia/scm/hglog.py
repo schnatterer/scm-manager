@@ -62,8 +62,9 @@ def printChangeset(repo, ctx):
   mods = status[0]
   added = status[1]
   deleted = status[2]
-  authorName = ctx.user();
+  authorName = ctx.user()
   authorMail = None
+  parents = ctx.parents()
   
   if authorName:
     s = authorName.find('<')
@@ -74,6 +75,10 @@ def printChangeset(repo, ctx):
   
   print '    <changeset>'
   print '      <id>' + str(ctx.rev()) + ':' + hex(ctx.node()[:6]) + '</id>'
+  if parents:
+    for parent in parents:
+      print '      <parents>' + str(parent.rev()) + ':' + hex(parent.node()[:6]) + '</parents>'
+  print '      <author>' + escape(ctx.user()) + '</author>'
   print '      <description>' + escape(ctx.description()) + '</description>'
   print '      <date>' + str(time).split('.')[0] + '</date>'
 
@@ -126,8 +131,7 @@ def printFooter():
   print '  </changesets>'
   print '</changeset-paging>'
 
-def printChangesetsForPath(repo, path):
-  rev = os.environ['SCM_REVISION']
+def printChangesetsForPath(repo, rev, path):
   if len(rev) <= 0:
     rev = "tip"
 
@@ -173,9 +177,14 @@ repo = hg.repository(ui.ui(), path = repositoryPath)
 path = os.environ['SCM_PATH']
 startNode = os.environ['SCM_REVISION_START']
 endNode = os.environ['SCM_REVISION_END']
+rev = os.environ['SCM_REVISION']
 
 if len(path) > 0:
-  printChangesetsForPath(repo, path)
+  printChangesetsForPath(repo, rev, path)
+elif len(rev) > 0:
+  ctx = repo[rev]
+  print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+  printChangeset(repo, ctx)
 else:
   if len(startNode) > 0 and len(endNode) > 0:
     # start and end revision

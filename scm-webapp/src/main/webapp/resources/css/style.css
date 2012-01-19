@@ -67,20 +67,9 @@ a.scm-link:hover {
   cursor: pointer;
 }
 
-#header {
-  margin: 5px;
-}
-
-#appTitle {
-  color: #004077;
-  font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
-  margin-top: 20px;
-  font-size: 14px;
-}
-
-#appTitle h1 {
-  font-size: 24px;
-  font-weight: bold;
+#north-panel {
+  background-image: url(../images/header-backgound.jpg);
+  background-repeat: repeat-x;
 }
 
 .right-side {
@@ -130,4 +119,30 @@ a.scm-link:hover {
 
 .cs-mod-txt {
   margin: 0 3px;
+}
+
+.changeset-tags {
+  margin-bottom: 5px;
+}
+
+.cs-tag, .cs-branch {
+  height: 18px;
+  vertical-align: middle;
+  display: inline-block;
+  border: 1px solid gray;
+  border-radius: 4px;
+}
+
+.cs-tag a, .cs-branch a {
+  padding: 5px;
+}
+
+.cs-tag {
+  background-image: url(../images/tag.gif);
+  background-repeat: no-repeat;
+  background-position: 1px 1px;
+}
+
+.cs-tag a {
+  margin-left: 16px;
 }

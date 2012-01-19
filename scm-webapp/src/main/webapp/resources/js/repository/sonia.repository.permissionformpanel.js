@@ -33,8 +33,8 @@ Sonia.repository.PermissionFormPanel = Ext.extend(Sonia.repository.FormPanel, {
 
   permissionStore: null,
   
-  addIcon: 'resources/images/add.gif',
-  removeIcon: 'resources/images/delete.gif',
+  addIcon: 'resources/images/add.png',
+  removeIcon: 'resources/images/delete.png',
   
   titleText: 'Permissions',
 
@@ -187,7 +187,7 @@ Sonia.repository.PermissionFormPanel = Ext.extend(Sonia.repository.FormPanel, {
           xtype: 'box',
           autoEl: {
             tag: 'img',
-            src: 'resources/images/help.gif'
+            src: 'resources/images/help.png'
           }
         }]
       }]

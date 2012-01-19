@@ -52,6 +52,7 @@ import sonia.scm.repository.GitRepositoryHookEvent;
 import sonia.scm.repository.RepositoryHookType;
 import sonia.scm.repository.RepositoryManager;
 import sonia.scm.repository.RepositoryNotFoundException;
+import sonia.scm.repository.RepositoryUtil;
 import sonia.scm.util.IOUtil;
 import sonia.scm.util.Util;
 
@@ -92,10 +93,13 @@ public class GitReceiveHook implements PreReceiveHook, PostReceiveHook
    *
    *
    * @param repositoryManager
+   * @param handler
    */
-  public GitReceiveHook(RepositoryManager repositoryManager)
+  public GitReceiveHook(RepositoryManager repositoryManager,
+                        GitRepositoryHandler handler)
   {
     this.repositoryManager = repositoryManager;
+    this.handler = handler;
   }
 
   //~--- methods --------------------------------------------------------------
@@ -213,7 +217,8 @@ public class GitReceiveHook implements PreReceiveHook, PostReceiveHook
   {
     try
     {
-      String repositoryName = directory.getName();
+      String repositoryName = RepositoryUtil.getRepositoryName(handler,
+                                directory);
       GitRepositoryHookEvent e = new GitRepositoryHookEvent(directory, newId,
                                    oldId, type);
 
@@ -361,6 +366,9 @@ public class GitReceiveHook implements PreReceiveHook, PostReceiveHook
   }
 
   //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private GitRepositoryHandler handler;
 
   /** Field description */
   private RepositoryManager repositoryManager;

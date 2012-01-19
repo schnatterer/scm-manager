@@ -188,6 +188,18 @@ public class GitRepositoryHandler
    * Method description
    *
    *
+   * @return
+   */
+  @Override
+  public ImportHandler getImportHandler()
+  {
+    return new GitImportHandler(this);
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param repository
    *
    * @return

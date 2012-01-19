@@ -48,6 +48,22 @@ public interface ChangesetViewer
    * Method description
    *
    *
+   * @param revision
+   *
+   * @return
+   *
+   * @since 1.12
+   *
+   * @throws IOException
+   * @throws RepositoryException
+   */
+  public Changeset getChangeset(String revision)
+          throws IOException, RepositoryException;
+
+  /**
+   * Method description
+   *
+   *
    *
    *
    * @param start

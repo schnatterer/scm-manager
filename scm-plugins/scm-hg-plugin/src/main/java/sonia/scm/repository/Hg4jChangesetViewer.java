@@ -102,6 +102,24 @@ public class Hg4jChangesetViewer implements HgChangesetViewer
    * Method description
    *
    *
+   * @param revision
+   *
+   * @return
+   *
+   * @throws IOException
+   * @throws RepositoryException
+   */
+  @Override
+  public Changeset getChangeset(String revision)
+          throws IOException, RepositoryException
+  {
+    return null;
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param startNode
    * @param endNode
    *

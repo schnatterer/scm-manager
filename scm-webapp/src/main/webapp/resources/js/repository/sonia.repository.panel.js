@@ -86,7 +86,8 @@ Sonia.repository.Panel = Ext.extend(Sonia.rest.Panel, {
       handler: this.reload
     },'-',{
       xtype: 'label',
-      text: 'Filter: '
+      text: 'Filter: ',
+      cls: 'ytb-text'
     }, '  ', {
       id: 'repositoryTypeFilter',
       xtype: 'combo',
@@ -112,7 +113,8 @@ Sonia.repository.Panel = Ext.extend(Sonia.rest.Panel, {
         '</div></tpl>'
     }, '  ',{
       xtype: 'label',
-      text: 'Search: '
+      text: 'Search: ',
+      cls: 'ytb-text'
     }, '  ',{
       id: 'repositorySearch',
       xtype: 'textfield',
@@ -299,7 +301,7 @@ Sonia.History.register('repositoryPanel', {
         var selected = false;
         panel.getGrid().getStore().addListener('load', function(){
           if (!selected){
-            panel.getGrid().selectedById(repoId);
+            panel.getGrid().selectById(repoId);
             selected = true;
           }
         });

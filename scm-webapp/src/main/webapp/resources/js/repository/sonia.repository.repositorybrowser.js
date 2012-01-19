@@ -36,9 +36,9 @@ Sonia.repository.RepositoryBrowser = Ext.extend(Ext.grid.GridPanel, {
   
   repositoryBrowserTitleText: 'Source {0}',
   
-  iconFolder: 'resources/images/folder.gif',
-  iconDocument: 'resources/images/document.gif',
-  iconSubRepository: 'resources/images/folder-remote.gif',
+  iconFolder: 'resources/images/folder.png',
+  iconDocument: 'resources/images/document.png',
+  iconSubRepository: 'resources/images/folder-remote.png',
   templateIcon: '<img src="{0}" alt="{1}" title="{2}" />',
   templateInternalLink: '<a class="scm-browser" rel="{1}">{0}</a>',
   templateExternalLink: '<a class="scm-browser" href="{1}" target="_blank">{0}</a>',
@@ -201,7 +201,13 @@ Sonia.repository.RepositoryBrowser = Ext.extend(Ext.grid.GridPanel, {
     if (debug){
       console.debug('open sub repository ' + subRepository);
     }
-    var id = 'repositoryBrowser;' + subRepository + ';null;null';
+    var revision = null;
+    var index = subRepository.indexOf(';');
+    if ( index > 0 ){
+      revision = subRepository.substring(index + 1);
+      subRepository = subRepository.substring(0, index);
+    }
+    var id = 'repositoryBrowser;' + subRepository + ';' + revision + ';null';
     Sonia.repository.get(subRepository, function(repository){
       var panel = Ext.getCmp(id);
       if (! panel){
@@ -209,7 +215,7 @@ Sonia.repository.RepositoryBrowser = Ext.extend(Ext.grid.GridPanel, {
           id: id,
           xtype: 'repositoryBrowser',
           repository : repository,
-          revision: null,
+          revision: revision,
           closable: true,
           autoScroll: true
         }
@@ -323,13 +329,16 @@ Sonia.repository.RepositoryBrowser = Ext.extend(Ext.grid.GridPanel, {
     return url;
   },
   
-  transformLink: function(url){
+  transformLink: function(url, revision){
     var link = null;
     var server = Sonia.util.getServername(url);
     if ( server == window.location.hostname || server == 'localhost' ){
       var repositoryPath = this.getRepositoryPath( url );
       if (repositoryPath){
         link = 'sub:' + repositoryPath;
+        if (revision){
+          link += ';' + revision;
+        }
       }
     }
     return link;
@@ -346,7 +355,7 @@ Sonia.repository.RepositoryBrowser = Ext.extend(Ext.grid.GridPanel, {
       if (!subRepositoryUrl){
         subRepositoryUrl = subRepository['repository-url'];
       }
-      path = this.transformLink(subRepositoryUrl);
+      path = this.transformLink(subRepositoryUrl, subRepository['revision']);
       if ( path ){
         template = this.templateInternalLink;
       } else {

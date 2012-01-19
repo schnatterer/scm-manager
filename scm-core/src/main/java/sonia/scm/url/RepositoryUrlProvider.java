@@ -84,6 +84,19 @@ public interface RepositoryUrlProvider extends ModelUrlProvider
    *
    *
    * @param repositoryId
+   * @param revision
+   *
+   * @return
+   * 
+   * @since 1.12
+   */
+  public String getChangesetUrl(String repositoryId, String revision);
+
+  /**
+   * Method description
+   *
+   *
+   * @param repositoryId
    * @param start
    * @param limit
    *
@@ -103,6 +116,18 @@ public interface RepositoryUrlProvider extends ModelUrlProvider
    */
   public String getContentUrl(String repositoryId, String path,
                               String revision);
+
+  /**
+   * Method description
+   *
+   *
+   * @param type
+   * @param name
+   *
+   * @return
+   * @since 1.11
+   */
+  public String getDetailUrl(String type, String name);
 
   /**
    * Method description

@@ -33,6 +33,10 @@
 
 package sonia.scm.url;
 
+//~--- non-JDK imports --------------------------------------------------------
+
+import sonia.scm.util.HttpUtil;
+
 /**
  *
  * @author Sebastian Sdorra
@@ -52,10 +56,18 @@ public class WUIRepositoryUrlProvider extends WUIModelUrlProvider
   public static final String COMPONENT_CONTENT = "contentPanel";
 
   /** Field description */
+  public static final String COMPONENT_DETAIL = "repositoryPanel";
+
+  /** Field description */
   public static final String COMPONENT_DIFF = "diffPanel";
 
   /** Field description */
   public static final String VIEW_BLAME = "blame";
+
+  /**
+   * @since 1.12
+   */
+  public static final String VIEW_CHANGESET = "changeset";
 
   /** Field description */
   public static final String VIEW_CONTENT = "content";
@@ -93,6 +105,8 @@ public class WUIRepositoryUrlProvider extends WUIModelUrlProvider
   @Override
   public String getBlameUrl(String repositoryId, String path, String revision)
   {
+    revision = UrlUtil.fixRevision(revision);
+
     return new WUIUrlBuilder(baseUrl, COMPONENT_CONTENT).append(
         repositoryId).append(revision).append(path).append(
         VIEW_BLAME).toString();
@@ -111,6 +125,8 @@ public class WUIRepositoryUrlProvider extends WUIModelUrlProvider
   @Override
   public String getBrowseUrl(String repositoryId, String path, String revision)
   {
+    revision = UrlUtil.fixRevision(revision);
+
     return new WUIUrlBuilder(baseUrl, COMPONENT_BROWSER).append(
         repositoryId).append(revision).append(path).toString();
   }
@@ -131,6 +147,7 @@ public class WUIRepositoryUrlProvider extends WUIModelUrlProvider
   public String getChangesetUrl(String repositoryId, String path,
                                 String revision, int start, int limit)
   {
+    revision = UrlUtil.fixRevision(revision);
 
     // TODO handle start and limit
     return new WUIUrlBuilder(baseUrl, COMPONENT_CONTENT).append(
@@ -160,6 +177,26 @@ public class WUIRepositoryUrlProvider extends WUIModelUrlProvider
    *
    *
    * @param repositoryId
+   * @param revision
+   *
+   * @return
+   *
+   * @since 1.12
+   */
+  @Override
+  public String getChangesetUrl(String repositoryId, String revision)
+  {
+    revision = UrlUtil.fixRevision(revision);
+
+    return new WUIUrlBuilder(baseUrl, VIEW_CHANGESET).append(
+        repositoryId).append(revision).toString();
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param repositoryId
    * @param path
    * @param revision
    *
@@ -168,9 +205,29 @@ public class WUIRepositoryUrlProvider extends WUIModelUrlProvider
   @Override
   public String getContentUrl(String repositoryId, String path, String revision)
   {
+    revision = UrlUtil.fixRevision(revision);
+
     return new WUIUrlBuilder(baseUrl, COMPONENT_CONTENT).append(
         repositoryId).append(revision).append(path).append(
         VIEW_HISTORY).toString();
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param type
+   * @param name
+   *
+   * @return
+   * @since 1.11
+   */
+  @Override
+  public String getDetailUrl(String type, String name)
+  {
+    name = type.concat(HttpUtil.SEPARATOR_PATH).concat(name);
+
+    return new WUIUrlBuilder(baseUrl, COMPONENT_DETAIL).append(name).toString();
   }
 
   /**
@@ -185,6 +242,8 @@ public class WUIRepositoryUrlProvider extends WUIModelUrlProvider
   @Override
   public String getDiffUrl(String repositoryId, String revision)
   {
+    revision = UrlUtil.fixRevision(revision);
+
     return new WUIUrlBuilder(baseUrl, COMPONENT_DIFF).append(
         repositoryId).append(revision).toString();
   }
