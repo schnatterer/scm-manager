@@ -58,7 +58,8 @@ public class DefaultHgChangesetViewerTest extends HgChangesetViewerTestBase
           HgRepositoryHandler handler, File repositoryDirectory)
   {
     return new DefaultHgChangesetViewer(handler,
-            handler.getChangesetPagingResultContext(), null, handler.getHgContext(),
+            handler.getChangesetPagingResultContext(),
+            handler.getChangesetContext(), handler.getHgContext(),
             repositoryDirectory);
   }
 }

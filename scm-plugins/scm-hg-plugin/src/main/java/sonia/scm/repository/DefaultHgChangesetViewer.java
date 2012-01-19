@@ -80,8 +80,8 @@ public class DefaultHgChangesetViewer extends AbstractHgHandler
    */
   public DefaultHgChangesetViewer(HgRepositoryHandler handler,
                                   JAXBContext changesetPagingResultContext,
-                                  JAXBContext changesetContext, HgContext context,
-                                  File repositoryDirectory)
+                                  JAXBContext changesetContext,
+                                  HgContext context, File repositoryDirectory)
   {
     super(handler, changesetPagingResultContext, context, repositoryDirectory);
     this.changesetContext = changesetContext;
@@ -100,8 +100,8 @@ public class DefaultHgChangesetViewer extends AbstractHgHandler
    */
   public DefaultHgChangesetViewer(HgRepositoryHandler handler,
                                   JAXBContext changesetPagingResultContext,
-                                  JAXBContext changesetContext, HgContext context,
-                                  Repository repository)
+                                  JAXBContext changesetContext,
+                                  HgContext context, Repository repository)
   {
     super(handler, changesetPagingResultContext, context, repository);
     this.changesetContext = changesetContext;

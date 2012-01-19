@@ -72,8 +72,8 @@ public class DefaultHgRepositoryBrowser extends AbstractHgHandler
    * @param browserResultContext
    */
   public DefaultHgRepositoryBrowser(HgRepositoryHandler handler,
-                             JAXBContext browserResultContext,
-                             HgContext context, Repository repository)
+                                    JAXBContext browserResultContext,
+                                    HgContext context, Repository repository)
   {
     super(handler, browserResultContext, context, repository);
   }

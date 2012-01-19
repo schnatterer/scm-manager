@@ -240,6 +240,17 @@ public class HgRepositoryHandler
    *
    * @return
    */
+  public JAXBContext getChangesetContext()
+  {
+    return changesetContext;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
   public JAXBContext getChangesetPagingResultContext()
   {
     return changesetPagingResultContext;
@@ -268,9 +279,8 @@ public class HgRepositoryHandler
     else
     {
       changesetViewer = new DefaultHgChangesetViewer(this,
-              changesetPagingResultContext, changesetContext, 
-              hgContextProvider.get(),
-              repository);
+              changesetPagingResultContext, changesetContext,
+              hgContextProvider.get(), repository);
     }
 
     return changesetViewer;
@@ -440,7 +450,7 @@ public class HgRepositoryHandler
     {
       throw new IllegalStateException("directory not found");
     }
-    
+
     HgChangesetViewer changesetViewer = null;
 
     if (config.isEnableHg4j())
@@ -450,7 +460,7 @@ public class HgRepositoryHandler
     }
     else
     {
-      changesetViewer = new DefaultHgChangesetViewer(this, changesetContext, 
+      changesetViewer = new DefaultHgChangesetViewer(this, changesetContext,
               changesetPagingResultContext, hgContextProvider.get(),
               repositoryDirectory);
     }
