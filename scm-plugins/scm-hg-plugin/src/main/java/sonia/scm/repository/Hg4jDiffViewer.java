@@ -299,31 +299,47 @@ public class Hg4jDiffViewer implements DiffViewer
     List<String> lines = new ArrayList<String>();
     HgDataFile file = repository.getFileNode(path);
 
-    revision = file.getLocalRevision(getFileRevision(repository, revision,
-            path));
-
-    ByteArrayChannel channel = new ByteArrayChannel();
-
-    file.content(revision, channel);
-
-    BufferedReader reader = null;
-
-    try
+    if (file.exists())
     {
-      reader = new BufferedReader(
-          new InputStreamReader(new ByteArrayInputStream(channel.toArray())));
+      Nodeid fileRevision = getFileRevision(repository, revision, path);
 
-      String line = reader.readLine();
-
-      while (line != null)
+      if (fileRevision != null)
       {
-        lines.add(line);
-        line = reader.readLine();
+        revision = file.getLocalRevision(fileRevision);
+
+        ByteArrayChannel channel = new ByteArrayChannel();
+
+        file.content(revision, channel);
+
+        BufferedReader reader = null;
+
+        try
+        {
+          reader = new BufferedReader(
+              new InputStreamReader(
+                  new ByteArrayInputStream(channel.toArray())));
+
+          String line = reader.readLine();
+
+          while (line != null)
+          {
+            lines.add(line);
+            line = reader.readLine();
+          }
+        }
+        finally
+        {
+          IOUtil.close(reader);
+        }
+      }
+      else if (logger.isDebugEnabled())
+      {
+        logger.debug("file {} is not available in revision {}", path, revision);
       }
     }
-    finally
+    else
     {
-      IOUtil.close(reader);
+      throw new IOException("could not find file revision");
     }
 
     return lines;
