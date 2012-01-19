@@ -186,7 +186,7 @@ public class Hg4jDiffViewer implements DiffViewer
   //~--- get methods ----------------------------------------------------------
 
   /**
-   * Method description
+   * TODO create diff for merges
    *
    *
    * @param repository
