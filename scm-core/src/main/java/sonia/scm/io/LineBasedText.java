@@ -217,6 +217,19 @@ public class LineBasedText implements Iterable<String>
    * Method description
    *
    *
+   * @param line
+   *
+   * @return
+   */
+  public boolean contains(String line)
+  {
+    return lines.contains(line);
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @return
    */
   @Override
@@ -314,6 +327,52 @@ public class LineBasedText implements Iterable<String>
   public List<String> getLines()
   {
     return lines;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param lines
+   *
+   * @return
+   */
+  public LineBasedText getNewLines(LineBasedText lines)
+  {
+    LineBasedText result = create();
+
+    for (String line : lines)
+    {
+      if (!contains(line))
+      {
+        result.append(line);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param lines
+   *
+   * @return
+   */
+  public LineBasedText getSameLines(LineBasedText lines)
+  {
+    LineBasedText result = create();
+
+    for (String line : lines)
+    {
+      if (contains(line))
+      {
+        result.append(line);
+      }
+    }
+
+    return result;
   }
 
   //~--- fields ---------------------------------------------------------------
