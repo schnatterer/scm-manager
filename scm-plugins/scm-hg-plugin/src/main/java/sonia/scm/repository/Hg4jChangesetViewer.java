@@ -45,7 +45,11 @@ import org.tmatesoft.hg.core.HgLogCommand;
 import org.tmatesoft.hg.core.HgRepoFacade;
 import org.tmatesoft.hg.core.Nodeid;
 import org.tmatesoft.hg.repo.HgChangelog;
+import org.tmatesoft.hg.repo.HgDataFile;
 import org.tmatesoft.hg.repo.HgRepository;
+import org.tmatesoft.hg.util.Path;
+
+import sonia.scm.util.Hg4jUtil;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -221,7 +225,7 @@ public class Hg4jChangesetViewer implements HgChangesetViewer
    * Method description
    *
    *
-   * @param path
+   * @param filePath
    * @param revision
    * @param start
    * @param max
@@ -232,7 +236,7 @@ public class Hg4jChangesetViewer implements HgChangesetViewer
    * @throws RepositoryException
    */
   @Override
-  public ChangesetPagingResult getChangesets(final String path,
+  public ChangesetPagingResult getChangesets(final String filePath,
           final String revision, final int start, final int max)
           throws IOException, RepositoryException
   {
@@ -243,10 +247,12 @@ public class Hg4jChangesetViewer implements HgChangesetViewer
               HgLogCommand lc, int total)
               throws HgInvalidControlFileException, HgDataStreamException
       {
-        List<HgChangeset> changesets = facade.createLogCommand().file(
-                                           path, false).changeset(
-                                           Nodeid.fromAscii(
-                                             revision)).execute();
+        Path path = Path.create(filePath);
+        HgRepository repository = facade.getRepository();
+        HgDataFile file = repository.getFileNode(path);
+        int rev = Hg4jUtil.getFileRevision(repository, revision, file, path);
+        List<HgChangeset> changesets = facade.createLogCommand().range(0,
+                                         rev).file(path, false).execute();
         int listStart = start;
 
         if (listStart < 0)
@@ -260,6 +266,12 @@ public class Hg4jChangesetViewer implements HgChangesetViewer
         if ((listMax <= 0) || (listMax > listLength))
         {
           listMax = listLength;
+        }
+
+        if (changesets != null)
+        {
+          changesets = new ArrayList<HgChangeset>(changesets);
+          Collections.reverse(changesets);
         }
 
         changesets = changesets.subList(listStart, listMax);
