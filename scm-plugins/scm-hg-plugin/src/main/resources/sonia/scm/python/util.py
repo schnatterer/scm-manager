@@ -37,6 +37,8 @@ from mercurial import hg, ui, commands, encoding
 from mercurial.node import hex
 from xml.dom.minidom import Document
 
+hgEncoding = os.environ['HGENCODING']
+
 # util methods
 def openRepository():
   repositoryPath = os.environ['SCM_REPOSITORY_PATH']
@@ -44,7 +46,7 @@ def openRepository():
 
 def writeXml(doc):
   # print doc.toprettyxml(indent="  ")
-  doc.writexml(sys.stdout, encoding='UTF-8')
+  doc.writexml(sys.stdout, encoding=hgEncoding)
 
 def createChildNode(doc, parentNode, name):
   node = doc.createElement(name)
@@ -52,7 +54,9 @@ def createChildNode(doc, parentNode, name):
   return node
 
 def appendValue(doc, node, value):
-  textNode = doc.createTextNode(encoding.tolocal(value))
+  if hgEncoding == 'UTF-8':
+    value = encoding.tolocal(value)
+  textNode = doc.createTextNode(value)
   node.appendChild(textNode)
   
 def appendTextNode(doc, parentNode, name, value):

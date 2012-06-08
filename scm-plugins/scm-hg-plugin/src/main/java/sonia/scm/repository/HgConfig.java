@@ -63,6 +63,17 @@ public class HgConfig extends SimpleRepositoryConfig
    *
    * @return
    */
+  public String getEncoding()
+  {
+    return encoding;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
   public String getHgBinary()
   {
     return hgBinary;
@@ -120,6 +131,17 @@ public class HgConfig extends SimpleRepositoryConfig
    * Method description
    *
    *
+   * @param encoding
+   */
+  public void setEncoding(String encoding)
+  {
+    this.encoding = encoding;
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param hgBinary
    */
   public void setHgBinary(String hgBinary)
@@ -161,6 +183,9 @@ public class HgConfig extends SimpleRepositoryConfig
   }
 
   //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private String encoding = "UTF-8";
 
   /** Field description */
   private String hgBinary;

@@ -68,7 +68,7 @@ public class AbstractHgHandler
 {
 
   /** Field description */
-  public static final String ENCODING = "UTF-8";
+  public static final String DEFAULT_ENCODING = "UTF-8";
 
   /** mercurial encoding */
   public static final String ENV_HGENCODING = "HGENCODING";
@@ -401,11 +401,17 @@ public class AbstractHgHandler
 
     pb.directory(directory);
 
+    // set encoding if available, else set encoding to utd-8
     Map<String, String> env = pb.environment();
+    String encoding = config.getEncoding();
 
-    // force utf-8 encoding for mercurial and python
-    env.put(ENV_PYTHONIOENCODING, ENCODING);
-    env.put(ENV_HGENCODING, ENCODING);
+    if (Util.isEmpty(encoding))
+    {
+      encoding = DEFAULT_ENCODING;
+    }
+
+    env.put(ENV_PYTHONIOENCODING, encoding);
+    env.put(ENV_HGENCODING, encoding);
 
     if (context.isSystemEnvironment())
     {
