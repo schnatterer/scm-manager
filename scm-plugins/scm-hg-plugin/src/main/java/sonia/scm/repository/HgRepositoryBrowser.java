@@ -35,9 +35,10 @@ package sonia.scm.repository;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import sonia.scm.util.IOUtil;
-import sonia.scm.util.Util;
-import sonia.scm.web.HgUtil;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -56,6 +57,14 @@ import javax.xml.bind.JAXBContext;
 public class HgRepositoryBrowser extends AbstractHgHandler
         implements RepositoryBrowser
 {
+
+  /**
+   * the logger for HgRepositoryBrowser
+   */
+  private static final Logger logger =
+    LoggerFactory.getLogger(HgRepositoryBrowser.class);
+
+  //~--- constructors ---------------------------------------------------------
 
   /**
    * Constructs ...
@@ -91,9 +100,14 @@ public class HgRepositoryBrowser extends AbstractHgHandler
   public void getContent(String revision, String path, OutputStream output)
           throws IOException, RepositoryException
   {
-    revision = HgUtil.getRevision(revision);
+    if (logger.isDebugEnabled())
+    {
+      logger.debug("try to retrive content of {} at revision {}", path,
+                   revision);
+    }
 
-    Process p = createHgProcess("cat", "-r", revision, Util.nonNull(path));
+    Process p = createScriptProcess(HgPythonScript.CAT,
+                                    createEnvironment(revision, path));
     InputStream input = null;
 
     try
@@ -124,6 +138,11 @@ public class HgRepositoryBrowser extends AbstractHgHandler
   public BrowserResult getResult(String revision, String path)
           throws IOException, RepositoryException
   {
+    if (logger.isDebugEnabled())
+    {
+      logger.debug("list files of {} at revision {}", path, revision);
+    }
+
     Map<String, String> env = createEnvironment(revision, path);
 
     return getResultFromScript(BrowserResult.class, HgPythonScript.FILELOG,
