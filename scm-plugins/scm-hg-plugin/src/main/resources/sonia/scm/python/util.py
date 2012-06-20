@@ -53,30 +53,30 @@ def createChildNode(doc, parentNode, name):
   parentNode.appendChild(node)
   return node
 
-def appendValue(doc, node, value):
-  if hgEncoding == 'UTF-8':
+def appendValue(doc, node, value, decode=False):
+  if decode:
     value = encoding.tolocal(value)
   textNode = doc.createTextNode(value)
   node.appendChild(textNode)
   
-def appendTextNode(doc, parentNode, name, value):
+def appendTextNode(doc, parentNode, name, value, decode=False):
   node = createChildNode(doc, parentNode, name)
-  appendValue(doc, node, value)
+  appendValue(doc, node, value, decode=decode)
   
 def appendDateNode(doc, parentNode, nodeName, date):
   time = int(date[0]) * 1000
   date = str(time).split('.')[0]
   appendTextNode(doc, parentNode, nodeName, date)
   
-def appendListNodes(doc, parentNode, name, values):
+def appendListNodes(doc, parentNode, name, values, decode=False):
   if values:
     for value in values:
-      appendTextNode(doc, parentNode, name, value)
+      appendTextNode(doc, parentNode, name, value, decode=decode)
 
-def appendWrappedListNodes(doc, parentNode, wrapperName, name, values):
+def appendWrappedListNodes(doc, parentNode, wrapperName, name, values, decode=False):
   if values:
     wrapperNode = createChildNode(doc, parentNode, wrapperName)
-    appendListNodes(doc, wrapperNode, name, values)
+    appendListNodes(doc, wrapperNode, name, values, decode=decode)
     
 def getId(ctx):
   return str(ctx.rev()) + ':' + hex(ctx.node()[:6])
