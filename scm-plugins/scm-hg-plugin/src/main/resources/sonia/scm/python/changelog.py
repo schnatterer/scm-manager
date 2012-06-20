@@ -117,7 +117,7 @@ def appendChangesetsForStartAndEnd(doc, repo, startRev, endRev):
 repo = openRepository()
 doc = Document()
 
-path = os.environ['SCM_PATH']
+path = getPathParameter()
 startNode = os.environ['SCM_REVISION_START']
 endNode = os.environ['SCM_REVISION_END']
 rev = os.environ['SCM_REVISION']

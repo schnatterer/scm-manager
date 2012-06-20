@@ -145,7 +145,7 @@ def appendFileNodes(doc, parentNode, repo, revision):
 
 repo = openRepository()
 revision = os.environ['SCM_REVISION']
-path = os.environ['SCM_PATH']
+path = getPathParameter()
 
 # create document and append nodes
 

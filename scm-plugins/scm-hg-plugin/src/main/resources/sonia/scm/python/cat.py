@@ -38,7 +38,7 @@ from mercurial import ui, commands, encoding
 # import utils
 from util import *
 
-path=encoding.tolocal(os.environ['SCM_PATH'])
+path=getPathParameter()
 revision=os.environ['SCM_REVISION']
 
 repository=openRepository()

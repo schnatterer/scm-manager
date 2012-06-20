@@ -57,7 +57,7 @@ def appendBlameLines(doc, repo, revision, path):
 
 repo = openRepository()
 revision = os.environ['SCM_REVISION']
-path = os.environ['SCM_PATH']
+path = getPathParameter()
 
 doc = Document()
 appendBlameLines(doc, repo, revision, path)

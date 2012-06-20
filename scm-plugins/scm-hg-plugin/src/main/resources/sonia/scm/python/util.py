@@ -93,3 +93,6 @@ def appendAuthorNodes(doc, parentNode, ctx):
       authorName = authorName[0:s].strip()
       appendTextNode(doc, authorNode, 'mail', authorMail)
     appendTextNode(doc, authorNode, 'name', authorName)
+
+def getPathParameter():
+  return encoding.tolocal(os.environ['SCM_PATH'])
