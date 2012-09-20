@@ -56,6 +56,7 @@ import sonia.scm.web.security.LocalSecurityContextHolder;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
 /**
@@ -100,8 +101,8 @@ public class ScmContextListener extends GuiceServletContextListener
 
       // call destroy event
       globalInjector.getInstance(
-          ServletContextListenerHolder.class).contextDestroyed(
-          servletContextEvent);
+        ServletContextListenerHolder.class).contextDestroyed(
+        servletContextEvent);
     }
 
     super.contextDestroyed(servletContextEvent);
@@ -116,6 +117,8 @@ public class ScmContextListener extends GuiceServletContextListener
   @Override
   public void contextInitialized(ServletContextEvent servletContextEvent)
   {
+    this.servletContext = servletContextEvent.getServletContext();
+
     if (SCMContext.getContext().getStartupError() == null)
     {
       ScmUpgradeHandler upgradeHandler = new ScmUpgradeHandler();
@@ -133,8 +136,8 @@ public class ScmContextListener extends GuiceServletContextListener
     if ((globalInjector != null) &&!startupError)
     {
       globalInjector.getInstance(
-          ServletContextListenerHolder.class).contextInitialized(
-          servletContextEvent);
+        ServletContextListenerHolder.class).contextInitialized(
+        servletContextEvent);
     }
   }
 
@@ -169,7 +172,7 @@ public class ScmContextListener extends GuiceServletContextListener
    */
   private Injector getDefaultInjector()
   {
-    PluginLoader pluginLoader = new DefaultPluginLoader();
+    PluginLoader pluginLoader = new DefaultPluginLoader(servletContext);
     BindingExtensionProcessor bindExtProcessor =
       new BindingExtensionProcessor();
 
@@ -231,6 +234,9 @@ public class ScmContextListener extends GuiceServletContextListener
 
   /** Field description */
   private Injector globalInjector;
+
+  /** Field description */
+  private ServletContext servletContext;
 
   /** Field description */
   private boolean startupError = false;

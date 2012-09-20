@@ -35,6 +35,8 @@ package sonia.scm.plugin;
 
 //~--- JDK imports ------------------------------------------------------------
 
+import java.net.URL;
+
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -91,7 +93,10 @@ public class Plugin
    *
    *
    * @return
+   *
+   * @deprecated use {@link #getUrl()} instead.
    */
+  @Deprecated
   public String getPath()
   {
     return path;
@@ -106,6 +111,17 @@ public class Plugin
   public PluginResources getResources()
   {
     return resources;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  public URL getUrl()
+  {
+    return url;
   }
 
   //~--- set methods ----------------------------------------------------------
@@ -149,6 +165,7 @@ public class Plugin
    *
    *
    * @param path
+   * @deprecated use {@link #setUrl(java.net.URL)} instead
    */
   public void setPath(String path)
   {
@@ -166,6 +183,17 @@ public class Plugin
     this.resources = resources;
   }
 
+  /**
+   * Method description
+   *
+   *
+   * @param url
+   */
+  public void setUrl(URL url)
+  {
+    this.url = url;
+  }
+
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
@@ -180,10 +208,16 @@ public class Plugin
   @XmlElementWrapper(name = "packages")
   private Set<String> packageSet;
 
-  /** Field description */
+  /**
+   * @deprecated use {@link #url} instead.
+   */
   @XmlTransient
   private String path;
 
   /** Field description */
   private PluginResources resources;
+
+  /** Field description */
+  @XmlTransient
+  private URL url;
 }

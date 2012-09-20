@@ -51,6 +51,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 
@@ -58,6 +59,8 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.servlet.ServletContext;
 
 import javax.xml.bind.JAXB;
 
@@ -87,9 +90,13 @@ public class DefaultPluginLoader implements PluginLoader
   /**
    * Constructs ...
    *
+   *
+   * @param servletContext
    */
-  public DefaultPluginLoader()
+  public DefaultPluginLoader(ServletContext servletContext)
   {
+    this.servletContext = servletContext;
+
     ClassLoader classLoader = getClassLoader();
 
     try
@@ -122,7 +129,7 @@ public class DefaultPluginLoader implements PluginLoader
       if (logger.isDebugEnabled())
       {
         logger.debug("search extensions from plugin {}",
-                     plugin.getInformation().getId());
+          plugin.getInformation().getId());
       }
 
       InputStream input = null;
@@ -138,39 +145,61 @@ public class DefaultPluginLoader implements PluginLoader
 
         packageSet.add(SCMContext.DEFAULT_PACKAGE);
 
-        File pluginFile = new File(plugin.getPath());
+        URL pluginUrl = plugin.getUrl();
 
-        if (pluginFile.exists())
+        if (pluginUrl != null)
         {
-          if (logger.isTraceEnabled())
-          {
-            String type = pluginFile.isDirectory()
-                          ? "directory"
-                          : "jar";
+          URI pluginUri = pluginUrl.toURI();
 
-            logger.trace("search extensions in packages {} of {} plugin {}",
-                         new Object[] { packageSet,
-                                        type, pluginFile });
-          }
-
-          if (pluginFile.isDirectory())
+          if (pluginUri.getScheme().equals("file"))
           {
-            scanner.processExtensions(classLoader, extensions, pluginFile,
-                                      packageSet);
+            File pluginFile = new File(pluginUri);
+
+            if (logger.isTraceEnabled())
+            {
+              String type = pluginFile.isDirectory()
+                ? "directory"
+                : "jar";
+
+              logger.trace("search extensions in packages {} of {} plugin {}",
+                new Object[] { packageSet,
+                type, pluginFile });
+            }
+
+            if (pluginFile.isDirectory())
+            {
+              scanner.processExtensions(classLoader, extensions, pluginFile,
+                packageSet);
+            }
+            else
+            {
+              input = new FileInputStream(pluginFile);
+              scanner.processExtensions(classLoader, extensions, input,
+                packageSet);
+            }
           }
           else
           {
-            input = new FileInputStream(plugin.getPath());
+            if (logger.isTraceEnabled())
+            {
+              logger.trace("search extensions in packages {} of plugin {}",
+                new Object[] { packageSet,
+                plugin.getUrl() });
+            }
+
+            input = plugin.getUrl().openStream();
             scanner.processExtensions(classLoader, extensions, input,
-                                      packageSet);
+              packageSet);
           }
+
         }
+
         else
         {
           logger.error("could not find plugin file {}", plugin.getPath());
         }
       }
-      catch (IOException ex)
+      catch (Exception ex)
       {
         logger.error("error during extension processing", ex);
       }
@@ -238,7 +267,7 @@ public class DefaultPluginLoader implements PluginLoader
     else if (logger.isTraceEnabled())
     {
       logger.trace(
-          "{} seems not to be a file path or the file does not exists", path);
+        "{} seems not to be a file path or the file does not exists", path);
     }
 
     return path;
@@ -293,13 +322,14 @@ public class DefaultPluginLoader implements PluginLoader
 
     try
     {
+      URL pluginFileUrl = null;
+
       if (path.startsWith("file:"))
       {
         path = path.substring("file:".length(),
-                              path.length()
-                              - "/META-INF/scm/plugin.xml".length());
+          path.length() - "/META-INF/scm/plugin.xml".length());
       }
-      else
+      else if (path.startsWith("jar:file:"))
       {
 
         // jar:file:/some/path/file.jar!/META-INF/scm/plugin.xml
@@ -307,13 +337,27 @@ public class DefaultPluginLoader implements PluginLoader
         path = decodePath(path);
       }
 
-      boolean corePlugin = path.matches(REGE_COREPLUGIN);
+      // jboss uses vfs fs
+      else if (path.startsWith("vfs:/"))
+      {
+
+        // vfs:/content/scm.war/WEB-INF/lib/plugin.jar/META-INF/scm/plugin.xml
+        path = path.substring("vfs:/content/".length());
+        path = path.substring(path.indexOf("/"));
+        path = path.substring(0,
+          path.length() - "/META-INF/scm/plugin.xml".length());
+
+        pluginFileUrl = servletContext.getResource(path);
+      }
+
+      boolean corePlugin = path.startsWith("vfs:/")
+                           || path.matches(REGE_COREPLUGIN);
 
       if (logger.isInfoEnabled())
       {
         logger.info("load {}plugin {}", corePlugin
-                                         ? "core "
-                                         : " ", path);
+          ? "core "
+          : " ", path);
       }
 
       Plugin plugin = JAXB.unmarshal(url, Plugin.class);
@@ -328,10 +372,16 @@ public class DefaultPluginLoader implements PluginLoader
       if (info != null)
       {
         info.setState(corePlugin
-                      ? PluginState.CORE
-                      : PluginState.INSTALLED);
+          ? PluginState.CORE
+          : PluginState.INSTALLED);
       }
 
+      if (pluginFileUrl == null)
+      {
+        pluginFileUrl = new File(path).toURI().toURL();
+      }
+
+      plugin.setUrl(pluginFileUrl);
       plugin.setPath(path);
 
       if (logger.isDebugEnabled())
@@ -376,4 +426,7 @@ public class DefaultPluginLoader implements PluginLoader
 
   /** Field description */
   private Set<Plugin> installedPlugins = new HashSet<Plugin>();
+
+  /** Field description */
+  private ServletContext servletContext;
 }
