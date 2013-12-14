@@ -6,7 +6,7 @@
   <groupId>sonia.scm</groupId>
   <artifactId>scm</artifactId>
   <packaging>pom</packaging>
-  <version>1.29-SNAPSHOT</version>
+  <version>1.35-SNAPSHOT</version>
   <description>
     The easiest way to share your Git, Mercurial
     and Subversion repositories over http.
@@ -251,7 +251,7 @@
         <configuration>
           <pushChanges>false</pushChanges>
           <localCheckout>true</localCheckout>
-          <releaseProfiles>release,APIviz</releaseProfiles>
+          <releaseProfiles>release,APIviz,doc</releaseProfiles>
           <tagNameFormat>@{project.version}</tagNameFormat>
         </configuration>
       </plugin>
@@ -417,21 +417,24 @@
     <junit.version>4.11</junit.version>
 
     <!-- logging libraries -->
-    <slf4j.version>1.7.2</slf4j.version>
-    <logback.version>1.0.9</logback.version>
+    <slf4j.version>1.7.5</slf4j.version>
+    <logback.version>1.0.13</logback.version>
     <servlet.version>2.5</servlet.version>
     <guice.version>3.0</guice.version>
-    <jersey.version>1.17</jersey.version>
-    <ehcache.version>2.6.3</ehcache.version>
-    <freemarker.version>2.3.19</freemarker.version>
-    <jetty.version>7.6.8.v20121106</jetty.version>
+    <jersey.version>1.17.1</jersey.version>
+    <ehcache.version>2.6.6</ehcache.version>
+    <freemarker.version>2.3.20</freemarker.version>
+    <jetty.version>7.6.13.v20130916</jetty.version>
 
     <!-- security libraries -->
-    <shiro.version>1.2.1-scm1</shiro.version>
+    <shiro.version>1.2.2</shiro.version>
 
     <!-- repostitory libraries -->
-    <jgit.version>2.2.0.201212191850-r</jgit.version>
-    <svnkit.version>1.7.8-scm1</svnkit.version>
+    <jgit.version>3.0.0.201306101825-r</jgit.version>
+    <svnkit.version>1.7.10-scm3</svnkit.version>
+    
+    <!-- util libraries -->
+    <guava.version>15.0</guava.version>
 
     <!-- build properties -->
     <project.build.javaLevel>1.6</project.build.javaLevel>

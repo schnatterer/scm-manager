@@ -39,12 +39,20 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+import org.eclipse.jgit.api.FetchCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffFormatter;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RepositoryCache;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.util.FS;
 
@@ -59,6 +67,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -81,6 +90,15 @@ public final class GitUtil
 
   /** Field description */
   private static final String PREFIX_TAG = "refs/tags/";
+
+  /** Field description */
+  private static final String REFSPEC = "+refs/heads/*:refs/remote/scm/%s/*";
+
+  /** Field description */
+  private static final String REMOTE_REF = "refs/remote/scm/%s/%s";
+
+  /** Field description */
+  private static final int TIMEOUT = 5;
 
   /** the logger for GitUtil */
   private static final Logger logger = LoggerFactory.getLogger(GitUtil.class);
@@ -155,6 +173,40 @@ public final class GitUtil
     }
 
     return tags;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param git
+   * @param directory
+   * @param remoteRepository
+   *
+   * @return
+   *
+   * @throws GitAPIException
+   *
+   * @throws RepositoryException
+   */
+  public static FetchResult fetch(Git git, File directory,
+    Repository remoteRepository)
+    throws RepositoryException
+  {
+    try
+    {
+      FetchCommand fetch = git.fetch();
+
+      fetch.setRemote(directory.getAbsolutePath());
+      fetch.setRefSpecs(createRefSpec(remoteRepository));
+      fetch.setTimeout((int) TimeUnit.MINUTES.toSeconds(TIMEOUT));
+
+      return fetch.call();
+    }
+    catch (GitAPIException ex)
+    {
+      throw new RepositoryException("could not fetch", ex);
+    }
   }
 
   /**
@@ -382,11 +434,62 @@ public final class GitUtil
    * Method description
    *
    *
+   * @param repository
+   * @param id
+   *
+   * @return
+   *
+   * @throws IncorrectObjectTypeException
+   * @throws MissingObjectException
+   *
+   * @throws IOException
+   */
+  public static Ref getRefForCommit(org.eclipse.jgit.lib.Repository repository,
+    ObjectId id)
+    throws IOException
+  {
+    Ref ref = null;
+    RevWalk walk = null;
+
+    try
+    {
+      walk = new RevWalk(repository);
+
+      RevCommit commit = walk.parseCommit(id);
+
+      for (Map.Entry<String, Ref> e : repository.getAllRefs().entrySet())
+      {
+        if (e.getKey().startsWith(Constants.R_HEADS))
+        {
+          if (walk.isMergedInto(commit,
+            walk.parseCommit(e.getValue().getObjectId())))
+          {
+            ref = e.getValue();
+          }
+        }
+      }
+
+    }
+    finally
+    {
+      release(walk);
+    }
+
+    return ref;
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param repo
    *
    * @return
+   *
+   * @throws IOException
    */
   public static ObjectId getRepositoryHead(org.eclipse.jgit.lib.Repository repo)
+    throws IOException
   {
     ObjectId id = null;
     String head = null;
@@ -415,9 +518,25 @@ public final class GitUtil
       }
     }
 
+    if (id == null)
+    {
+      id = repo.resolve(Constants.HEAD);
+    }
+
     if (logger.isDebugEnabled())
     {
-      logger.debug("use {}:{} as repository head", head, id);
+      if ((head != null) && (id != null))
+      {
+        logger.debug("use {}:{} as repository head", head, id.name());
+      }
+      else if (id != null)
+      {
+        logger.debug("use {} as repository head", id.name());
+      }
+      else
+      {
+        logger.warn("could not find repository head");
+      }
     }
 
     return id;
@@ -456,6 +575,41 @@ public final class GitUtil
    * Method description
    *
    *
+   * @param repository
+   * @param localBranch
+   *
+   * @return
+   */
+  public static String getScmRemoteRefName(Repository repository,
+    Ref localBranch)
+  {
+    return getScmRemoteRefName(repository, localBranch.getName());
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param repository
+   * @param localBranch
+   *
+   * @return
+   */
+  public static String getScmRemoteRefName(Repository repository,
+    String localBranch)
+  {
+    String branch = localBranch;
+    if ( localBranch.startsWith(REF_HEAD_PREFIX) )
+    {
+      branch = localBranch.substring(REF_HEAD_PREFIX.length());
+    }
+    return String.format(REMOTE_REF, repository.getId(), branch);
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param ref
    *
    * @return
@@ -470,7 +624,6 @@ public final class GitUtil
     }
 
     return name;
-
   }
 
   //~--- methods --------------------------------------------------------------
@@ -505,5 +658,18 @@ public final class GitUtil
           branchName.concat(" is an invalid branch name"));
       }
     }
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param repository
+   *
+   * @return
+   */
+  private static RefSpec createRefSpec(Repository repository)
+  {
+    return new RefSpec(String.format(REFSPEC, repository.getId()));
   }
 }

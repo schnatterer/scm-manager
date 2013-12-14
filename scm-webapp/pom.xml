@@ -6,13 +6,13 @@
   <parent>
     <groupId>sonia.scm</groupId>
     <artifactId>scm</artifactId>
-    <version>1.29-SNAPSHOT</version>
+    <version>1.35-SNAPSHOT</version>
   </parent>
 
   <groupId>sonia.scm</groupId>
   <artifactId>scm-webapp</artifactId>
   <packaging>war</packaging>
-  <version>1.29-SNAPSHOT</version>
+  <version>1.35-SNAPSHOT</version>
   <name>scm-webapp</name>
 
   <dependencies>
@@ -38,31 +38,31 @@
     <dependency>
       <groupId>sonia.scm</groupId>
       <artifactId>scm-core</artifactId>
-      <version>1.29-SNAPSHOT</version>
+      <version>1.35-SNAPSHOT</version>
     </dependency>
     
     <dependency>
       <groupId>sonia.scm</groupId>
       <artifactId>scm-dao-xml</artifactId>
-      <version>1.29-SNAPSHOT</version>
+      <version>1.35-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>sonia.scm.plugins</groupId>
       <artifactId>scm-hg-plugin</artifactId>
-      <version>1.29-SNAPSHOT</version>
+      <version>1.35-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>sonia.scm.plugins</groupId>
       <artifactId>scm-svn-plugin</artifactId>
-      <version>1.29-SNAPSHOT</version>
+      <version>1.35-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>sonia.scm.plugins</groupId>
       <artifactId>scm-git-plugin</artifactId>
-      <version>1.29-SNAPSHOT</version>
+      <version>1.35-SNAPSHOT</version>
     </dependency>
     
     <!-- security -->
@@ -113,12 +113,8 @@
       <groupId>com.sun.jersey.contribs</groupId>
       <artifactId>jersey-guice</artifactId>
       <version>${jersey.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>jersey-grizzly2</artifactId>
-          <groupId>com.sun.jersey</groupId>
-        </exclusion>
-      </exclusions>
+      <!-- included by dependency rewrite -->
+      <scope>provided</scope>
     </dependency>
     
     <dependency>
@@ -187,6 +183,12 @@
       <groupId>asm</groupId>
       <artifactId>asm</artifactId>
       <version>3.3.1</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
     </dependency>
     
     <!-- template engine -->
@@ -265,7 +267,7 @@
     <dependency>
       <groupId>sonia.scm</groupId>
       <artifactId>scm-test</artifactId>
-      <version>1.29-SNAPSHOT</version>
+      <version>1.35-SNAPSHOT</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -278,7 +280,7 @@
     <dependency>
       <groupId>sonia.scm.plugins</groupId>
       <artifactId>scm-git-plugin</artifactId>
-      <version>1.29-SNAPSHOT</version>
+      <version>1.35-SNAPSHOT</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -286,7 +288,7 @@
     <dependency>
       <groupId>sonia.scm.plugins</groupId>
       <artifactId>scm-hg-plugin</artifactId>
-      <version>1.29-SNAPSHOT</version>
+      <version>1.35-SNAPSHOT</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -294,7 +296,7 @@
     <dependency>
       <groupId>sonia.scm.plugins</groupId>
       <artifactId>scm-svn-plugin</artifactId>
-      <version>1.29-SNAPSHOT</version>
+      <version>1.35-SNAPSHOT</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -316,13 +318,6 @@
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-firefox-driver</artifactId>
       <version>${selenium.version}</version>
-      <scope>test</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>com.jcraft</groupId>
-      <artifactId>jsch</artifactId>
-      <version>0.1.48</version>
       <scope>test</scope>
     </dependency>
 
@@ -392,6 +387,51 @@
           </execution>
         </executions>
       </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <id>repack</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <!--
+                add beans.xml to jersey-guice
+                -->
+                <property name="beans.file" value="src/main/webapp/WEB-INF/beans.xml" />
+                <property name="temp.dir" value="${project.build.directory}/tmp" />
+                <property name="rewrite.dir" value="${project.build.directory}/dependency-rewrite/WEB-INF/lib" />
+                <property name="suffix" value="gfcdifix" />
+
+                <!-- jersey guice -->
+                <property name="jersey.tmp" value="${temp.dir}/jersey-guice" />
+                <unzip src="${com.sun.jersey.contribs:jersey-guice:jar}" dest="${jersey.tmp}" />
+                <copy file="${beans.file}" toDir="${jersey.tmp}/META-INF" />
+                <zip basedir="${jersey.tmp}" destfile="${rewrite.dir}/jersey-guice-${jersey.version}-${suffix}.jar" />
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>2.2</version>
+        <configuration>
+          <webResources>
+            <resource>
+              <directory>${project.build.directory}/dependency-rewrite</directory>
+            </resource>
+          </webResources>
+        </configuration>
+      </plugin>
 
       <plugin>
         <groupId>sonia.maven</groupId>
@@ -459,11 +499,11 @@
     <scm.home>target/scm-it</scm.home>
     <environment.profile>default</environment.profile>
     <selenium.version>2.28.0</selenium.version>
-    <enunciate.version>1.26.2</enunciate.version>
+    <enunciate.version>1.27</enunciate.version>
     <aether.version>1.13.1</aether.version>
     <wagon.version>1.0</wagon.version>
-    <maven.version>3.0.4</maven.version>
-    <mustache.version>0.8.9</mustache.version>
+    <maven.version>3.0.5</maven.version>
+    <mustache.version>0.8.13</mustache.version>
     <netbeans.hint.deploy.server>Tomcat</netbeans.hint.deploy.server>
   </properties>
 
@@ -477,7 +517,7 @@
         <dependency>
           <groupId>sonia.scm</groupId>
           <artifactId>scm-dao-orientdb</artifactId>
-          <version>1.29-SNAPSHOT</version>
+          <version>1.35-SNAPSHOT</version>
         </dependency>
         
       </dependencies>
@@ -498,15 +538,17 @@
                 <resource>
                   <directory>${project.build.directory}/web-compressor</directory>
                 </resource>
+                <resource>
+                  <directory>${project.build.directory}/dependency-rewrite</directory>
+                </resource>
               </webResources>
             </configuration>
           </plugin>
 
-
           <plugin>
             <groupId>sonia.maven</groupId>
             <artifactId>web-compressor</artifactId>
-            <version>1.4</version>
+            <version>1.5</version>
             <executions>
               <execution>
                 <phase>prepare-package</phase>
@@ -734,7 +776,7 @@
             </executions>
             <configuration>
               <configFile>src/main/doc/enunciate.xml</configFile>
-              <docsDir>${project.build.directory}/docs</docsDir>
+              <docsDir>${project.build.directory}/restdocs</docsDir>
             </configuration>
             <dependencies>
               <dependency>
@@ -743,6 +785,25 @@
                 <version>${enunciate.version}</version>
               </dependency>
             </dependencies>
+          </plugin>
+          
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>2.3</version>
+            <configuration>
+              <descriptors>
+                <descriptor>src/main/doc/assembly.xml</descriptor>
+              </descriptors>
+            </configuration>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+              </execution>
+            </executions>
           </plugin>
           
         </plugins>

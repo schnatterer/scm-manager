@@ -329,8 +329,8 @@ Sonia.repository.Panel = Ext.extend(Sonia.rest.Panel, {
       }
 
       var url = restUrl + 'repositories/' + item.id + '.json';
-      this.executeRemoteCall(this.archiveTitleText, 
-        String.format(this.archiveMsgText, item.name), 
+      this.executeRemoteCall(this.removeTitleText, 
+        String.format(this.removeMsgText, item.name), 
         'DELETE', url, null, function(result){
           main.handleFailure(
             result.status, 
@@ -366,6 +366,13 @@ Sonia.repository.Panel = Ext.extend(Sonia.rest.Panel, {
   },
 
   resetPanel: function(){
+    Ext.getCmp('repoRmButton').setDisabled(true);
+    if (state.clientConfig.enableRepositoryArchive){
+      var archiveBt = Ext.getCmp('repoArchiveButton');
+      archiveBt.setText(this.archiveText);
+      archiveBt.setDisabled(true);
+    }
+    this.getGrid().getSelectionModel().clearSelections();
     Sonia.repository.setEditPanel(Sonia.repository.DefaultPanel);
   },
 
@@ -388,7 +395,6 @@ Sonia.repository.Panel = Ext.extend(Sonia.rest.Panel, {
   
   repositoryCreated: function(item){
     var grid = this.getGrid();
-    this.clearRepositoryFilter(grid);
     
     grid.reload(function(){
       if (debug){

@@ -30,15 +30,18 @@
  */
 
 
+
 package sonia.scm.security;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provider;
 
 import org.apache.shiro.authc.AccountException;
+import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UnknownAccountException;
@@ -49,6 +52,9 @@ import org.apache.shiro.subject.PrincipalCollection;
 
 import org.junit.Test;
 
+import org.mockito.Mockito;
+
+import sonia.scm.cache.CacheManager;
 import sonia.scm.cache.MapCacheManager;
 import sonia.scm.config.ScmConfiguration;
 import sonia.scm.group.Group;
@@ -75,6 +81,7 @@ import static org.mockito.Mockito.*;
 //~--- JDK imports ------------------------------------------------------------
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -305,8 +312,12 @@ public class ScmRealmTest
 
     assertNotNull(groups);
     assertFalse(groups.getCollection().isEmpty());
-    assertEquals(4, groups.getCollection().size());
-    assertThat(groups, containsInAnyOrder("g1", "g2", "g3", "g4"));
+    assertEquals(5, groups.getCollection().size());
+    //J-
+    assertThat(groups,
+      containsInAnyOrder("g1", "g2", "g3", "g4", GroupNames.AUTHENTICATED)
+    );
+    //J+
   }
 
   /**
@@ -459,13 +470,44 @@ public class ScmRealmTest
       AuthenticationResult.NOT_FOUND
     );
     
+    SecuritySystem securitySystem = mock(SecuritySystem.class);
+    when(
+      securitySystem.getPermissions(Mockito.any(Predicate.class))
+    ).thenReturn(
+      Collections.EMPTY_LIST
+    );
+    
+    CacheManager cacheManager = new MapCacheManager();
+    
+    AuthorizationCollector collector = new AuthorizationCollector(
+      cacheManager, 
+      repositoryDAO,
+      securitySystem, 
+      new RepositoryPermissionResolver()
+    );
+    
+    LoginAttemptHandler dummyLoginAttemptHandler = new LoginAttemptHandler()
+    {
+      @Override
+      public void beforeAuthentication(AuthenticationToken token)
+        throws AuthenticationException {}
+
+      @Override
+      public void onSuccessfulAuthentication(AuthenticationToken token,
+        AuthenticationResult result) throws AuthenticationException {}
+
+      @Override
+      public void onUnsuccessfulAuthentication(AuthenticationToken token,
+        AuthenticationResult result) throws AuthenticationException {}
+    };
 
     return new ScmRealm(
       new ScmConfiguration(),
-      new MapCacheManager(),
+      dummyLoginAttemptHandler,
+      collector,
+      // cacheManager,
       userManager,
       groupManager,
-      repositoryDAO,
       userDAO,
       authManager,
       null,

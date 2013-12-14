@@ -57,6 +57,12 @@ Sonia.repository.PermissionFormPanel = Ext.extend(Sonia.repository.FormPanel, {
         sortable: true
       },
       columns: [{
+          id: 'groupPermission',
+          xtype: 'checkcolumn',
+          header: this.colGroupPermissionText,
+          dataIndex: 'groupPermission',
+          width: 40
+        },{
           id: 'name',
           header: this.colNameText,
           dataIndex: 'name',
@@ -82,16 +88,10 @@ Sonia.repository.PermissionFormPanel = Ext.extend(Sonia.repository.FormPanel, {
               ]
             })
           })
-        },{
-         id: 'groupPermission',
-         xtype: 'checkcolumn',
-         header: this.colGroupPermissionText,
-         dataIndex: 'groupPermission',
-         width: 40
         }],
 
         getCellEditor: function(colIndex, rowIndex) {
-          if (colIndex == 0) {
+          if (this.getColumnId(colIndex) === 'name') {
             var store = null;
             var rec = permissionStore.getAt(rowIndex);
             if ( rec.data.groupPermission ){
@@ -121,8 +121,8 @@ Sonia.repository.PermissionFormPanel = Ext.extend(Sonia.repository.FormPanel, {
         }
     });
 
-    if ( this.item != null ){
-      if ( this.item.permissions == null ){
+    if ( this.item ){
+      if ( !this.item.permissions ){
         this.item.permissions = [];
       }
       this.permissionStore.loadData( this.item );
@@ -213,7 +213,7 @@ Sonia.repository.PermissionFormPanel = Ext.extend(Sonia.repository.FormPanel, {
     var permissions = [];
     this.permissionStore.data.each(function(record){
       permissions.push( record.data );
-    })
+    });
     item.permissions = permissions;
   },
 

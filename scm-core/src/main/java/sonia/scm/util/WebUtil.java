@@ -165,7 +165,7 @@ public final class WebUtil
     String cc = "max-age=".concat(Long.toString(seconds)).concat(", public");
 
     // use public for https
-    response.addHeader(HEADER_CACHECONTROL, cc.toString());
+    response.addHeader(HEADER_CACHECONTROL, cc);
   }
 
   /**
@@ -249,11 +249,7 @@ public final class WebUtil
       }
       catch (ParseException ex)
       {
-        logger.warn(ex.getMessage(), ex);
-      }
-      catch (NumberFormatException ex)
-      {
-        logger.warn(ex.getMessage(), ex);
+        logger.warn("could not parse http date", ex);
       }
     }
 

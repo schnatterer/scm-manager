@@ -39,11 +39,14 @@ Sonia.login.Form = Ext.extend(Ext.FormPanel,{
   WaitMsgText: 'Sending data...',
   failedMsgText: 'Login failed!',
   failedDescriptionText: 'Incorrect username, password or not enough permission. Please Try again.',
+  accountLockedText: 'Account is locked.',
+  accountTemporaryLockedText: 'Account is temporary locked. Please try again later.',
+  rememberMeText: 'Remember me',
 
   initComponent: function(){
 
     var config = {
-      labelWidth: 80,
+      labelWidth: 120,
       url: restUrl + "authentication/login.json",
       frame: true,
       title: this.titleText,
@@ -76,6 +79,11 @@ Sonia.login.Form = Ext.extend(Ext.FormPanel,{
             scope: this
           }
         }
+      },{
+        xtype: 'checkbox',
+        fieldLabel: this.rememberMeText,
+        name: 'rememberMe',
+        inputValue: 'true'
       }],
       buttons:[{
           text: this.cancelText,
@@ -116,14 +124,23 @@ Sonia.login.Form = Ext.extend(Ext.FormPanel,{
         main.loadState( action.result );
       },
 
-      failure: function(form){
+      failure: function(form, action){
         if ( debug ){
-          console.debug( 'login failed' );
+          console.debug( 'login failed with ' + action.result.failure);
         }
         this.fireEvent('failure');
+        var msg = this.failedDescriptionText;
+        switch (action.result.failure){
+          case 'LOCKED':
+            msg = this.accountLockedText;
+            break;
+          case 'TEMPORARY_LOCKED':
+            msg = this.accountTemporaryLockedText;
+            break;
+        }
         Ext.Msg.show({
           title: this.failedMsgText,
-          msg: this.failedDescriptionText,
+          msg: msg,
           buttons: Ext.Msg.OK,
           icon: Ext.MessageBox.WARNING
         });
@@ -133,7 +150,7 @@ Sonia.login.Form = Ext.extend(Ext.FormPanel,{
   },
 
   specialKeyPressed: function(field, e){
-    if (e.getKey() == e.ENTER) {
+    if (e.getKey() === e.ENTER) {
       var form = this.getForm();
       if ( form.isValid() ){
         this.authenticate();

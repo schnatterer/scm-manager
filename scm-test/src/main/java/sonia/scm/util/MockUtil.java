@@ -41,6 +41,7 @@ import org.apache.shiro.authz.Permission;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.Subject.Builder;
 
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -62,6 +63,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import sonia.scm.security.Role;
 
 /**
  *
@@ -116,7 +118,8 @@ public final class MockUtil
     when(subject.isPermittedAll(anyCollectionOf(Permission.class))).thenReturn(
       Boolean.TRUE);
     when(subject.isPermittedAll()).thenReturn(Boolean.TRUE);
-    when(subject.hasRole("admin")).thenReturn(Boolean.TRUE);
+    when(subject.hasRole(Role.ADMIN)).thenReturn(Boolean.TRUE);
+    when(subject.hasRole(Role.USER)).thenReturn(Boolean.TRUE);
 
     PrincipalCollection collection = mock(PrincipalCollection.class);
 
@@ -137,14 +140,38 @@ public final class MockUtil
    */
   public static Subject createUserSubject()
   {
+    return createUserSubject(null);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   *
+   * @param securityManager
+   * @return
+   */
+  public static Subject createUserSubject(
+    org.apache.shiro.mgt.SecurityManager securityManager)
+  {
     SimplePrincipalCollection collection = new SimplePrincipalCollection();
     User user = UserTestData.createTrillian();
 
     collection.add(user.getName(), "junit");
     collection.add(user, "junit");
 
-    return new Subject.Builder().principals(collection).authenticated(
-      true).buildSubject();
+    Builder builder;
+
+    if (securityManager != null)
+    {
+      builder = new Subject.Builder(securityManager);
+    }
+    else
+    {
+      builder = new Subject.Builder();
+    }
+
+    return builder.principals(collection).authenticated(true).buildSubject();
   }
 
   //~--- get methods ----------------------------------------------------------

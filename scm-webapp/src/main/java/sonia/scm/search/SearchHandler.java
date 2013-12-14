@@ -37,6 +37,7 @@ package sonia.scm.search;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -54,6 +55,7 @@ import java.util.Collection;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
+import sonia.scm.security.Role;
 
 /**
  *
@@ -111,7 +113,7 @@ public class SearchHandler<T>
   {
     Subject subject = SecurityUtils.getSubject();
 
-    if (!subject.isAuthenticated())
+    if (!subject.hasRole(Role.USER))
     {
       throw new ScmSecurityException("Authentication is required");
     }
@@ -139,7 +141,11 @@ public class SearchHandler<T>
           Collections2.transform(users, function);
 
         result.setSuccess(true);
-        result.setResults(resultCollection);
+
+        // create a copy of the result collection to reduce memory
+        // use ArrayList instead of ImmutableList for copy, 
+        // because the list must be mutable for decorators
+        result.setResults(Lists.newArrayList(resultCollection));
         cache.put(queryString, result);
       }
     }

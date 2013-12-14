@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import sonia.scm.ConfigChangedListener;
 import sonia.scm.ListenerSupport;
+import sonia.scm.event.ScmEventBus;
 import sonia.scm.xml.XmlSetStringAdapter;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -52,6 +53,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -141,6 +143,9 @@ public class ScmConfiguration
 
       listener.configChanged(this);
     }
+
+    // fire event to event bus
+    ScmEventBus.getInstance().post(new ScmConfigurationChangedEvent(this));
   }
 
   /**
@@ -152,7 +157,6 @@ public class ScmConfiguration
    */
   public void load(ScmConfiguration other)
   {
-    this.servername = other.servername;
     this.dateFormat = other.dateFormat;
     this.pluginUrl = other.pluginUrl;
     this.anonymousAccessEnabled = other.anonymousAccessEnabled;
@@ -168,8 +172,11 @@ public class ScmConfiguration
     this.baseUrl = other.baseUrl;
     this.disableGroupingGrid = other.disableGroupingGrid;
     this.enableRepositoryArchive = other.enableRepositoryArchive;
+    this.loginAttemptLimit = other.loginAttemptLimit;
+    this.loginAttemptLimitTimeout = other.loginAttemptLimitTimeout;
 
     // deprecated fields
+    this.servername = other.servername;
     this.sslPort = other.sslPort;
     this.enableSSL = other.enableSSL;
     this.enablePortForward = other.enablePortForward;
@@ -226,11 +233,10 @@ public class ScmConfiguration
 
   /**
    * Returns the date format for the user interface. This format is a
-   * JavaScript date format, see
-   * {@link http://jacwright.com/projects/javascript/date_format}.
+   * JavaScript date format, from the library moment.js.
    *
-   *
-   * @return JavaScript date format
+   * @see <a href="http://momentjs.com/docs/#/parsing/" target="_blank">http://momentjs.com/docs/#/parsing/</a>
+   * @return moment.js date format
    */
   public String getDateFormat()
   {
@@ -248,6 +254,31 @@ public class ScmConfiguration
   public int getForwardPort()
   {
     return forwardPort;
+  }
+
+  /**
+   * Returns maximum allowed login attempts.
+   *
+   * @return maximum allowed login attempts
+   *
+   * @since 1.34
+   */
+  public int getLoginAttemptLimit()
+  {
+    return loginAttemptLimit;
+  }
+
+  /**
+   * Returns the timeout in seconds for users which are temporary disabled,
+   * because of too many failed login attempts.
+   *
+   * @return login attempt timeout in seconds
+   *
+   * @since 1.34
+   */
+  public long getLoginAttemptLimitTimeout()
+  {
+    return loginAttemptLimitTimeout;
   }
 
   /**
@@ -486,10 +517,10 @@ public class ScmConfiguration
   }
 
   /**
-   * Method description
+   * Sets the date format for the ui.
    *
    *
-   * @param dateFormat
+   * @param dateFormat date format for ui
    */
   public void setDateFormat(String dateFormat)
   {
@@ -580,6 +611,32 @@ public class ScmConfiguration
   public void setForwardPort(int forwardPort)
   {
     this.forwardPort = forwardPort;
+  }
+
+  /**
+   * Set maximum allowed login attempts.
+   *
+   *
+   * @param loginAttemptLimit login attempt limit
+   *
+   * @since 1.34
+   */
+  public void setLoginAttemptLimit(int loginAttemptLimit)
+  {
+    this.loginAttemptLimit = loginAttemptLimit;
+  }
+
+  /**
+   * Sets the timeout in seconds for users which are temporary disabled,
+   * because of too many failed login attempts.
+   *
+   * @param loginAttemptLimitTimeout login attempt timeout in seconds
+   *
+   * @since 1.34
+   */
+  public void setLoginAttemptLimitTimeout(long loginAttemptLimitTimeout)
+  {
+    this.loginAttemptLimitTimeout = loginAttemptLimitTimeout;
   }
 
   /**
@@ -694,15 +751,31 @@ public class ScmConfiguration
   private String baseUrl;
 
   /** Field description */
-  private boolean enableProxy = false;
-
-  /** Field description */
   @XmlElement(name = "force-base-url")
   private boolean forceBaseUrl;
 
   /** @deprecated use {@link #baseUrl} */
   @Deprecated
   private int forwardPort = 80;
+
+  /**
+   * Maximum allowed login attempts.
+   *
+   * @since 1.34
+   */
+  @XmlElement(name = "login-attempt-limit")
+  private int loginAttemptLimit = -1;
+
+  /**
+   * Login attempt timeout.
+   *
+   * @since 1.34
+   */
+  @XmlElement(name = "login-attempt-limit-timeout")
+  private long loginAttemptLimitTimeout = TimeUnit.MINUTES.toSeconds(5l);
+
+  /** Field description */
+  private boolean enableProxy = false;
 
   /** Field description */
   @XmlElement(name = "plugin-url")
@@ -752,7 +825,8 @@ public class ScmConfiguration
   private boolean disableGroupingGrid = false;
 
   /**
-   * JavaScript date format, see http://jacwright.com/projects/javascript/date_format
+   * JavaScript date format from moment.js
+   * @see <a href="http://momentjs.com/docs/#/parsing/" target="_blank">http://momentjs.com/docs/#/parsing/</a>
    */
   private String dateFormat = DEFAULT_DATEFORMAT;
 

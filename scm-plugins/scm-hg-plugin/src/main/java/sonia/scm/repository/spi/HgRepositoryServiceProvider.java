@@ -38,6 +38,7 @@ package sonia.scm.repository.spi;
 import com.google.common.io.Closeables;
 
 import sonia.scm.repository.Feature;
+import sonia.scm.repository.HgHookManager;
 import sonia.scm.repository.HgRepositoryHandler;
 import sonia.scm.repository.Repository;
 import sonia.scm.repository.api.Command;
@@ -58,10 +59,21 @@ public class HgRepositoryServiceProvider extends RepositoryServiceProvider
 {
 
   /** Field description */
-  public static final Set<Command> COMMANDS = EnumSet.of(Command.BLAME,
-                                                Command.BROWSE, Command.CAT,
-                                                Command.DIFF, Command.LOG,
-                                                Command.TAGS, Command.BRANCHES);
+  //J-
+  public static final Set<Command> COMMANDS = EnumSet.of(
+    Command.BLAME,
+    Command.BROWSE, 
+    Command.CAT,
+    Command.DIFF, 
+    Command.LOG,
+    Command.TAGS, 
+    Command.BRANCHES,
+    Command.INCOMING,
+    Command.OUTGOING,
+    Command.PUSH,
+    Command.PULL
+  );
+  //J+
 
   /** Field description */
   public static final Set<Feature> FEATURES =
@@ -74,14 +86,18 @@ public class HgRepositoryServiceProvider extends RepositoryServiceProvider
    *
    *
    *
+   *
+   * @param hookManager
    * @param handler
    * @param repository
    */
-  HgRepositoryServiceProvider(HgRepositoryHandler handler, Repository repository)
+  HgRepositoryServiceProvider(HgRepositoryHandler handler,
+    HgHookManager hookManager, Repository repository)
   {
     this.repository = repository;
+    this.handler = handler;
     this.repositoryDirectory = handler.getDirectory(repository);
-    this.context = new HgCommandContext(handler.getConfig(), repository,
+    this.context = new HgCommandContext(hookManager, handler, repository,
       repositoryDirectory);
   }
 
@@ -168,9 +184,57 @@ public class HgRepositoryServiceProvider extends RepositoryServiceProvider
    * @return
    */
   @Override
+  public IncomingCommand getIncomingCommand()
+  {
+    return new HgIncomingCommand(context, repository, handler);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  @Override
   public HgLogCommand getLogCommand()
   {
     return new HgLogCommand(context, repository);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  @Override
+  public OutgoingCommand getOutgoingCommand()
+  {
+    return new HgOutgoingCommand(context, repository, handler);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  @Override
+  public PullCommand getPullCommand()
+  {
+    return new HgPullCommand(handler, context, repository);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  @Override
+  public PushCommand getPushCommand()
+  {
+    return new HgPushCommand(handler, context, repository);
   }
 
   /**
@@ -213,6 +277,9 @@ public class HgRepositoryServiceProvider extends RepositoryServiceProvider
 
   /** Field description */
   private HgCommandContext context;
+
+  /** Field description */
+  private HgRepositoryHandler handler;
 
   /** Field description */
   private Repository repository;

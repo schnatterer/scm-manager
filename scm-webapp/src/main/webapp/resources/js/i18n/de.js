@@ -88,7 +88,11 @@ if (Sonia.login.Form){
     WaitMsgText: 'Übertrage Daten...',
     failedMsgText: 'Anmeldung fehlgeschlagen!',
     failedDescriptionText: 'Falscher Benutzername, Passwort oder sie haben nicht\n\
-                             genug Berechtigungen. Bitte versuchen sie es erneut.'
+                             genug Berechtigungen. Bitte versuchen sie es erneut.',
+    accountLockedText: 'Der Account ist gesperrt.',
+    accountTemporaryLockedText: 'Der Account ist momentan gesperrt. \n\
+                                 Versuchen sie es später nochmal.',
+    rememberMeText: 'Angemeldet bleiben'
   });
 
 }
@@ -238,7 +242,10 @@ if (Sonia.repository.InfoPanel){
     contactText: 'Kontakt: ',
     urlText: 'Url: ',
     // german ??
-    changesetViewerText: 'Commits'
+    changesetViewerText: 'Commits',
+    accessText: 'Zugriff:',
+    accessReadOnly: 'Nur lesender Zugriff',
+    accessReadWrite: 'Lese und Schreibzugriff'
   });
 
 }
