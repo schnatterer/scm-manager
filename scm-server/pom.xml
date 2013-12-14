@@ -56,7 +56,7 @@
       <plugin>
         <groupId>sonia.maven</groupId>
         <artifactId>appassembler-maven-plugin</artifactId>
-        <version>1.2.0.3</version>
+        <version>1.2.1.0</version>
         <executions>
           <execution>
             <id>scm-app</id>
@@ -100,6 +100,14 @@
                         <property>
                           <name>darwin.arch.enable</name>
                           <value>false</value>
+                        </property>
+                        <property>
+                          <name>windows.service.dependencies</name>
+                          <value>Tcpip</value>
+                        </property>
+                        <property>
+                          <name>windows.service.startup</name>
+                          <value>auto</value>
                         </property>
                       </configuration>
 
