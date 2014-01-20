@@ -52,6 +52,7 @@ import sonia.scm.config.ScmConfiguration;
 import sonia.scm.user.User;
 import sonia.scm.util.HttpUtil;
 import sonia.scm.util.Util;
+import sonia.scm.web.security.AuthenticationHandler;
 import sonia.scm.web.security.WebSecurityContext;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -59,6 +60,7 @@ import sonia.scm.web.security.WebSecurityContext;
 import com.sun.jersey.core.util.Base64;
 
 import java.io.IOException;
+import java.util.Set;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -70,7 +72,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author Sebastian Sdorra
  */
 @Singleton
-public class BasicAuthenticationFilter extends HttpFilter
+public class BasicAuthenticationFilter extends AutoLoginFilter
 {
 
   /** Field description */
@@ -107,8 +109,10 @@ public class BasicAuthenticationFilter extends HttpFilter
    * @since 1.21
    */
   @Inject
-  public BasicAuthenticationFilter(ScmConfiguration configuration)
+  public BasicAuthenticationFilter(ScmConfiguration configuration,
+                                   Set<AutoLoginModule> autoLoginModules)
   {
+    super(autoLoginModules);
     this.configuration = configuration;
   }
 
@@ -131,45 +135,44 @@ public class BasicAuthenticationFilter extends HttpFilter
     throws IOException, ServletException
   {
     Subject subject = SecurityUtils.getSubject();
+    User user = getAuthenticatedUser(request, response);
 
-    User user = null;
-    String authentication = request.getHeader(HEADER_AUTHORIZATION);
-
-    if (Util.startWithIgnoreCase(authentication, AUTHORIZATION_BASIC_PREFIX))
+    // Fallback to basic authentication scheme
+    if (user == null)
     {
-      if (logger.isTraceEnabled())
-      {
-        logger.trace("found basic authorization header, start authentication");
-      }
+      String authentication = request.getHeader(HEADER_AUTHORIZATION);
 
-      user = authenticate(request, response, subject, authentication);
-
-      if (logger.isTraceEnabled())
+      if (Util.startWithIgnoreCase(authentication, AUTHORIZATION_BASIC_PREFIX))
       {
-        if (user != null)
+        if (logger.isTraceEnabled())
         {
-          logger.trace("user {} successfully authenticated", user.getName());
+          logger.trace("found basic authorization header, start authentication");
         }
-        else
+
+        user = authenticate(request, response, subject, authentication);
+
+        if (logger.isTraceEnabled())
         {
-          logger.trace("authentcation failed, user object is null");
+          if (user != null)
+          {
+            logger.trace("user {} successfully authenticated", user.getName());
+          }
+          else
+          {
+            logger.trace("authentcation failed, user object is null");
+          }
         }
       }
-    }
-    else if (subject.isAuthenticated() || subject.isRemembered())
-    {
-      if (logger.isTraceEnabled())
+      else if ((configuration != null)
+        && configuration.isAnonymousAccessEnabled())
       {
-        logger.trace("user is allready authenticated");
+        if (logger.isTraceEnabled())
+        {
+          logger.trace("anonymous access granted");
+        }
+
+        user = SCMContext.ANONYMOUS;
       }
-
-      user = subject.getPrincipals().oneByType(User.class);
-    }
-    else if ((configuration != null)
-      && configuration.isAnonymousAccessEnabled())
-    {
-      user = SCMContext.ANONYMOUS;
-
     }
 
     if (user == null)

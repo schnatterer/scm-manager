@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2010, Sebastian Sdorra
  * All rights reserved.
  *
@@ -28,39 +28,28 @@
  * http://bitbucket.org/sdorra/scm-manager
  *
  */
+ 
+ 
+vm.breakpoint("org.eclipse.jgit.lib.Repository", 133){
+  println "open repository " + gitDir;
+}
 
-Ext.apply(Ext.util.Format, {
+vm.breakpoint("org.eclipse.jgit.lib.Repository", 808){
+  println "  open repository, counter: " + useCnt.get();
+}
 
-  formatTimestamp: function(value){
-    var result = '';
-    if ( value && (value > 0 || value.length > 0)){
-      var df = state.clientConfig.dateFormat;
-      if ( ! df || df.length === 0 || ! Ext.isDefined(value) ){
-        df = "YYYY-MM-DD HH:mm:ss";
-      }
-      result = moment(value).format(df);
-    }
+vm.breakpoint("org.eclipse.jgit.lib.Repository", 812){
+  println "  close repository, counter: " + useCnt.get();
+}
 
-    if (result.indexOf("{0}") >= 0){
-      result = String.format(result, Ext.util.Format.timeAgo(value));
-    }
+vm.breakpoint("org.eclipse.jgit.lib.Repository", 813){
+  println "close repository";
+}
 
-    return result;
-  },
+vm.breakpoint("org.eclipse.jgit.revwalk.RevWalk", 215){
+  println "    open revwalk";
+}
 
-  timeAgo : function(value){
-    return moment(value).fromNow();
-  },
-  
-  id: function(value){
-    return this.substr(value, 0, 12);
-  },
-  
-  convertLineBreaks: function(value){
-    if (value){
-      value = value.replace(/(\r\n|\n|\r)/gm, "<br />");
-    }
-    return value;
-  }
-  
-});
+vm.breakpoint("org.eclipse.jgit.revwalk.RevWalk", 239){
+  println "    release revwalk";
+}

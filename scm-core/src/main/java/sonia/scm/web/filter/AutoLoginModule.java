@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010, Sebastian Sdorra
+/**
+ * Copyright (c) 2013, Clemens Rabe
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,42 +25,40 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * http://bitbucket.org/sdorra/scm-manager
- *
  */
+package sonia.scm.web.filter;
 
-Ext.apply(Ext.util.Format, {
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-  formatTimestamp: function(value){
-    var result = '';
-    if ( value && (value > 0 || value.length > 0)){
-      var df = state.clientConfig.dateFormat;
-      if ( ! df || df.length === 0 || ! Ext.isDefined(value) ){
-        df = "YYYY-MM-DD HH:mm:ss";
-      }
-      result = moment(value).format(df);
-    }
+import org.apache.shiro.subject.Subject;
 
-    if (result.indexOf("{0}") >= 0){
-      result = String.format(result, Ext.util.Format.timeAgo(value));
-    }
+import sonia.scm.plugin.ExtensionPoint;
+import sonia.scm.user.User;
 
-    return result;
-  },
+/**
+ * Classes implementing this interface are called by the
+ * BasicAuthenticationFilter before the default basic authentication takes
+ * place. This allows to implement auto-login methods.
+ * 
+ * @author Clemens Rabe
+ */
+@ExtensionPoint
+public interface AutoLoginModule {
 
-  timeAgo : function(value){
-    return moment(value).fromNow();
-  },
-  
-  id: function(value){
-    return this.substr(value, 0, 12);
-  },
-  
-  convertLineBreaks: function(value){
-    if (value){
-      value = value.replace(/(\r\n|\n|\r)/gm, "<br />");
-    }
-    return value;
-  }
-  
-});
+	/**
+	 * Authenticate a user using the given request object. If the user can not
+	 * be authenticated, e.g., because required headers are not set null must be
+	 * returned.
+	 * 
+	 * @param request
+	 *            The HTTP request.
+	 * @param response
+	 *            The HTTP response. Use only if absolutely necessary.
+	 * @param subject
+	 *            The subject object.
+	 * @return Return a User object or null.
+	 */
+	public User authenticate(HttpServletRequest request,
+			HttpServletResponse response, Subject subject);
+}

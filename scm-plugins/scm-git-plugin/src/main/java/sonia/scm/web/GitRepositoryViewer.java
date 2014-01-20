@@ -44,6 +44,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.repository.Branch;
 import sonia.scm.repository.Branches;
 import sonia.scm.repository.Changeset;
@@ -59,7 +60,6 @@ import sonia.scm.template.TemplateEngineFactory;
 import sonia.scm.url.RepositoryUrlProvider;
 import sonia.scm.url.UrlProvider;
 import sonia.scm.url.UrlProviderFactory;
-import sonia.scm.util.HttpUtil;
 import sonia.scm.util.Util;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -103,13 +103,16 @@ public class GitRepositoryViewer
    *
    * @param templateEngineFactory
    * @param repositoryServiceFactory
+   * @param configuration
    */
   @Inject
   public GitRepositoryViewer(TemplateEngineFactory templateEngineFactory,
-    RepositoryServiceFactory repositoryServiceFactory)
+    RepositoryServiceFactory repositoryServiceFactory,
+    ScmConfiguration configuration)
   {
     this.templateEngineFactory = templateEngineFactory;
     this.repositoryServiceFactory = repositoryServiceFactory;
+    this.configuration = configuration;
   }
 
   //~--- methods --------------------------------------------------------------
@@ -131,7 +134,7 @@ public class GitRepositoryViewer
     throws RepositoryException, IOException
   {
 
-    String baseUrl = HttpUtil.getCompleteUrl(request);
+    String baseUrl = configuration.getBaseUrl();
 
     UrlProvider urlProvider = UrlProviderFactory.createUrlProvider(baseUrl,
                                 UrlProviderFactory.TYPE_WUI);
@@ -448,6 +451,9 @@ public class GitRepositoryViewer
 
 
   //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private final ScmConfiguration configuration;
 
   /** Field description */
   private final RepositoryServiceFactory repositoryServiceFactory;

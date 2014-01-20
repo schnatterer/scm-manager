@@ -36,6 +36,10 @@ Sonia.panel.SyntaxHighlighterPanel = Ext.extend(Ext.Panel, {
     aliases: ['as3', 'actionscript3'],
     fileName: 'shBrushAS3.js'
   },{
+    name: 'AppleScript',
+    aliases: ['applescript', 'scpt'],
+    fileName: 'shBrushAppleScript.js'
+  },{
     name: 'Bash/shell',
     aliases: ['bash', 'shell'],
     fileName: 'shBrushBash.js'
@@ -49,7 +53,7 @@ Sonia.panel.SyntaxHighlighterPanel = Ext.extend(Ext.Panel, {
     fileName: 'shBrushCSharp.js'
   },{
     name: 'C++',
-    aliases: ['cpp', 'c'],
+    aliases: ['cpp', 'c', 'h', 'hh', 'cc'],
     fileName: 'shBrushCpp.js'
   },{
     name: 'CSS',
@@ -77,7 +81,7 @@ Sonia.panel.SyntaxHighlighterPanel = Ext.extend(Ext.Panel, {
     fileName: 'shBrushJScript.js'
   },{
     name: 'Java',
-    aliases: ['java'],
+    aliases: ['java', 'idl'],
     fileName: 'shBrushJava.js'
   },{
     name: 'JavaFX',
@@ -108,21 +112,21 @@ Sonia.panel.SyntaxHighlighterPanel = Ext.extend(Ext.Panel, {
     aliases: ['rails', 'ror', 'ruby', 'rb'],
     fileName: 'shBrushRuby.js'
   },{
+    name: 'Sass',
+    aliases: ['sass', 'scss'],
+    fileName: 'shBrushSass.js'
+  },{
     name: 'Scala',
     aliases: ['scala'],
     fileName: 'shBrushScala.js'
   },{
     name: 'SQL',
     aliases: ['sql'],
-    fileName: 'shBrushScala.js'
+    fileName: 'shBrushSql.js'
   },{
     name: 'Visual Basic',
     aliases: ['vb', 'vbnet'],
     fileName: 'shBrushVb.js'
-  },{
-    name: 'Python',
-    aliases: ['py', 'python'],
-    fileName: 'shBrushPython.js'
   },{
     name: 'XML',
     aliases: ['xml', 'xhtml', 'xslt', 'html', 'xhtml'],

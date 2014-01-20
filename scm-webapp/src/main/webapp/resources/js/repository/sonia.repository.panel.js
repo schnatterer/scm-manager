@@ -35,6 +35,8 @@ Sonia.repository.Panel = Ext.extend(Sonia.rest.Panel, {
   titleText: 'Repository Form',
   emptyText: 'Add or select an Repository',
   
+  filterText: 'Filter: ',
+  searchText: 'Search: ',
   archiveText: 'Archive',
   unarchiveText: 'Unarchive',
   archiveTitleText: 'Archive Repository',
@@ -114,7 +116,7 @@ Sonia.repository.Panel = Ext.extend(Sonia.rest.Panel, {
       handler: this.reload
     },'-',{
       xtype: 'label',
-      text: 'Filter: ',
+      text: this.filterText,
       cls: 'ytb-text'
     }, '  ', {
       id: 'repositoryTypeFilter',
@@ -141,7 +143,7 @@ Sonia.repository.Panel = Ext.extend(Sonia.rest.Panel, {
         '</div></tpl>'
     }, '  ',{
       xtype: 'label',
-      text: 'Search: ',
+      text: this.searchText,
       cls: 'ytb-text'
     }, '  ',{
       id: 'repositorySearch',
