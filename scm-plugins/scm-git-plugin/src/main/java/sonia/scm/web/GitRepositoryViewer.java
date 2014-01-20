@@ -89,6 +89,9 @@ public class GitRepositoryViewer
   /** Field description */
   private static final int CHANGESET_PER_BRANCH = 10;
 
+  /** Field description */
+  private static final String ENCODING = "UTF-8";
+
   /**
    * the logger for GitRepositoryViewer
    */
@@ -139,6 +142,7 @@ public class GitRepositoryViewer
     UrlProvider urlProvider = UrlProviderFactory.createUrlProvider(baseUrl,
                                 UrlProviderFactory.TYPE_WUI);
 
+    response.setCharacterEncoding(ENCODING);
     response.setContentType(MIMETYPE_HTML);
 
     RepositoryUrlProvider rup = urlProvider.getRepositoryUrlProvider();
@@ -196,7 +200,7 @@ public class GitRepositoryViewer
     }
     finally
     {
-      Closeables.closeQuietly(service);
+      Closeables.close(service, true);
     }
 
     return model;
