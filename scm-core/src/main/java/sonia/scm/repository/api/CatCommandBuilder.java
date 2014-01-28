@@ -42,6 +42,8 @@ import com.google.common.io.Closeables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sonia.scm.config.ScmConfiguration;
+import sonia.scm.repository.Encodings;
 import sonia.scm.repository.Repository;
 import sonia.scm.repository.RepositoryException;
 import sonia.scm.repository.spi.CatCommand;
@@ -84,10 +86,16 @@ public final class CatCommandBuilder
    * Constructs a new {@link CatCommandBuilder}, this constructor should
    * only be called from the {@link RepositoryService}.
    *
+   *
+   * @param configuration main configuration
+   * @param repository repository
    * @param catCommand implementation of the {@link CatCommand}
    */
-  CatCommandBuilder(CatCommand catCommand)
+  CatCommandBuilder(ScmConfiguration configuration, Repository repository,
+    CatCommand catCommand)
   {
+    this.configuration = configuration;
+    this.repository = repository;
     this.catCommand = catCommand;
   }
 
@@ -117,8 +125,8 @@ public final class CatCommandBuilder
    * @throws RepositoryException
    */
   public CatCommandBuilder retriveContent(OutputStream outputStream,
-          String path)
-          throws IOException, RepositoryException
+    String path)
+    throws IOException, RepositoryException
   {
     getCatResult(outputStream, path);
 
@@ -145,7 +153,7 @@ public final class CatCommandBuilder
     {
       baos = new ByteArrayOutputStream();
       getCatResult(baos, path);
-      content = baos.toString();
+      content = baos.toString(Encodings.getEncoding(configuration, repository));
     }
     finally
     {
@@ -185,11 +193,11 @@ public final class CatCommandBuilder
    * @throws RepositoryException
    */
   private void getCatResult(OutputStream outputStream, String path)
-          throws IOException, RepositoryException
+    throws IOException, RepositoryException
   {
     Preconditions.checkNotNull(outputStream, "OutputStream is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(path),
-                                "path is required");
+      "path is required");
 
     CatCommandRequest requestClone = request.clone();
 
@@ -204,6 +212,12 @@ public final class CatCommandBuilder
   }
 
   //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private final ScmConfiguration configuration;
+
+  /** Field description */
+  private final Repository repository;
 
   /** implementation of the cat command */
   private CatCommand catCommand;

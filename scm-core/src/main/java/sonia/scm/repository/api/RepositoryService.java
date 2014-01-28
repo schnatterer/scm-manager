@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import sonia.scm.cache.CacheManager;
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.repository.Changeset;
 import sonia.scm.repository.Feature;
 import sonia.scm.repository.PreProcessorUtil;
@@ -99,15 +100,17 @@ public final class RepositoryService implements Closeable
    * Constructs a new {@link RepositoryService}. This constructor should only
    * be called from the {@link RepositoryServiceFactory}.
    *
+   * @param configuration main configuration
    * @param cacheManager cache manager
    * @param provider implementation for {@link RepositoryServiceProvider}
    * @param repository the repository
-   * @param preProcessorUtil
+   * @param preProcessorUtil pre processor util
    */
-  RepositoryService(CacheManager cacheManager,
+  RepositoryService(ScmConfiguration configuration, CacheManager cacheManager,
     RepositoryServiceProvider provider, Repository repository,
     PreProcessorUtil preProcessorUtil)
   {
+    this.configuration = configuration;
     this.cacheManager = cacheManager;
     this.provider = provider;
     this.repository = repository;
@@ -219,7 +222,8 @@ public final class RepositoryService implements Closeable
         repository.getName());
     }
 
-    return new CatCommandBuilder(provider.getCatCommand());
+    return new CatCommandBuilder(configuration, repository,
+      provider.getCatCommand());
   }
 
   /**
@@ -390,7 +394,7 @@ public final class RepositoryService implements Closeable
    * @param feature feature
    *
    * @return true if the feature is supported
-   * 
+   *
    * @since 1.25
    */
   public boolean isSupported(Feature feature)
@@ -399,6 +403,9 @@ public final class RepositoryService implements Closeable
   }
 
   //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private final ScmConfiguration configuration;
 
   /** cache manager */
   private CacheManager cacheManager;

@@ -243,6 +243,14 @@
       <version>${aether.version}</version>
     </dependency>
     
+    <!-- mime type detector -->
+    
+    <dependency>
+      <groupId>org.apache.tika</groupId>
+      <artifactId>tika-core</artifactId>
+      <version>1.4</version>
+    </dependency>
+    
     <!-- rest documentation -->
     
     <dependency>

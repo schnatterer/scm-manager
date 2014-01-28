@@ -72,6 +72,10 @@ Sonia.repository.SettingsFormPanel = Ext.extend(Sonia.repository.FormPanel, {
         xtype: 'textarea',
         helpText: this.descriptionHelpText
       },{
+        fieldLabel: this.encodingText,
+        name: 'encoding',
+        helpText: this.encodingHelpText
+      },{
         fieldLabel: this.publicText,
         name: 'public',
         xtype: 'checkbox',

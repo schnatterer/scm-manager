@@ -35,6 +35,7 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
   titleText: 'General Settings',
   servnameText: 'Servername',
   dateFormatText: 'Date format',
+  defaultRepositoryEncodingText: 'Default repository encoding',
   enableForwardingText: 'Enable forwarding (mod_proxy)',
   forwardPortText: 'Forward Port',
   pluginRepositoryText: 'Plugin repository',
@@ -72,6 +73,8 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
                       <a href="http://momentjs.com/docs/#/displaying/format/" target="_blank">http://momentjs.com/docs/#/displaying/format/</a>.<br />\n\
                       <b>Note:</b><br />\n\
                       {0} - is replaced by a "time ago" string (e.g. 2 hours ago).',
+  // i18n
+  defaultRepositoryEncodingHelpText: 'Default encoding for repositories.',
   pluginRepositoryHelpText: 'The url of the plugin repository.<br />Explanation of the {placeholders}:\n\
   <br /><b>version</b> = SCM-Manager Version<br /><b>os</b> = Operation System<br /><b>arch</b> = Architecture',
   enableForwardingHelpText: 'Enbale mod_proxy port forwarding.',
@@ -136,6 +139,12 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
           helpText: this.dateFormatHelpText,
           helpDisableAutoHide: true,
           allowBlank: false
+        },{
+          xtype: 'textfield',
+          fieldLabel: this.defaultRepositoryEncodingText,
+          name: 'default-repository-encoding',
+          helpText: this.defaultRepositoryEncodingHelpText,
+          allowBlank: true
         },{
           xtype: 'textfield',
           fieldLabel: this.pluginRepositoryText,

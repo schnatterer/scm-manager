@@ -174,6 +174,7 @@ public class ScmConfiguration
     this.enableRepositoryArchive = other.enableRepositoryArchive;
     this.loginAttemptLimit = other.loginAttemptLimit;
     this.loginAttemptLimitTimeout = other.loginAttemptLimitTimeout;
+    this.defaultRepositoryEncoding = other.defaultRepositoryEncoding;
 
     // deprecated fields
     this.servername = other.servername;
@@ -241,6 +242,19 @@ public class ScmConfiguration
   public String getDateFormat()
   {
     return dateFormat;
+  }
+
+  /**
+   * Returns the default encoding for repositories.
+   *
+   *
+   * @return default encoding
+   *
+   * @since 1.36
+   */
+  public String getDefaultRepositoryEncoding()
+  {
+    return defaultRepositoryEncoding;
   }
 
   /**
@@ -528,6 +542,19 @@ public class ScmConfiguration
   }
 
   /**
+   * Sets the default encoding of repositories.
+   *
+   *
+   * @param defaultRepositoryEncoding default encoding
+   *
+   * @since 1.36
+   */
+  public void setDefaultRepositoryEncoding(String defaultRepositoryEncoding)
+  {
+    this.defaultRepositoryEncoding = defaultRepositoryEncoding;
+  }
+
+  /**
    * Method description
    *
    * @since 1.9
@@ -749,6 +776,13 @@ public class ScmConfiguration
   /** Field description */
   @XmlElement(name = "base-url")
   private String baseUrl;
+
+  /**
+   * default encoding of repositories.
+   * @since 1.36
+   */
+  @XmlElement(name = "default-repository-encoding")
+  private String defaultRepositoryEncoding;
 
   /** Field description */
   @XmlElement(name = "force-base-url")

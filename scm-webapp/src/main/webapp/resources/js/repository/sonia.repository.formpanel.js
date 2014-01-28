@@ -40,6 +40,8 @@ Sonia.repository.FormPanel = Ext.extend(Sonia.rest.FormPanel,{
   typeText: 'Type',
   contactText: 'Contact',
   descriptionText: 'Description',
+  // i18n
+  encodingText: 'Encoding',
   publicText: 'Public',
   permissionText: 'Permission',
   errorTitleText: 'Error',
@@ -51,6 +53,8 @@ Sonia.repository.FormPanel = Ext.extend(Sonia.rest.FormPanel,{
   typeHelpText: 'The type of the repository (e.g. Mercurial, Git or Subversion).',
   contactHelpText: 'Email address of the person who is responsible for this repository.',
   descriptionHelpText: 'A short description of the repository.',
+  // i18n
+  encodingHelpText: 'Specify the encoding of the repository, leave the field empty to use the default encoding.',
   publicHelpText: 'Public repository, readable by everyone.',
   permissionHelpText: 'Manage permissions for a specific user or group.<br />\n\
   Permissions explenation:<br /><b>READ</b> = read<br /><b>WRITE</b> = read and write<br />\n\

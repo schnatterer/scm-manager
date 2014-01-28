@@ -154,7 +154,7 @@ public final class RepositoryServiceFactory
    * @param repositoryManager manager for repositories
    * @param resolvers a set of {@link RepositoryServiceResolver}
    * @param preProcessorUtil helper object for pre processor handling
-   * 
+   *
    * @since 1.21
    */
   @Inject
@@ -292,8 +292,8 @@ public final class RepositoryServiceFactory
             repository.getName(), repository.getType());
         }
 
-        service = new RepositoryService(cacheManager, provider, repository,
-          preProcessorUtil);
+        service = new RepositoryService(configuration, cacheManager, provider,
+          repository, preProcessorUtil);
 
         break;
       }

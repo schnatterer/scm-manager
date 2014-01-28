@@ -43,6 +43,7 @@ import com.google.inject.servlet.ServletModule;
 import com.google.inject.throwingproviders.ThrowingProviderBinder;
 
 import org.apache.shiro.authz.permission.PermissionResolver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,8 +61,10 @@ import sonia.scm.group.GroupDAO;
 import sonia.scm.group.GroupManager;
 import sonia.scm.group.GroupManagerProvider;
 import sonia.scm.group.xml.XmlGroupDAO;
+import sonia.scm.io.ContentTypeDetector;
 import sonia.scm.io.DefaultFileSystem;
 import sonia.scm.io.FileSystem;
+import sonia.scm.io.TikaContentTypeDetector;
 import sonia.scm.net.HttpClient;
 import sonia.scm.net.URLHttpClient;
 import sonia.scm.plugin.DefaultPluginLoader;
@@ -140,7 +143,6 @@ import sonia.scm.web.security.DefaultAdministrationContext;
 import sonia.scm.web.security.WebSecurityContext;
 
 //~--- JDK imports ------------------------------------------------------------
-
 
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
@@ -275,6 +277,7 @@ public class ScmServletModule extends ServletModule
     bind(CipherHandler.class).toInstance(cu.getCipherHandler());
     bind(EncryptionHandler.class, MessageDigestEncryptionHandler.class);
     bind(FileSystem.class, DefaultFileSystem.class);
+    bind(ContentTypeDetector.class, TikaContentTypeDetector.class);
 
     // bind extensions
     pluginLoader.processExtensions(binder());

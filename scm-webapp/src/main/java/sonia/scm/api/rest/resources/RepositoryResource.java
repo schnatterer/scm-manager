@@ -49,6 +49,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import sonia.scm.config.ScmConfiguration;
+import sonia.scm.io.ContentType;
+import sonia.scm.io.ContentTypeDetector;
 import sonia.scm.repository.BlameResult;
 import sonia.scm.repository.Branches;
 import sonia.scm.repository.BrowserResult;
@@ -131,16 +133,19 @@ public class RepositoryResource
    * @param configuration
    * @param repositoryManager
    * @param servicefactory
+   * @param contentTypeDetector
    */
   @Inject
   public RepositoryResource(ScmConfiguration configuration,
     RepositoryManager repositoryManager,
-    RepositoryServiceFactory servicefactory)
+    RepositoryServiceFactory servicefactory,
+    ContentTypeDetector contentTypeDetector)
   {
     super(repositoryManager);
     this.configuration = configuration;
     this.repositoryManager = repositoryManager;
     this.servicefactory = servicefactory;
+    this.contentTypeDetector = contentTypeDetector;
     setDisableCache(false);
   }
 
@@ -774,37 +779,54 @@ public class RepositoryResource
     @QueryParam("revision") String revision, @QueryParam("path") String path)
   {
     Response response = null;
-    StreamingOutput output = null;
     RepositoryService service = null;
 
     try
     {
-      service = servicefactory.create(id);
+      Repository repository = repositoryManager.get(id);
 
-      CatCommandBuilder builder = service.getCatCommand();
-
-      if (!Strings.isNullOrEmpty(revision))
+      if (repository != null)
       {
-        builder.setRevision(revision);
+        service = servicefactory.create(repository);
+
+        CatCommandBuilder builder = service.getCatCommand();
+
+        if (!Strings.isNullOrEmpty(revision))
+        {
+          builder.setRevision(revision);
+        }
+
+        /**
+         * protection for crlf injection
+         * see https://bitbucket.org/sdorra/scm-manager/issue/320/crlf-injection-vulnerability-in-diff-api
+         */
+        path = HttpUtil.removeCRLFInjectionChars(path);
+
+        Object entity;
+        ContentType mimeType = contentTypeDetector.detect(path);
+
+        if (mimeType.isText())
+        {
+          entity = builder.getContent(path);
+        }
+        else
+        {
+          entity = new BrowserStreamingOutput(service, builder, path);
+        }
+
+        String contentDispositionName = getContentDispositionNameFromPath(path);
+
+        //J-
+        response = Response.ok(entity)
+          .header("Content-Disposition", contentDispositionName)
+          .build();
+        //J+
       }
-
-      output = new BrowserStreamingOutput(service, builder, path);
-
-      /**
-       * protection for crlf injection
-       * see https://bitbucket.org/sdorra/scm-manager/issue/320/crlf-injection-vulnerability-in-diff-api
-       */
-      path = HttpUtil.removeCRLFInjectionChars(path);
-
-      String contentDispositionName = getContentDispositionNameFromPath(path);
-
-      response = Response.ok(output).header("Content-Disposition",
-        contentDispositionName).build();
-    }
-    catch (RepositoryNotFoundException ex)
-    {
-      logger.warn("could not find repository browser for respository {}", id);
-      response = Response.status(Response.Status.NOT_FOUND).build();
+      else
+      {
+        logger.warn("could not find repository browser for respository {}", id);
+        response = Response.status(Response.Status.NOT_FOUND).build();
+      }
     }
     catch (CommandNotSupportedException ex)
     {
@@ -1133,6 +1155,9 @@ public class RepositoryResource
   }
 
   //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private final ContentTypeDetector contentTypeDetector;
 
   /** Field description */
   private ScmConfiguration configuration;

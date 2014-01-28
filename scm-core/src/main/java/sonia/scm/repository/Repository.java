@@ -53,6 +53,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import sonia.scm.config.ScmConfiguration;
 
 /**
  * Source code repository.
@@ -163,6 +164,7 @@ public class Repository extends BasicPropertiesAware implements ModelObject
     repository.setUrl(url);
     repository.setPublicReadable(publicReadable);
     repository.setArchived(archived);
+    repository.setEncoding(encoding);
   }
 
   /**
@@ -216,7 +218,8 @@ public class Repository extends BasicPropertiesAware implements ModelObject
            && Objects.equal(url, other.url)
            && Objects.equal(creationDate, other.creationDate)
            && Objects.equal(lastModified, other.lastModified)
-           && Objects.equal(properties, other.properties);
+           && Objects.equal(properties, other.properties)
+           && Objects.equal(encoding, other.encoding);
     //J+
   }
 
@@ -230,7 +233,7 @@ public class Repository extends BasicPropertiesAware implements ModelObject
   public int hashCode()
   {
     return Objects.hashCode(id, name, contact, description, publicReadable,
-      archived, permissions, type, url, creationDate, lastModified, properties);
+      archived, permissions, type, url, creationDate, lastModified, properties, encoding);
   }
 
   /**
@@ -256,6 +259,7 @@ public class Repository extends BasicPropertiesAware implements ModelObject
             .add("lastModified", lastModified)
             .add("creationDate", creationDate)
             .add("properties", properties)
+            .add("encoding", encoding)
             .toString();
     //J+
   }
@@ -294,6 +298,21 @@ public class Repository extends BasicPropertiesAware implements ModelObject
   public String getDescription()
   {
     return description;
+  }
+
+  /**
+   * Encoding of the repository. The method returns {@code null} if the 
+   * encoding for the repository is not set, in this case the default repository
+   * should be used ({@link ScmConfiguration#getDefaultRepositoryEncoding()}).
+   *
+   *
+   * @return encoding of repository
+   * 
+   * @since 1.36
+   */
+  public String getEncoding()
+  {
+    return encoding;
   }
 
   /**
@@ -464,6 +483,19 @@ public class Repository extends BasicPropertiesAware implements ModelObject
   }
 
   /**
+   * Sets the repository encoding.
+   *
+   *
+   * @param encoding encoding of the repository
+   * 
+   * @since 1.36
+   */
+  public void setEncoding(String encoding)
+  {
+    this.encoding = encoding;
+  }
+
+  /**
    * The unique id of the {@link Repository}.
    *
    *
@@ -552,6 +584,12 @@ public class Repository extends BasicPropertiesAware implements ModelObject
 
   /** Field description */
   private String description;
+
+  /**
+   * encoding of the repository
+   * @since 1.36
+   */
+  private String encoding;
 
   /** Field description */
   private String id;
