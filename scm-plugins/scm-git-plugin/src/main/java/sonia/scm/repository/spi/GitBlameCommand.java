@@ -37,9 +37,12 @@ package sonia.scm.repository.spi;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.RawText;
+import org.eclipse.jgit.diff.RawTexts;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -47,8 +50,10 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.repository.BlameLine;
 import sonia.scm.repository.BlameResult;
+import sonia.scm.repository.Encodings;
 import sonia.scm.repository.GitUtil;
 import sonia.scm.repository.Person;
 import sonia.scm.repository.Repository;
@@ -79,15 +84,15 @@ public class GitBlameCommand extends AbstractGitCommand implements BlameCommand
   /**
    * Constructs ...
    *
-   *
-   *
+   * @param configuration
    * @param context
    * @param repository
-   * @param repositoryDirectory
    */
-  public GitBlameCommand(GitContext context, Repository repository)
+  public GitBlameCommand(ScmConfiguration configuration, GitContext context,
+    Repository repository)
   {
     super(context, repository);
+    this.configuration = configuration;
   }
 
   //~--- get methods ----------------------------------------------------------
@@ -105,7 +110,7 @@ public class GitBlameCommand extends AbstractGitCommand implements BlameCommand
    */
   @Override
   public BlameResult getBlameResult(BlameCommandRequest request)
-          throws IOException, RepositoryException
+    throws IOException, RepositoryException
   {
     if (logger.isDebugEnabled())
     {
@@ -113,7 +118,7 @@ public class GitBlameCommand extends AbstractGitCommand implements BlameCommand
     }
 
     Preconditions.checkArgument(!Strings.isNullOrEmpty(request.getPath()),
-                                "path is empty or null");
+      "path is empty or null");
 
     BlameResult result = null;
 
@@ -133,12 +138,17 @@ public class GitBlameCommand extends AbstractGitCommand implements BlameCommand
       if (gitBlameResult == null)
       {
         throw new RepositoryException(
-            "could not create blame result for path ".concat(
-              request.getPath()));
+          "could not create blame result for path ".concat(request.getPath()));
       }
 
-      List<BlameLine> blameLines = new ArrayList<BlameLine>();
-      int total = gitBlameResult.getResultContents().size();
+      List<BlameLine> blameLines = Lists.newArrayList();
+      //J-
+      RawText content = RawTexts.withEncoding(
+        Encodings.getEncoding(configuration, repository),
+        gitBlameResult.getResultContents()
+      );
+      //J+
+      int total = content.size();
       int i = 0;
 
       for (; i < total; i++)
@@ -152,7 +162,7 @@ public class GitBlameCommand extends AbstractGitCommand implements BlameCommand
 
           blameLine.setLineNumber(i + 1);
           blameLine.setAuthor(new Person(author.getName(),
-                                         author.getEmailAddress()));
+            author.getEmailAddress()));
           blameLine.setDescription(commit.getShortMessage());
 
           long when = GitUtil.getCommitTime(commit);
@@ -163,9 +173,7 @@ public class GitBlameCommand extends AbstractGitCommand implements BlameCommand
 
           blameLine.setRevision(rev);
 
-          String content = gitBlameResult.getResultContents().getString(i);
-
-          blameLine.setCode(content);
+          blameLine.setCode(content.getString(i));
           blameLines.add(blameLine);
         }
       }
@@ -179,4 +187,9 @@ public class GitBlameCommand extends AbstractGitCommand implements BlameCommand
 
     return result;
   }
+
+  //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private ScmConfiguration configuration;
 }

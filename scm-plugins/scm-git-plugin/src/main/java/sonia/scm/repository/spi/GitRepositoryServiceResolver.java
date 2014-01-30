@@ -30,12 +30,14 @@
  */
 
 
+
 package sonia.scm.repository.spi;
 
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.google.inject.Inject;
 
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.plugin.ext.Extension;
 import sonia.scm.repository.GitRepositoryHandler;
 import sonia.scm.repository.Repository;
@@ -56,12 +58,14 @@ public class GitRepositoryServiceResolver implements RepositoryServiceResolver
   /**
    * Constructs ...
    *
-   *
+   * @param configuration
    * @param handler
    */
   @Inject
-  public GitRepositoryServiceResolver(GitRepositoryHandler handler)
+  public GitRepositoryServiceResolver(ScmConfiguration configuration,
+    GitRepositoryHandler handler)
   {
+    this.configuration = configuration;
     this.handler = handler;
   }
 
@@ -82,13 +86,17 @@ public class GitRepositoryServiceResolver implements RepositoryServiceResolver
 
     if (TYPE.equalsIgnoreCase(repository.getType()))
     {
-      provider = new GitRepositoryServiceProvider(handler, repository);
+      provider = new GitRepositoryServiceProvider(configuration, handler,
+        repository);
     }
 
     return provider;
   }
 
   //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private ScmConfiguration configuration;
 
   /** Field description */
   private GitRepositoryHandler handler;

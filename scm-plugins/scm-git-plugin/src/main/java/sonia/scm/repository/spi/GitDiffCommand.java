@@ -30,12 +30,18 @@
  */
 
 
+
 package sonia.scm.repository.spi;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.base.Charsets;
+
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
+import org.eclipse.jgit.diff.RawText;
+import org.eclipse.jgit.diff.RawTexts;
+import org.eclipse.jgit.patch.FileHeader;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -46,6 +52,8 @@ import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sonia.scm.config.ScmConfiguration;
+import sonia.scm.repository.Encodings;
 import sonia.scm.repository.GitUtil;
 import sonia.scm.repository.Repository;
 import sonia.scm.util.Util;
@@ -53,6 +61,7 @@ import sonia.scm.util.Util;
 //~--- JDK imports ------------------------------------------------------------
 
 import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 
 import java.util.List;
@@ -75,15 +84,15 @@ public class GitDiffCommand extends AbstractGitCommand implements DiffCommand
   /**
    * Constructs ...
    *
-   *
-   *
+   * @param configuration
    * @param context
    * @param repository
-   * @param repositoryDirectory
    */
-  public GitDiffCommand(GitContext context, Repository repository)
+  public GitDiffCommand(ScmConfiguration configuration, GitContext context,
+    Repository repository)
   {
     super(context, repository);
+    this.configuration = configuration;
   }
 
   //~--- get methods ----------------------------------------------------------
@@ -140,7 +149,12 @@ public class GitDiffCommand extends AbstractGitCommand implements DiffCommand
       }
 
       treeWalk.addTree(commit.getTree());
-      formatter = new DiffFormatter(new BufferedOutputStream(output));
+      //J-
+      formatter = new EncodingAwareDiffFormatter(
+        new BufferedOutputStream(output),
+        Encodings.getEncoding(configuration, repository)
+      );
+      //J+
       formatter.setRepository(gr);
 
       List<DiffEntry> entries = DiffEntry.scan(treeWalk);
@@ -168,4 +182,65 @@ public class GitDiffCommand extends AbstractGitCommand implements DiffCommand
       GitUtil.release(formatter);
     }
   }
+
+  //~--- inner classes --------------------------------------------------------
+
+  /**
+   * Class description
+   *
+   *
+   * @version        Enter version here..., 14/01/30
+   * @author         Enter your name here...
+   */
+  private static class EncodingAwareDiffFormatter extends DiffFormatter
+  {
+
+    /**
+     * Constructs ...
+     *
+     *
+     * @param out
+     * @param encoding
+     */
+    public EncodingAwareDiffFormatter(OutputStream out, String encoding)
+    {
+      super(out);
+      this.encoding = encoding;
+    }
+
+    //~--- methods ------------------------------------------------------------
+
+    /**
+     * Method description
+     *
+     *
+     * @param prefix
+     * @param text
+     * @param cur
+     *
+     * @throws IOException
+     */
+    @Override
+    protected void writeLine(char prefix, RawText text, int cur)
+      throws IOException
+    {
+      OutputStream out = getOutputStream();
+
+      out.write(prefix);
+      out.write(RawTexts.withEncoding(encoding,
+        text).getString(cur).getBytes(Charsets.UTF_8));
+      out.write('\n');
+    }
+
+    //~--- fields -------------------------------------------------------------
+
+    /** Field description */
+    private final String encoding;
+  }
+
+
+  //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private ScmConfiguration configuration;
 }

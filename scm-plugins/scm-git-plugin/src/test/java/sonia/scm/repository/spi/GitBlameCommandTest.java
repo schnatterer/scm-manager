@@ -30,12 +30,14 @@
  */
 
 
+
 package sonia.scm.repository.spi;
 
 //~--- non-JDK imports --------------------------------------------------------
 
 import org.junit.Test;
 
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.repository.BlameLine;
 import sonia.scm.repository.BlameResult;
 import sonia.scm.repository.RepositoryException;
@@ -78,13 +80,13 @@ public class GitBlameCommandTest extends AbstractGitCommandTestBase
     line = result.getLine(1);
     assertEquals(2, line.getLineNumber());
     assertEquals("fcd0ef1831e4002ac43ea539f4094334c79ea9ec",
-                 line.getRevision());
+      line.getRevision());
     checkDate(line.getWhen());
     assertEquals("line for blame", line.getCode());
     assertEquals("added new line for blame", line.getDescription());
     assertEquals("Zaphod Beeblebrox", line.getAuthor().getName());
     assertEquals("zaphod.beeblebrox@hitchhiker.com",
-                 line.getAuthor().getMail());
+      line.getAuthor().getMail());
   }
 
   /**
@@ -96,7 +98,7 @@ public class GitBlameCommandTest extends AbstractGitCommandTestBase
    */
   @Test
   public void testGetBlameResultWithRevision()
-          throws IOException, RepositoryException
+    throws IOException, RepositoryException
   {
     BlameCommandRequest request = new BlameCommandRequest();
 
@@ -123,7 +125,7 @@ public class GitBlameCommandTest extends AbstractGitCommandTestBase
   {
     assertEquals(1, line.getLineNumber());
     assertEquals("435df2f061add3589cb326cc64be9b9c3897ceca",
-                 line.getRevision());
+      line.getRevision());
     checkDate(line.getWhen());
     assertEquals("a", line.getCode());
     assertEquals("added a and b files", line.getDescription());
@@ -139,6 +141,7 @@ public class GitBlameCommandTest extends AbstractGitCommandTestBase
    */
   private GitBlameCommand createCommand()
   {
-    return new GitBlameCommand(createContext(), repository);
+    return new GitBlameCommand(new ScmConfiguration(), createContext(),
+      repository);
   }
 }

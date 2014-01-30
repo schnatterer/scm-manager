@@ -37,6 +37,7 @@ package sonia.scm.repository.spi;
 
 import com.google.common.collect.ImmutableSet;
 
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.repository.GitRepositoryHandler;
 import sonia.scm.repository.Repository;
 import sonia.scm.repository.api.Command;
@@ -77,12 +78,15 @@ public class GitRepositoryServiceProvider extends RepositoryServiceProvider
    * Constructs ...
    *
    *
+   *
+   * @param configuration
    * @param handler
    * @param repository
    */
-  public GitRepositoryServiceProvider(GitRepositoryHandler handler,
-    Repository repository)
+  public GitRepositoryServiceProvider(ScmConfiguration configuration,
+    GitRepositoryHandler handler, Repository repository)
   {
+    this.configuration = configuration;
     this.handler = handler;
     this.repository = repository;
     context = new GitContext(handler.getDirectory(repository));
@@ -113,7 +117,7 @@ public class GitRepositoryServiceProvider extends RepositoryServiceProvider
   @Override
   public BlameCommand getBlameCommand()
   {
-    return new GitBlameCommand(context, repository);
+    return new GitBlameCommand(configuration, context, repository);
   }
 
   /**
@@ -161,7 +165,7 @@ public class GitRepositoryServiceProvider extends RepositoryServiceProvider
   @Override
   public DiffCommand getDiffCommand()
   {
-    return new GitDiffCommand(context, repository);
+    return new GitDiffCommand(configuration, context, repository);
   }
 
   /**
@@ -249,6 +253,9 @@ public class GitRepositoryServiceProvider extends RepositoryServiceProvider
   }
 
   //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private ScmConfiguration configuration;
 
   /** Field description */
   private GitContext context;
