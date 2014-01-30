@@ -39,6 +39,10 @@ import com.aragost.javahg.Repository;
 
 import com.google.common.base.Strings;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.repository.HgConfig;
 import sonia.scm.repository.HgHookManager;
 import sonia.scm.repository.HgRepositoryHandler;
@@ -58,7 +62,16 @@ public class HgCommandContext implements Closeable
 {
 
   /** Field description */
+  private static final String ENCODING = "UTF-8";
+
+  /** Field description */
   private static final String PROPERTY_ENCODING = "hg.encoding";
+
+  /**
+   * the logger for HgCommandContext
+   */
+  private static final Logger logger =
+    LoggerFactory.getLogger(HgCommandContext.class);
 
   //~--- constructors ---------------------------------------------------------
 
@@ -67,16 +80,18 @@ public class HgCommandContext implements Closeable
    *
    *
    *
+   *
+   * @param configuration
    * @param hookManager
    * @param handler
    * @param repository
    * @param directory
    */
-  public HgCommandContext(HgHookManager hookManager,
-    HgRepositoryHandler handler, sonia.scm.repository.Repository repository,
-    File directory)
+  public HgCommandContext(ScmConfiguration configuration,
+    HgHookManager hookManager, HgRepositoryHandler handler,
+    sonia.scm.repository.Repository repository, File directory)
   {
-    this(hookManager, handler, repository, directory,
+    this(configuration, hookManager, handler, repository, directory,
       handler.getHgContext().isPending());
   }
 
@@ -85,26 +100,23 @@ public class HgCommandContext implements Closeable
    *
    *
    *
+   *
+   * @param configuration
    * @param hookManager
    * @param hanlder
    * @param repository
    * @param directory
    * @param pending
    */
-  public HgCommandContext(HgHookManager hookManager,
-    HgRepositoryHandler hanlder, sonia.scm.repository.Repository repository,
-    File directory, boolean pending)
+  public HgCommandContext(ScmConfiguration configuration,
+    HgHookManager hookManager, HgRepositoryHandler hanlder,
+    sonia.scm.repository.Repository repository, File directory, boolean pending)
   {
     this.hookManager = hookManager;
     this.hanlder = hanlder;
     this.directory = directory;
-    this.encoding = repository.getProperty(PROPERTY_ENCODING);
+    this.encoding = getRepositoryEncoding(configuration, hanlder, repository);
     this.pending = pending;
-
-    if (Strings.isNullOrEmpty(encoding))
-    {
-      encoding = hanlder.getConfig().getEncoding();
-    }
   }
 
   //~--- methods --------------------------------------------------------------
@@ -152,6 +164,62 @@ public class HgCommandContext implements Closeable
   public HgConfig getConfig()
   {
     return hanlder.getConfig();
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param configuration
+   * @param handler
+   * @param repository
+   *
+   * @return
+   */
+  private String getRepositoryEncoding(ScmConfiguration configuration,
+    HgRepositoryHandler handler, sonia.scm.repository.Repository repository)
+  {
+    String enc = repository.getEncoding();
+
+    if (Strings.isNullOrEmpty(enc))
+    {
+      enc = repository.getProperty(PROPERTY_ENCODING);
+
+      if (Strings.isNullOrEmpty(enc))
+      {
+        enc = handler.getConfig().getEncoding();
+
+        if (Strings.isNullOrEmpty(enc))
+        {
+          enc = configuration.getDefaultRepositoryEncoding();
+
+          if (Strings.isNullOrEmpty(enc))
+          {
+            enc = ENCODING;
+            logger.trace("could not find configured encoding, use default {}",
+              enc);
+          }
+          else
+          {
+            logger.trace("use encoding {} from scm configuration", enc);
+          }
+        }
+        else
+        {
+          logger.trace("use encoding {} from repository handler", enc);
+        }
+      }
+      else
+      {
+        logger.trace("use encoding {} from repository property {}", enc);
+      }
+    }
+    else
+    {
+      logger.trace("use encoding {} from repository", enc);
+    }
+
+    return enc;
   }
 
   //~--- fields ---------------------------------------------------------------

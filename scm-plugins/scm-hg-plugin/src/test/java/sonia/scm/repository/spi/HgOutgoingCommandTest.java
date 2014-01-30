@@ -30,6 +30,7 @@
  */
 
 
+
 package sonia.scm.repository.spi;
 
 //~--- non-JDK imports --------------------------------------------------------
@@ -38,6 +39,7 @@ import com.aragost.javahg.Changeset;
 
 import org.junit.Test;
 
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.repository.ChangesetPagingResult;
 import sonia.scm.repository.HgTestUtil;
 import sonia.scm.repository.RepositoryException;
@@ -150,9 +152,8 @@ public class HgOutgoingCommandTest extends IncomingOutgoingTestBase
    */
   private HgOutgoingCommand createOutgoingCommand()
   {
-    return new HgOutgoingCommand(
-      new HgCommandContext(
-        HgTestUtil.createHookManager(), handler, outgoingRepository,
-          outgoingDirectory), outgoingRepository, handler);
+    return new HgOutgoingCommand(new HgCommandContext(new ScmConfiguration(),
+      HgTestUtil.createHookManager(), handler, outgoingRepository,
+      outgoingDirectory), outgoingRepository, handler);
   }
 }

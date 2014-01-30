@@ -38,6 +38,7 @@ package sonia.scm.repository.spi;
 import org.junit.After;
 import org.junit.Before;
 
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.repository.HgRepositoryHandler;
 import sonia.scm.repository.HgTestUtil;
 import sonia.scm.repository.RepositoryTestData;
@@ -82,7 +83,8 @@ public class AbstractHgCommandTestBase extends ZippedRepositoryTestBase
 
     HgTestUtil.checkForSkip(handler);
 
-    cmdContext = new HgCommandContext(HgTestUtil.createHookManager(), handler,
+    cmdContext = new HgCommandContext(new ScmConfiguration(),
+      HgTestUtil.createHookManager(), handler,
       RepositoryTestData.createHeartOfGold(), repositoryDirectory);
   }
 
