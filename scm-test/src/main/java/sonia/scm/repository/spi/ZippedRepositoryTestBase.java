@@ -54,9 +54,14 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
+import java.lang.reflect.Constructor;
+
 import java.net.URL;
+
+import java.nio.charset.Charset;
 
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -125,8 +130,6 @@ public abstract class ZippedRepositoryTestBase extends AbstractTestBase
    *
    *
    * @return
-   *
-   * @throws IOException
    */
   protected File createRepositoryDirectory()
   {
@@ -150,6 +153,59 @@ public abstract class ZippedRepositoryTestBase extends AbstractTestBase
    * Method description
    *
    *
+   * @param url
+   * @param charset
+   *
+   * @return
+   *
+   * @throws IOException
+   */
+  protected ZipInputStream open(URL url, Charset charset) throws IOException
+  {
+    ZipInputStream zis = null;
+
+    // try to use java 7 method to create ZipInputStream
+    try
+    {
+      Constructor<ZipInputStream> constructor =
+        ZipInputStream.class.getConstructor(InputStream.class, Charset.class);
+
+      zis = constructor.newInstance(url.openStream(), charset);
+    }
+    catch (NoSuchMethodException ex) {}
+    catch (Exception ex)
+    {
+      ex.printStackTrace(System.err);
+    }
+
+    // fall back to java 6 method to create ZipInputStream
+    if (zis == null)
+    {
+      zis = new ZipInputStream(url.openStream());
+    }
+
+    return zis;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param url
+   *
+   * @return
+   *
+   * @throws IOException
+   */
+  protected ZipInputStream open(URL url) throws IOException
+  {
+    return new ZipInputStream(url.openStream());
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param folder
    *
    * @throws IOException
@@ -161,7 +217,7 @@ public abstract class ZippedRepositoryTestBase extends AbstractTestBase
 
     try
     {
-      zip = new ZipInputStream(url.openStream());
+      zip = open(url);
 
       ZipEntry entry = zip.getNextEntry();
 
