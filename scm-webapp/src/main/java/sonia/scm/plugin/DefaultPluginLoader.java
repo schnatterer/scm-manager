@@ -75,7 +75,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextListener;
 
@@ -123,6 +122,7 @@ public class DefaultPluginLoader implements PluginLoader
   {
     this.servletContext = servletContext;
     this.annotationScannerFactory = new DefaultAnnotationScannerFactory();
+
     ClassLoader classLoader = getClassLoader();
 
     try
@@ -272,6 +272,7 @@ public class DefaultPluginLoader implements PluginLoader
         logger.error("could not decode path ".concat(path), ex);
       }
     }
+
     return path;
   }
 
@@ -300,29 +301,54 @@ public class DefaultPluginLoader implements PluginLoader
       path = path.substring("jar:file:".length(), path.lastIndexOf('!'));
       path = decodePath(path);
     }
+
     // jboss uses vfs fs
     else if (path.startsWith("vfs:/"))
     {
 
       // vfs:/content/scm.war/WEB-INF/lib/plugin.jar/META-INF/scm/plugin.xml
-      path = path.substring("vfs:/content/".length());
-      path = path.substring(path.indexOf("/"));
+      int index = path.indexOf(".war");
+
+      if (index > 0)
+      {
+        path = path.substring(index + 4);
+      }
+      else
+      {
+        throw new IllegalArgumentException("vfs ulr does not contain .war");
+      }
+
       path = path.substring(0,
         path.length() - "/META-INF/scm/plugin.xml".length());
 
-      try {
-      location = new PluginLocation(servletContext.getResource(path));
-      } catch (MalformedURLException ex){
+      URL pluginUrl = null;
+
+      try
+      {
+        pluginUrl = servletContext.getResource(path);
+      }
+      catch (MalformedURLException ex)
+      {
         throw Throwables.propagate(ex);
       }
+
+      if (pluginUrl != null)
+      {
+        location = new PluginLocation(pluginUrl);
+      }
+      else
+      {
+        throw new IllegalArgumentException(
+          "could not create location from url");
+      }
     }
-    
-    if ( location == null )
+
+    if (location == null)
     {
       location = new PluginLocation(new File(path));
     }
 
-    logger.trace("extract resource path {} from url {}", path, url);
+    logger.warn("extract resource path {} from url {}", location, url);
 
     return location;
   }
@@ -471,6 +497,7 @@ public class DefaultPluginLoader implements PluginLoader
    * @param extensionPointCollector
    * @param extensionCollector
    * @param file
+   * @param location
    *
    * @throws IOException
    */
@@ -562,8 +589,8 @@ public class DefaultPluginLoader implements PluginLoader
 
         packageSet.add(SCMContext.DEFAULT_PACKAGE);
 
-          scanFile(classLoader, packageSet, extensionPointCollector,
-            extensionCollector, plugin.getLocation());
+        scanFile(classLoader, packageSet, extensionPointCollector,
+          extensionCollector, plugin.getLocation());
       }
       catch (IOException ex)
       {
