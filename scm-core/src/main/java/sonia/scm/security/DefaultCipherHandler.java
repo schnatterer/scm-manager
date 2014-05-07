@@ -57,10 +57,13 @@ import java.io.UnsupportedEncodingException;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 
 import java.util.Arrays;
 
+import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -90,6 +93,12 @@ public class DefaultCipherHandler implements CipherHandler
 
   /** Field description */
   private static final String CIPHERKEY_FILENAME = ".cipherkey";
+
+  /** Field description */
+  private static final String DEFAULT_CIPHER_PROVIDER = "SunJCE";
+
+  /** Field description */
+  private static final String DEFAULT_DIGEST_PROVIDER = "SUN";
 
   /** Field description */
   private static final char[] KEY_BASE = new char[]
@@ -199,7 +208,7 @@ public class DefaultCipherHandler implements CipherHandler
 
       IvParameterSpec iv = new IvParameterSpec(salt);
       SecretKey secretKey = buildSecretKey(plainKey);
-      javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(CIPHER_TYPE);
+      javax.crypto.Cipher cipher = getCipherInstance();
 
       cipher.init(javax.crypto.Cipher.DECRYPT_MODE, secretKey, iv);
 
@@ -252,7 +261,7 @@ public class DefaultCipherHandler implements CipherHandler
 
       IvParameterSpec iv = new IvParameterSpec(salt);
       SecretKey secretKey = buildSecretKey(key);
-      javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(CIPHER_TYPE);
+      javax.crypto.Cipher cipher = getCipherInstance();
 
       cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, secretKey, iv);
 
@@ -290,7 +299,7 @@ public class DefaultCipherHandler implements CipherHandler
     throws UnsupportedEncodingException, NoSuchAlgorithmException
   {
     byte[] raw = new String(plainKey).getBytes(ENCODING);
-    MessageDigest digest = MessageDigest.getInstance(DIGEST_TYPE);
+    MessageDigest digest = getMessageDigestInstance();
 
     raw = digest.digest(raw);
     raw = Arrays.copyOf(raw, KEY_LENGTH);
@@ -342,6 +351,87 @@ public class DefaultCipherHandler implements CipherHandler
     {
       IOUtil.close(output);
     }
+  }
+
+  //~--- get methods ----------------------------------------------------------
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   *
+   * @throws NoSuchAlgorithmException
+   * @throws NoSuchPaddingException
+   */
+  private Cipher getCipherInstance()
+    throws NoSuchAlgorithmException, NoSuchPaddingException
+  {
+    javax.crypto.Cipher cipher;
+
+    try
+    {
+      cipher = javax.crypto.Cipher.getInstance(CIPHER_TYPE,
+        DEFAULT_CIPHER_PROVIDER);
+    }
+    catch (NoSuchProviderException ex)
+    {
+      logger.warn(
+        "could not use default cipher provider ".concat(
+          DEFAULT_CIPHER_PROVIDER), ex);
+      cipher = javax.crypto.Cipher.getInstance(CIPHER_TYPE);
+    }
+    catch (NoSuchAlgorithmException ex)
+    {
+      logger.warn(
+        "could not use default cipher provider ".concat(
+          DEFAULT_CIPHER_PROVIDER), ex);
+      cipher = javax.crypto.Cipher.getInstance(CIPHER_TYPE);
+    }
+    catch (NoSuchPaddingException ex)
+    {
+      logger.warn(
+        "could not use default cipher provider ".concat(
+          DEFAULT_CIPHER_PROVIDER), ex);
+      cipher = javax.crypto.Cipher.getInstance(CIPHER_TYPE);
+    }
+
+    return cipher;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   *
+   * @throws NoSuchAlgorithmException
+   */
+  private MessageDigest getMessageDigestInstance()
+    throws NoSuchAlgorithmException
+  {
+    MessageDigest digest;
+
+    try
+    {
+      digest = MessageDigest.getInstance(DIGEST_TYPE, DEFAULT_DIGEST_PROVIDER);
+    }
+    catch (NoSuchProviderException ex)
+    {
+      logger.warn(
+        "could not use default digest provider ".concat(
+          DEFAULT_DIGEST_PROVIDER), ex);
+      digest = MessageDigest.getInstance(DIGEST_TYPE);
+    }
+    catch (NoSuchAlgorithmException ex)
+    {
+      logger.warn(
+        "could not use default digest provider ".concat(
+          DEFAULT_DIGEST_PROVIDER), ex);
+      digest = MessageDigest.getInstance(DIGEST_TYPE);
+    }
+
+    return digest;
   }
 
   //~--- fields ---------------------------------------------------------------
