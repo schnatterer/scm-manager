@@ -65,7 +65,7 @@ import java.util.Locale;
  *
  * @author Sebastian Sdorra
  */
-public class IOUtil
+public final class IOUtil
 {
 
   /** Field description */
@@ -93,15 +93,23 @@ public class IOUtil
 
   /** Field description */
   private static final String[] EXTENSION_SCRIPT_UNIX = { ".sh", ".csh",
-          ".bsh" };
+    ".bsh" };
 
   /** Field description */
   private static final String[] EXTENSION_SCRIPT_WINDOWS = { ".bat", ".cmd",
-          ".exe" };
+    ".exe" };
 
   /** Field description */
   private static final Logger logger =
     LoggerFactory.getLogger(IOUtil.class.getName());
+
+  //~--- constructors ---------------------------------------------------------
+
+  /**
+   * Constructs ...
+   *
+   */
+  private IOUtil() {}
 
   //~--- methods --------------------------------------------------------------
 
@@ -137,7 +145,7 @@ public class IOUtil
    * @throws IOException
    */
   public static void copy(Reader reader, Writer writer, int bufferSize)
-          throws IOException
+    throws IOException
   {
     char[] buffer = new char[bufferSize];
 
@@ -186,7 +194,7 @@ public class IOUtil
    * @throws IOException
    */
   public static void copy(InputStream in, OutputStream out, int bufferSize)
-          throws IOException
+    throws IOException
   {
     byte[] buffer = new byte[bufferSize];
 
@@ -210,8 +218,8 @@ public class IOUtil
    * @throws IOException
    */
   public static void copy(InputStream in, OutputStream out, int bufferSize,
-                          int byteCount)
-          throws IOException
+    int byteCount)
+    throws IOException
   {
     byte buffer[] = new byte[bufferSize];
     int len = bufferSize;
@@ -221,8 +229,8 @@ public class IOUtil
       while (byteCount > 0)
       {
         int max = (byteCount < bufferSize)
-                  ? (int) byteCount
-                  : bufferSize;
+          ? (int) byteCount
+          : bufferSize;
 
         len = in.read(buffer, 0, max);
 
@@ -343,7 +351,7 @@ public class IOUtil
    * @param bufferSize
    */
   public static void copyThread(InputStream input, OutputStream output,
-                                int bufferSize)
+    int bufferSize)
   {
     new Thread(new IOStreamCopyThread(input, output, bufferSize)).start();
   }
@@ -362,13 +370,13 @@ public class IOUtil
   }
 
   /**
-   *   Method description
+   * Method description
    *
    *
-   *   @param file
+   * @param file
    * @param silent
    *
-   *   @throws IOException
+   * @throws IOException
    */
   public static void delete(File file, boolean silent) throws IOException
   {
@@ -380,22 +388,35 @@ public class IOUtil
       {
         for (File child : children)
         {
-          delete(child);
+          delete(child, silent);
         }
       }
     }
 
-    if (!file.delete())
+    for (int i = 20; !file.delete(); i--)
     {
-      String message = "could not delete file ".concat(file.getPath());
+      if (i <= 20)
+      {
+        String message = "could not delete file ".concat(file.getPath());
 
-      if (silent)
-      {
-        logger.error(message);
+        if (silent)
+        {
+          logger.error(message);
+        }
+        else
+        {
+          throw new IOException(message);
+        }
       }
-      else
+
+      try
       {
-        throw new IOException(message);
+        logger.warn("sleep 250ms, because of delete for file {} failed", file);
+        Thread.sleep(250);
+      }
+      catch (InterruptedException ex)
+      {
+        logger.warn("sleep of delete method interrupted", ex);
       }
     }
   }
@@ -410,7 +431,7 @@ public class IOUtil
    * @throws IOException
    */
   public static void extract(File archive, File outputDirectory)
-          throws IOException
+    throws IOException
   {
     String name = archive.getName().toLowerCase(Locale.ENGLISH);
 
@@ -428,7 +449,7 @@ public class IOUtil
    * @throws IOException
    */
   public static void extract(File archive, File outputDirectory, String type)
-          throws IOException
+    throws IOException
   {
     if (type.endsWith(ZipUnArchiver.EXTENSION))
     {
@@ -451,7 +472,7 @@ public class IOUtil
     if (!directory.exists() &&!directory.mkdirs())
     {
       throw new IllegalStateException(
-          "could not create directory ".concat(directory.getPath()));
+        "could not create directory ".concat(directory.getPath()));
     }
   }
 
@@ -569,7 +590,7 @@ public class IOUtil
    * @return
    */
   public static List<String> searchAll(String[] path, String cmd,
-          String checkParameter)
+    String checkParameter)
   {
     List<String> cmds = new ArrayList<String>();
 
@@ -646,7 +667,7 @@ public class IOUtil
       close(in);
     }
 
-    return content.toString();
+    return content;
   }
 
   /**
@@ -737,7 +758,7 @@ public class IOUtil
    * @return
    */
   private static File findFileByExtension(String parentPath, String cmd,
-          List<String> potentialExtensions)
+    List<String> potentialExtensions)
   {
     File file = null;
 
@@ -942,7 +963,7 @@ public class IOUtil
      * @param bufferSize
      */
     public IOStreamCopyThread(InputStream input, OutputStream output,
-                              int bufferSize)
+      int bufferSize)
     {
       this.input = input;
       this.output = output;

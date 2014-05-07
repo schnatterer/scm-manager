@@ -38,8 +38,9 @@ package sonia.scm.api.rest.resources;
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
+
+import org.apache.shiro.SecurityUtils;
 
 import org.codehaus.enunciate.jaxrs.TypeHint;
 import org.codehaus.enunciate.modules.jersey.ExternallyManagedLifecycle;
@@ -53,9 +54,9 @@ import sonia.scm.repository.Branches;
 import sonia.scm.repository.BrowserResult;
 import sonia.scm.repository.Changeset;
 import sonia.scm.repository.ChangesetPagingResult;
+import sonia.scm.repository.HealthChecker;
 import sonia.scm.repository.Permission;
 import sonia.scm.repository.PermissionType;
-import sonia.scm.repository.PermissionUtil;
 import sonia.scm.repository.Repository;
 import sonia.scm.repository.RepositoryException;
 import sonia.scm.repository.RepositoryIsNotArchivedException;
@@ -68,13 +69,15 @@ import sonia.scm.repository.api.BrowseCommandBuilder;
 import sonia.scm.repository.api.CatCommandBuilder;
 import sonia.scm.repository.api.CommandNotSupportedException;
 import sonia.scm.repository.api.DiffCommandBuilder;
+import sonia.scm.repository.api.DiffFormat;
 import sonia.scm.repository.api.LogCommandBuilder;
 import sonia.scm.repository.api.RepositoryService;
 import sonia.scm.repository.api.RepositoryServiceFactory;
+import sonia.scm.security.RepositoryPermission;
 import sonia.scm.security.ScmSecurityException;
 import sonia.scm.util.AssertUtil;
+import sonia.scm.util.HttpUtil;
 import sonia.scm.util.Util;
-import sonia.scm.web.security.WebSecurityContext;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -128,23 +131,19 @@ public class RepositoryResource
    *
    * @param configuration
    * @param repositoryManager
-   * @param securityContextProvider
    * @param servicefactory
-   * @param changesetViewerUtil
-   * @param repositoryBrowserUtil
-   * @param blameViewerUtil
+   * @param healthChecker
    */
   @Inject
   public RepositoryResource(ScmConfiguration configuration,
     RepositoryManager repositoryManager,
-    Provider<WebSecurityContext> securityContextProvider,
-    RepositoryServiceFactory servicefactory)
+    RepositoryServiceFactory servicefactory, HealthChecker healthChecker)
   {
     super(repositoryManager);
     this.configuration = configuration;
     this.repositoryManager = repositoryManager;
     this.servicefactory = servicefactory;
-    this.securityContextProvider = securityContextProvider;
+    this.healthChecker = healthChecker;
     setDisableCache(false);
   }
 
@@ -217,7 +216,7 @@ public class RepositoryResource
       }
       catch (ScmSecurityException ex)
       {
-        logger.warn("delete not allowd", ex);
+        logger.warn("delete not allowed", ex);
         response = Response.status(Response.Status.FORBIDDEN).build();
       }
       catch (Exception ex)
@@ -230,6 +229,50 @@ public class RepositoryResource
     {
       logger.warn("could not find repository {}", id);
       response = Response.status(Status.NOT_FOUND).build();
+    }
+
+    return response;
+  }
+
+  /**
+   * Re run repository health checks.<br />
+   * Status codes:
+   * <ul>
+   *  <li>201 re run success</li>
+   *  <li>403 forbidden, the current user has no owner privileges</li>
+   *  <li>404 could not find repository</li>
+   *  <li>500 internal server error</li>
+   * </ul>
+   *
+   * @param id id of the repository
+   *
+   * @return
+   */
+  @POST
+  @Path("{id}/healthcheck")
+  public Response runHealthChecks(@PathParam("id") String id)
+  {
+    Response response;
+
+    try
+    {
+      healthChecker.check(id);
+      response = Response.ok().build();
+    }
+    catch (RepositoryNotFoundException ex)
+    {
+      logger.warn("could not find repository ".concat(id), ex);
+      response = Response.status(Status.NOT_FOUND).build();
+    }
+    catch (RepositoryException ex)
+    {
+      logger.error("error occured during health check", ex);
+      response = Response.serverError().build();
+    }
+    catch (IOException ex)
+    {
+      logger.error("error occured during health check", ex);
+      response = Response.serverError().build();
     }
 
     return response;
@@ -469,6 +512,9 @@ public class RepositoryResource
    * @param id the id of the repository
    * @param revision the revision of the file
    * @param path the path of the folder
+   * @param disableLastCommit true disables fetch of last commit message
+   * @param disableSubRepositoryDetection true disables sub repository detection
+   * @param recursive true to enable recursive browsing
    *
    * @return a list of folders and files for the given folder
    *
@@ -479,9 +525,16 @@ public class RepositoryResource
   @Path("{id}/browse")
   @TypeHint(BrowserResult.class)
   @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-  public Response getBrowserResult(@PathParam("id") String id,
-    @QueryParam("revision") String revision, @QueryParam("path") String path)
+  //J-
+  public Response getBrowserResult(
+    @PathParam("id") String id,
+    @QueryParam("revision") String revision, 
+    @QueryParam("path") String path,
+    @QueryParam("disableLastCommit") @DefaultValue("false") boolean disableLastCommit,
+    @QueryParam("disableSubRepositoryDetection") @DefaultValue("false") boolean disableSubRepositoryDetection,
+    @QueryParam("recursive") @DefaultValue("false") boolean recursive)
     throws RepositoryException, IOException
+  //J+
   {
     Response response = null;
     RepositoryService service = null;
@@ -501,6 +554,12 @@ public class RepositoryResource
       {
         builder.setPath(path);
       }
+
+      //J-
+      builder.setDisableLastCommit(disableLastCommit)
+             .setDisableSubRepositoryDetection(disableSubRepositoryDetection)
+             .setRecursive(recursive);
+      //J+
 
       BrowserResult result = builder.getBrowserResult();
 
@@ -658,7 +717,7 @@ public class RepositoryResource
    * @param id the id of the repository
    * @param path path of a file
    * @param revision the revision of the file specified by the path parameter
-   * @param branch
+   * @param branch name of the branch
    * @param start the start value for paging
    * @param limit the limit value for paging
    *
@@ -778,6 +837,12 @@ public class RepositoryResource
 
       output = new BrowserStreamingOutput(service, builder, path);
 
+      /**
+       * protection for crlf injection
+       * see https://bitbucket.org/sdorra/scm-manager/issue/320/crlf-injection-vulnerability-in-diff-api
+       */
+      path = HttpUtil.removeCRLFInjectionChars(path);
+
       String contentDispositionName = getContentDispositionNameFromPath(path);
 
       response = Response.ok(output).header("Content-Disposition",
@@ -816,6 +881,7 @@ public class RepositoryResource
    * @param id the id of the repository
    * @param revision the revision of the file
    * @param path path to the file
+   * @param format
    *
    * @return the modifications of a {@link Changeset}
    *
@@ -827,11 +893,18 @@ public class RepositoryResource
   @TypeHint(DiffStreamingOutput.class)
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   public Response getDiff(@PathParam("id") String id,
-    @QueryParam("revision") String revision, @QueryParam("path") String path)
+    @QueryParam("revision") String revision, @QueryParam("path") String path,
+    @QueryParam("format") DiffFormat format)
     throws RepositoryException, IOException
   {
     AssertUtil.assertIsNotEmpty(id);
     AssertUtil.assertIsNotEmpty(revision);
+
+    /**
+     * check for a crlf injection attack
+     * see https://bitbucket.org/sdorra/scm-manager/issue/320/crlf-injection-vulnerability-in-diff-api
+     */
+    HttpUtil.checkForCRLFInjection(revision);
 
     RepositoryService service = null;
     Response response = null;
@@ -850,6 +923,11 @@ public class RepositoryResource
       if (!Strings.isNullOrEmpty(path))
       {
         builder.setPath(path);
+      }
+
+      if (format != null)
+      {
+        builder.setFormat(format);
       }
 
       String name = service.getRepository().getName().concat("-").concat(
@@ -968,8 +1046,7 @@ public class RepositoryResource
   {
     for (Repository repository : repositories)
     {
-      RepositoryUtil.appendUrl(configuration, repositoryManager, repository);
-      prepareRepository(repository);
+      prepareForReturn(repository);
     }
 
     return repositories;
@@ -1039,8 +1116,15 @@ public class RepositoryResource
     }
     else
     {
+      if (logger.isTraceEnabled())
+      {
+        logger.trace("remove properties and permissions from repository, "
+          + "because the user is not privileged");
+      }
+
       repository.setProperties(null);
       repository.setPermissions(null);
+      repository.setHealthCheckFailures(null);
     }
   }
 
@@ -1071,7 +1155,7 @@ public class RepositoryResource
   private String getContentDispositionNameFromPath(String path)
   {
     String name = path;
-    int index = path.lastIndexOf("/");
+    int index = path.lastIndexOf('/');
 
     if (index >= 0)
     {
@@ -1091,21 +1175,22 @@ public class RepositoryResource
    */
   private boolean isOwner(Repository repository)
   {
-    return PermissionUtil.hasPermission(repository, securityContextProvider,
-      PermissionType.OWNER);
+
+    return SecurityUtils.getSubject().isPermitted(
+      new RepositoryPermission(repository, PermissionType.OWNER));
   }
 
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
-  private ScmConfiguration configuration;
+  private final ScmConfiguration configuration;
 
   /** Field description */
-  private RepositoryManager repositoryManager;
+  private final HealthChecker healthChecker;
 
   /** Field description */
-  private Provider<WebSecurityContext> securityContextProvider;
+  private final RepositoryManager repositoryManager;
 
   /** Field description */
-  private RepositoryServiceFactory servicefactory;
+  private final RepositoryServiceFactory servicefactory;
 }

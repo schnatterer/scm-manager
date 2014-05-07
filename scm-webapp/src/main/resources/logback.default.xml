@@ -46,17 +46,24 @@
     <!-- encoders are  by default assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder -->
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
     </encoder>
   </appender>
   
-  <logger name="sonia.scm" level="DEBUG" />
+  <logger name="sonia.scm" level="TRACE" />
   
   <!-- suppress massive gzip logging -->
   <logger name="sonia.scm.filter.GZipFilter" level="WARN" />
   <logger name="sonia.scm.filter.GZipResponseStream" level="WARN" />
   
   <logger name="sonia.scm.util.ServiceUtil" level="WARN" />
+  <logger name="sonia.scm.plugin.ext.DefaultAnnotationScanner" level="INFO" />
+  
+  <!-- aether -->
+  <!--
+  <logger name="org.sonatype.aether" level="TRACE" />
+  <logger name="com.ning.http.client" level="DEBUG" />
+  -->
   
   <!-- svnkit -->
   <!--
@@ -68,6 +75,11 @@
   <!-- javahg -->
   <!--
   <logger name="com.aragost.javahg" level="DEBUG" />
+  -->
+  
+  <!-- ehcache -->
+  <!--
+  <logger name="net.sf.ehcache" level="DEBUG" />
   -->
 
   <root level="WARN">

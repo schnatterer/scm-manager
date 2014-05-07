@@ -36,14 +36,17 @@ package sonia.scm.web.security;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
+import sonia.scm.config.ScmConfiguration;
+import sonia.scm.web.filter.AutoLoginModule;
 import sonia.scm.web.filter.BasicAuthenticationFilter;
 
 //~--- JDK imports ------------------------------------------------------------
 
+
 import java.io.IOException;
+import java.util.Set;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -73,13 +76,13 @@ public class ApiBasicAuthenticationFilter extends BasicAuthenticationFilter
    * Constructs ...
    *
    *
-   * @param securityContextProvider
+   * @param configuration
    */
   @Inject
-  public ApiBasicAuthenticationFilter(
-          Provider<WebSecurityContext> securityContextProvider)
+  public ApiBasicAuthenticationFilter(ScmConfiguration configuration,
+			Set<AutoLoginModule> autoLoginModules)
   {
-    super(securityContextProvider);
+    super(configuration, autoLoginModules);
   }
 
   //~--- methods --------------------------------------------------------------
@@ -97,14 +100,14 @@ public class ApiBasicAuthenticationFilter extends BasicAuthenticationFilter
    */
   @Override
   protected void doFilter(HttpServletRequest request,
-                          HttpServletResponse response, FilterChain chain)
-          throws IOException, ServletException
+    HttpServletResponse response, FilterChain chain)
+    throws IOException, ServletException
   {
 
     // skip filter on authentication resource
     if (request.getRequestURI().contains(URI_LOGIN)
-        || request.getRequestURI().contains(URI_STATE)
-        || request.getRequestURI().contains(URI_LOGOUT))
+      || request.getRequestURI().contains(URI_STATE)
+      || request.getRequestURI().contains(URI_LOGOUT))
     {
       chain.doFilter(request, response);
     }
@@ -127,9 +130,8 @@ public class ApiBasicAuthenticationFilter extends BasicAuthenticationFilter
    */
   @Override
   protected void handleUnauthorized(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain)
-          throws IOException, ServletException
+    HttpServletResponse response, FilterChain chain)
+    throws IOException, ServletException
   {
     chain.doFilter(request, response);
   }

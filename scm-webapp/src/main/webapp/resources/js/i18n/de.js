@@ -39,7 +39,8 @@ if (Ext.form.VTypes){
 
     passwordText: 'Die Passwörter stimmen nicht überein!',
     nameTest: 'Der Name ist invalid.',
-    usernameText: 'Der Benutzername ist invalid.'
+    usernameText: 'Der Benutzername ist invalid.',
+    repositoryNameText: 'Der Name des Repositorys ist ungültig.'
   });
 
 }
@@ -87,8 +88,12 @@ if (Sonia.login.Form){
     waitTitleText: 'Verbinden',
     WaitMsgText: 'Übertrage Daten...',
     failedMsgText: 'Anmeldung fehlgeschlagen!',
-    failedDescriptionText: 'Falscher Benutzername, Passwort oder sie haben nicht\n\
-                             genug Berechtigungen. Bitte versuchen sie es erneut.'
+    failedDescriptionText: 'Falscher Benutzername, Passwort oder Sie haben nicht\n\
+                             genug Berechtigungen. Bitte versuchen Sie es erneut.',
+    accountLockedText: 'Der Account ist gesperrt.',
+    accountTemporaryLockedText: 'Der Account ist momentan gesperrt. \n\
+                                 Versuchen Sie es später nochmal.',
+    rememberMeText: 'Angemeldet bleiben'
   });
 
 }
@@ -131,6 +136,14 @@ if ( Sonia.rest.FormPanel ){
 
 }
 
+if (Sonia.repository.ChangesetPanel){
+	
+	Ext.apply(Sonia.repository.ChangesetPanel, {
+		 diffLabel: 'Änderung',
+		 rawDiffLabel: 'Datei anzeigen'
+	});
+}
+
 // sonia.repository.js
 
 if (Sonia.repository.DefaultPanel){
@@ -150,6 +163,7 @@ if ( Sonia.repository.Grid ){
     colContactText: 'Kontakt',
     colDescriptionText: 'Beschreibung',
     colCreationDateText: 'Erstellungsdatum',
+    colLastModifiedText: 'Zuletzt geändert',
     colUrlText: 'Url',
     colArchiveText: 'Archiv',
     emptyText: 'Es wurde kein Repository konfiguriert',
@@ -193,7 +207,8 @@ if (Sonia.repository.Panel){
 
   Ext.override(Sonia.repository.Panel, {
     titleText: 'Repository',
-    
+
+    searchText: 'Suche: ',
     archiveText: 'Archivieren',
     unarchiveText: 'Wiederherstellen',
     archiveTitleText: 'Repository archivieren',
@@ -224,7 +239,7 @@ if (Sonia.repository.PermissionFormPanel){
 if (Sonia.repository.ChangesetViewerPanel){
   
   Ext.override(Sonia.repository.ChangesetViewerPanel,{
-    // german ??
+	// german ??
     changesetViewerTitleText: 'Commits {0}'
   });
   
@@ -238,7 +253,10 @@ if (Sonia.repository.InfoPanel){
     contactText: 'Kontakt: ',
     urlText: 'Url: ',
     // german ??
-    changesetViewerText: 'Commits'
+    changesetViewerText: 'Commits',
+    accessText: 'Zugriff:',
+    accessReadOnly: 'Nur lesender Zugriff',
+    accessReadWrite: 'Lese und Schreibzugriff'
   });
 
 }
@@ -248,7 +266,7 @@ if (Sonia.repository.ExtendedInfoPanel){
   Ext.override(Sonia.repository.ExtendedInfoPanel, {
     // german ??
     checkoutText: 'Checkout: ',
-    repositoryBrowserText: 'Source'
+    repositoryBrowserText: 'Quellcode'
   });
   
 }
@@ -256,9 +274,12 @@ if (Sonia.repository.ExtendedInfoPanel){
 if (Sonia.repository.RepositoryBrowser){
   
   Ext.override(Sonia.repository.RepositoryBrowser, {
-    // german ??
-    repositoryBrowserTitleText: 'Source {0}',
-    emptyText: 'In diesem Verzeichnis befinden sich keine Dateien'
+    repositoryBrowserTitleText: 'Quellcode {0}',
+    emptyText: 'In diesem Verzeichnis befinden sich keine Dateien',
+    colNameText: 'Name',
+    colLengthText: 'Length',
+    colLastModifiedText: 'Last Modified',
+    colDescriptionText: 'Description'
   });
   
 }
@@ -303,6 +324,7 @@ if (Sonia.config.ScmConfigPanel){
     proxyPortText: 'Proxy Port',
     proxyUserText: 'Proxy User',
     proxyPasswordText: 'Proxy Passwort',
+    proxyExcludesText: 'Proxy Ausnahmen',
     baseUrlText: 'Basis-URL',
     forceBaseUrlText: 'Basis-URL forcieren',
     disableGroupingGridText: 'Repository-Gruppierung deaktivieren',
@@ -328,11 +350,21 @@ if (Sonia.config.ScmConfigPanel){
     adminGroupsHelpText: 'Komma getrennte Liste von Gruppen mit Administrationsrechten.',
     adminUsersHelpText: 'Komma getrennte Liste von Benutzern mit Administrationsrechten.',
     
+    skipFailedAuthenticatorsText: 'Überspringe fehlgeschlagene Authentifizierer',
+    skipFailedAuthenticatorsHelpText: 'Setzt die Authentifizierungs-Kette fort,\n\
+                                       auch wenn ein ein Authentifizierer einen Benutzer gefunden hat,\n\
+                                       diesen aber nicht Authentifizieren kann.',
+    loginAttemptLimitText: 'Login Attempt Limit',
+    loginAttemptLimitTimeoutText: 'Login Attempt Limit Timeout',
+    loginAttemptLimitHelpText: 'Maximale Anzahl gescheiterte Loginversuche. Der Wert -1 deaktiviert die Begrenzung.', 
+    loginAttemptLimitTimeoutHelpText: 'Zeitraum in Sekunden, die ein Nutzer nach zu vielen gescheiterten Loginversuchen vorübergehend gesperrt ist.',
+    
     enableProxyHelpText: 'Proxy-Einstellungen verwenden.',
     proxyServerHelpText: 'Der Proxy-Server.',
     proxyPortHelpText: 'Der Proxy-Port',
     proxyUserHelpText: 'Der Benutzername für die Authentifizierung am Proxy-Server.',
     proxyPasswordHelpText: 'Das Passwort für die Authentifizierung am Proxy-Server.',
+    proxyExcludesHelpText: 'Eine Komma-separierte liste von Glob-Patterns für servername die von den Proxy-Einstellungen ausgenommen werden sollen',
     baseUrlHelpText: 'Die vollständige URL des Server, inclusive Context-Pfad z.B.: http://localhost:8080/scm.',
     forceBaseUrlHelpText: 'Leitet alle Zugriffe die nicht von der Basis-URL kommen auf die Basis-URL um.',
     disableGroupingGridHelpText: 'Repository grupierung deaktivieren. Wenn dieser Wert verändert wird muss die Seite neu geladen werden.',
@@ -505,7 +537,7 @@ if (Sonia.action.ExceptionWindow){
   Ext.override(Sonia.action.ExceptionWindow, {
     okText: 'Ok',
     detailsText: 'Details',
-    exceptionText: 'Exception'
+    exceptionText: 'Fehler'
   });
   
 }
@@ -544,9 +576,25 @@ if (Sonia.plugin.Grid){
     colActionText: 'Aktion',
     colUrlText: 'Url',
     colCategoryText: 'Kategorie',
-    emptyText: 'Es konnte kein Plugin gefunden werden.'
+    emptyText: 'Es konnte kein Plugin gefunden werden.',
+    	
+	btnReload: 'Aktualisieren',
+	btnInstallPackage: 'Paket installieren',
+    	  
+	uploadWindowTitle: 'Plugin-Paket hochladen'
   });
 
+}
+
+if (Sonia.plugin.UploadForm){
+
+	  Ext.override(Sonia.plugin.UploadForm, {
+		  emptyText: 'Wählen Sie ein Plugin-Paket',
+		  uploadFieldLabel: 'Paket',
+		  waitMsg: 'Hochladen des Pakets ...',
+		  btnUpload: 'Hochladen',
+		  btnReset: 'Zurücksetzen' 
+  }); 
 }
 
 // sonia.scm.js
@@ -584,7 +632,7 @@ if (Sonia.scm.Main){
     errorMessage: 'Es ist ein unbekannter Fehler aufgetreten.',
     
     errorSessionExpiredTitle: 'Session abgelaufen',
-    errorSessionExpiredMessage: 'Ihre Session ist abgelaufen. Bitte melden sie sich neu an.',
+    errorSessionExpiredMessage: 'Ihre Session ist abgelaufen. Bitte melden Sie sich neu an.',
     
     errorNoPermissionsTitle: 'Keine Berechtigung',
     errorNoPermissionsMessage: 'Sie haben nicht genügend Rechte um diese Aktion auszuführen.',
@@ -620,3 +668,18 @@ if (Sonia.rest.Panel){
   });
   
 }
+
+// sonia.security.permissionspanel.js
+if (Sonia.security.PermissionsPanel){
+	  
+	  Ext.override(Sonia.security.PermissionsPanel, {
+	    
+	    addText: 'Hinzufügen',
+	    removeText: 'Entfernen',
+	    reloadText: 'Aktualisieren',
+	    
+	    titleText: 'Berechtigungen'
+	    
+	  });
+	  
+	}

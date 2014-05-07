@@ -30,6 +30,7 @@
  */
 
 
+
 package sonia.scm.repository;
 
 //~--- non-JDK imports --------------------------------------------------------
@@ -39,9 +40,11 @@ import sonia.scm.repository.api.Command;
 
 //~--- JDK imports ------------------------------------------------------------
 
+import java.util.Collections;
 import java.util.Set;
 
 /**
+ * The type (mercurial, subversion, git) of a {@link Repository}.
  *
  * @author Sebastian Sdorra
  * @since 1.18
@@ -57,35 +60,68 @@ public class RepositoryType extends Type
   public RepositoryType() {}
 
   /**
-   * Constructs ...
+   * Constructs a new {@link RepositoryType} object.
    *
    *
-   * @param name
-   * @param displayName
-   * @param supportedCommands
+   * @param name name of the type
+   * @param displayName display name of the type
+   * @param supportedCommands supported commands of the type
    */
   public RepositoryType(String name, String displayName,
     Set<Command> supportedCommands)
   {
+    this(name, displayName, supportedCommands, Collections.EMPTY_SET);
+  }
+
+  /**
+   * Constructs a new {@link RepositoryType} object.
+   *
+   *
+   * @param name name of the type
+   * @param displayName display name of the type
+   * @param supportedCommands supported commands of the type
+   * @param supportedFeatures supported features of the type
+   *
+   * @since 1.25
+   */
+  public RepositoryType(String name, String displayName,
+    Set<Command> supportedCommands, Set<Feature> supportedFeatures)
+  {
     super(name, displayName);
     this.supportedCommands = supportedCommands;
+    this.supportedFeatures = supportedFeatures;
   }
 
   //~--- get methods ----------------------------------------------------------
 
   /**
-   * Method description
+   * Returns a set of commands, which are supported by the repository type.
    *
    *
-   * @return
+   * @return set of supported commands
    */
   public Set<Command> getSupportedCommands()
   {
     return supportedCommands;
   }
 
+  /**
+   * Returns a set of features, which are supported by the repository type.
+   *
+   *
+   * @return set of supported features
+   * @since 1.25
+   */
+  public Set<Feature> getSupportedFeatures()
+  {
+    return supportedFeatures;
+  }
+
   //~--- fields ---------------------------------------------------------------
 
-  /** Field description */
+  /** set of supported commands */
   private Set<Command> supportedCommands;
+
+  /** set of supported features */
+  private Set<Feature> supportedFeatures;
 }

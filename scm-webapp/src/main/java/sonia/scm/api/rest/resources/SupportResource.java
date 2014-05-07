@@ -39,18 +39,22 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
+
 import org.codehaus.enunciate.modules.jersey.ExternallyManagedLifecycle;
 
 import sonia.scm.SCMContextProvider;
+import sonia.scm.ServletContainerDetector;
 import sonia.scm.Type;
 import sonia.scm.config.ScmConfiguration;
 import sonia.scm.plugin.PluginManager;
 import sonia.scm.repository.RepositoryHandler;
 import sonia.scm.repository.RepositoryManager;
+import sonia.scm.security.Role;
+import sonia.scm.security.ScmSecurityException;
 import sonia.scm.store.StoreFactory;
-import sonia.scm.util.SecurityUtil;
 import sonia.scm.util.SystemUtil;
-import sonia.scm.web.security.WebSecurityContext;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -62,6 +66,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+
+import javax.servlet.http.HttpServletRequest;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -94,19 +100,20 @@ public class SupportResource
    * @param pluginManager
    * @param storeFactory
    * @param repositoryManager
+   * @param request
    */
   @Inject
-  public SupportResource(WebSecurityContext securityContext,
-    SCMContextProvider context, ScmConfiguration configuration,
-    PluginManager pluginManager, StoreFactory storeFactory,
-    RepositoryManager repositoryManager)
+  public SupportResource(SCMContextProvider context,
+    ScmConfiguration configuration, PluginManager pluginManager,
+    StoreFactory storeFactory, RepositoryManager repositoryManager,
+    HttpServletRequest request)
   {
-    this.securityContext = securityContext;
     this.context = context;
     this.configuration = configuration;
     this.pluginManager = pluginManager;
     this.storeFactoryClass = storeFactory.getClass();
     this.repositoryManager = repositoryManager;
+    this.request = request;
   }
 
   //~--- get methods ----------------------------------------------------------
@@ -123,7 +130,12 @@ public class SupportResource
   @Produces(MediaType.TEXT_HTML)
   public Viewable getSupport() throws IOException
   {
-    SecurityUtil.assertIsAdmin(securityContext);
+    Subject subject = SecurityUtils.getSubject();
+
+    if (!subject.hasRole(Role.ADMIN))
+    {
+      throw new ScmSecurityException("admin privileges required");
+    }
 
     Map<String, Object> env = Maps.newHashMap();
 
@@ -131,7 +143,7 @@ public class SupportResource
     env.put("configuration", configuration);
     env.put("pluginManager", pluginManager);
     env.put("runtime", new RuntimeInformation());
-    env.put("system", new SystemInformation());
+    env.put("system", new SystemInformation(request));
     env.put("repositoryHandlers", getRepositoryHandlers());
 
     return new Viewable(TEMPLATE, env);
@@ -256,12 +268,14 @@ public class SupportResource
     /**
      * Constructs ...
      *
+     *
+     * @param request
      */
-    public SystemInformation()
+    public SystemInformation(HttpServletRequest request)
     {
       os = SystemUtil.getOS();
       arch = SystemUtil.getArch();
-      container = SystemUtil.getServletContainer().name();
+      container = ServletContainerDetector.detect(request).name();
       java = System.getProperty("java.vendor").concat("/").concat(
         System.getProperty("java.version"));
       locale = Locale.getDefault().toString();
@@ -446,7 +460,7 @@ public class SupportResource
   private RepositoryManager repositoryManager;
 
   /** Field description */
-  private WebSecurityContext securityContext;
+  private HttpServletRequest request;
 
   /** Field description */
   private Class<?> storeFactoryClass;

@@ -48,7 +48,7 @@ def appendTrailingSlash(path):
     path += '/'
   return path
 
-def collectFiles(revCtx, path, files, directories):
+def collectFiles(revCtx, path, files, directories, recursive):
   length = 0
   paths = []
   mf = revCtx.manifest()
@@ -66,18 +66,22 @@ def collectFiles(revCtx, path, files, directories):
       if f.startswith(directory):
         paths.append(f)
   
-  for p in paths:
-    parts = p.split('/')
-    depth = len(parts)
-    if depth is length:
-      file = revCtx[p]
-      files.append(file)
-    elif depth > length:
-      dirpath = ''
-      for i in range(0, length):
-        dirpath += parts[i] + '/'
-      if not dirpath in directories:
-        directories.append(dirpath)
+  if not recursive:
+    for p in paths:
+      parts = p.split('/')
+      depth = len(parts)
+      if depth is length:
+        file = revCtx[p]
+        files.append(file)
+      elif depth > length:
+        dirpath = ''
+        for i in range(0, length):
+          dirpath += parts[i] + '/'
+        if not dirpath in directories:
+          directories.append(dirpath)
+  else:
+    for p in paths:
+      files.append(revCtx[p])
         
 def createSubRepositoryMap(revCtx):
   subrepos = {}
@@ -117,13 +121,17 @@ def printDirectory(ui, path, transport):
     format = 'd%s\0'
   ui.write( format % path)
   
-def printFile(ui, repo, file, transport):
-  linkrev = repo[file.linkrev()]
-  date = "%d %d" % util.parsedate(linkrev.date())
+def printFile(ui, repo, file, disableLastCommit, transport):
+  date = '0 0'
+  description = 'n/a'
+  if not disableLastCommit:
+    linkrev = repo[file.linkrev()]
+    date = '%d %d' % util.parsedate(linkrev.date())
+    description = linkrev.description()
   format = '%s %i %s %s\n'
   if transport:
     format = 'f%s\n%i %s %s\0'
-  ui.write( format % (file.path(), file.size(), date, linkrev.description()))
+  ui.write( format % (file.path(), file.size(), date, description) )
 
 def fileview(ui, repo, **opts):
   files = []
@@ -136,21 +144,25 @@ def fileview(ui, repo, **opts):
   if path.endswith('/'):
     path = path[0:-1]
   transport = opts['transport']
-  collectFiles(revCtx, path, files, directories)
-  subRepositories = createSubRepositoryMap(revCtx)
-  for k, v in subRepositories.iteritems():
-    if k.startswith(path):
-      printSubRepository(ui, k, v, transport)
+  collectFiles(revCtx, path, files, directories, opts['recursive'])
+  if not opts['disableSubRepositoryDetection']:
+    subRepositories = createSubRepositoryMap(revCtx)
+    for k, v in subRepositories.iteritems():
+      if k.startswith(path):
+        printSubRepository(ui, k, v, transport)
   for d in directories:
     printDirectory(ui, d, transport)
   for f in files:
-    printFile(ui, repo, f, transport)
+    printFile(ui, repo, f, opts['disableLastCommit'], transport)
   
 cmdtable = {
   # cmd name        function call
   'fileview': (fileview,[
     ('r', 'revision', 'tip', 'revision to print'),
     ('p', 'path', '', 'path to print'),
+    ('c', 'recursive', False, 'browse repository recursive'),
+    ('d', 'disableLastCommit', False, 'disables last commit description and date'),
+    ('s', 'disableSubRepositoryDetection', False, 'disables detection of sub repositories'),
     ('t', 'transport', False, 'format the output for command server'),
   ])
 }

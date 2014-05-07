@@ -61,14 +61,14 @@
 
     <append>true</append>
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
     </encoder>
   </appender>
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
     </encoder>
     
   </appender>
@@ -81,11 +81,27 @@
   
   <logger name="sonia.scm.util.ServiceUtil" level="WARN" />
   
+  <!-- aether -->
+  <!--
+  <logger name="org.sonatype.aether" level="TRACE" />
+  <logger name="com.ning.http.client" level="DEBUG" />
+  -->
+  
   <!-- svnkit -->
   <!--
   <logger name="svnkit" level="WARN" />
   <logger name="svnkit.network" level="DEBUG" />
   <logger name="svnkit.fsfs" level="WARN" />
+  -->
+  
+  <!-- javahg -->
+  <!--
+  <logger name="com.aragost.javahg" level="DEBUG" />
+  -->
+  
+  <!-- ehcache -->
+  <!--
+  <logger name="net.sf.ehcache" level="DEBUG" />
   -->
 
   <root level="WARN">

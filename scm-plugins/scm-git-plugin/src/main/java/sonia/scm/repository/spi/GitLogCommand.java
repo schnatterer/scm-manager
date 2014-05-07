@@ -60,7 +60,6 @@ import sonia.scm.util.IOUtil;
 
 import java.io.IOException;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -115,6 +114,7 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
     Changeset changeset = null;
     Repository gr = null;
     GitChangesetConverter converter = null;
+    RevWalk revWalk = null;
 
     try
     {
@@ -122,13 +122,13 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
 
       if (!gr.getAllRefs().isEmpty())
       {
-        RevWalk revWalk = new RevWalk(gr);
+        revWalk = new RevWalk(gr);
         ObjectId id = GitUtil.getRevisionId(gr, revision);
         RevCommit commit = revWalk.parseCommit(id);
 
         if (commit != null)
         {
-          converter = new GitChangesetConverter(gr, revWalk, GitUtil.ID_LENGTH);
+          converter = new GitChangesetConverter(gr, revWalk);
           changeset = converter.createChangeset(commit);
         }
         else if (logger.isWarnEnabled())
@@ -144,6 +144,7 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
     finally
     {
       IOUtil.close(converter);
+      GitUtil.release(revWalk);
       GitUtil.close(gr);
     }
 
@@ -172,6 +173,7 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
 
     ChangesetPagingResult changesets = null;
     GitChangesetConverter converter = null;
+    RevWalk revWalk = null;
 
     try
     {
@@ -208,9 +210,9 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
           endId = gr.resolve(request.getEndChangeset());
         }
 
-        RevWalk revWalk = new RevWalk(gr);
+        revWalk = new RevWalk(gr);
 
-        converter = new GitChangesetConverter(gr, revWalk, GitUtil.ID_LENGTH);
+        converter = new GitChangesetConverter(gr, revWalk);
 
         if (!Strings.isNullOrEmpty(request.getPath()))
         {
@@ -279,6 +281,7 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
     finally
     {
       IOUtil.close(converter);
+      GitUtil.release(revWalk);
     }
 
     return changesets;

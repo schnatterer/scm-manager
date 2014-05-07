@@ -35,6 +35,8 @@ package sonia.scm.group;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
@@ -47,7 +49,6 @@ import sonia.scm.SCMContextProvider;
 import sonia.scm.TransformFilter;
 import sonia.scm.search.SearchRequest;
 import sonia.scm.search.SearchUtil;
-import sonia.scm.security.SecurityContext;
 import sonia.scm.util.CollectionAppender;
 import sonia.scm.util.SecurityUtil;
 import sonia.scm.util.Util;
@@ -87,11 +88,9 @@ public class DefaultGroupManager extends AbstractGroupManager
    * @param groupListenerProvider
    */
   @Inject
-  public DefaultGroupManager(Provider<SecurityContext> securityContextProvider,
-                             GroupDAO groupDAO,
-                             Provider<Set<GroupListener>> groupListenerProvider)
+  public DefaultGroupManager(GroupDAO groupDAO,
+    Provider<Set<GroupListener>> groupListenerProvider)
   {
-    this.securityContextProvider = securityContextProvider;
     this.groupDAO = groupDAO;
     this.groupListenerProvider = groupListenerProvider;
   }
@@ -133,16 +132,17 @@ public class DefaultGroupManager extends AbstractGroupManager
     if (logger.isInfoEnabled())
     {
       logger.info("create group {} of type {}", group.getName(),
-                  group.getType());
+        group.getType());
     }
 
-    SecurityUtil.assertIsAdmin(securityContextProvider);
+    SecurityUtil.assertIsAdmin();
 
     if (groupDAO.contains(group.getName()))
     {
       throw new GroupAllreadyExistExeption();
     }
 
+    removeDuplicateMembers(group);
     group.setCreationDate(System.currentTimeMillis());
     fireEvent(group, HandlerEvent.BEFORE_CREATE);
     groupDAO.add(group);
@@ -164,10 +164,10 @@ public class DefaultGroupManager extends AbstractGroupManager
     if (logger.isInfoEnabled())
     {
       logger.info("delete group {} of type {}", group.getName(),
-                  group.getType());
+        group.getType());
     }
 
-    SecurityUtil.assertIsAdmin(securityContextProvider);
+    SecurityUtil.assertIsAdmin();
 
     String name = group.getName();
 
@@ -179,7 +179,7 @@ public class DefaultGroupManager extends AbstractGroupManager
     }
     else
     {
-      throw new GroupException("user does not exists");
+      throw new GroupNotFoundException("user does not exists");
     }
   }
 
@@ -215,15 +215,16 @@ public class DefaultGroupManager extends AbstractGroupManager
     if (logger.isInfoEnabled())
     {
       logger.info("modify group {} of type {}", group.getName(),
-                  group.getType());
+        group.getType());
     }
 
-    SecurityUtil.assertIsAdmin(securityContextProvider);
+    SecurityUtil.assertIsAdmin();
 
     String name = group.getName();
 
     if (groupDAO.contains(name))
     {
+      removeDuplicateMembers(group);
       group.setLastModified(System.currentTimeMillis());
       fireEvent(group, HandlerEvent.BEFORE_MODIFY);
       groupDAO.modify(group);
@@ -231,7 +232,7 @@ public class DefaultGroupManager extends AbstractGroupManager
     }
     else
     {
-      throw new GroupException("group does not exists");
+      throw new GroupNotFoundException("group does not exists");
     }
   }
 
@@ -250,16 +251,16 @@ public class DefaultGroupManager extends AbstractGroupManager
     if (logger.isInfoEnabled())
     {
       logger.info("refresh group {} of type {}", group.getName(),
-                  group.getType());
+        group.getType());
     }
 
-    SecurityUtil.assertIsAdmin(securityContextProvider);
+    SecurityUtil.assertIsAdmin();
 
     Group fresh = groupDAO.get(group.getName());
 
     if (fresh == null)
     {
-      throw new GroupException("group does not exists");
+      throw new GroupNotFoundException("group does not exists");
     }
 
     fresh.copyProperties(group);
@@ -282,7 +283,7 @@ public class DefaultGroupManager extends AbstractGroupManager
     }
 
     return SearchUtil.search(searchRequest, groupDAO.getAll(),
-                             new TransformFilter<Group>()
+      new TransformFilter<Group>()
     {
       @Override
       public Group accept(Group group)
@@ -290,7 +291,7 @@ public class DefaultGroupManager extends AbstractGroupManager
         Group result = null;
 
         if (SearchUtil.matchesOne(searchRequest, group.getName(),
-                                  group.getDescription()))
+          group.getDescription()))
         {
           result = group.clone();
         }
@@ -346,7 +347,7 @@ public class DefaultGroupManager extends AbstractGroupManager
   @Override
   public Collection<Group> getAll(Comparator<Group> comparator)
   {
-    SecurityUtil.assertIsAdmin(securityContextProvider);
+    SecurityUtil.assertIsAdmin();
 
     List<Group> groups = new ArrayList<Group>();
 
@@ -376,12 +377,12 @@ public class DefaultGroupManager extends AbstractGroupManager
    */
   @Override
   public Collection<Group> getAll(Comparator<Group> comparator, int start,
-                                  int limit)
+    int limit)
   {
-    SecurityUtil.assertIsAdmin(securityContextProvider);
+    SecurityUtil.assertIsAdmin();
 
     return Util.createSubCollection(groupDAO.getAll(), comparator,
-                                    new CollectionAppender<Group>()
+      new CollectionAppender<Group>()
     {
       @Override
       public void append(Collection<Group> collection, Group item)
@@ -442,6 +443,23 @@ public class DefaultGroupManager extends AbstractGroupManager
     return groupDAO.getLastModified();
   }
 
+  //~--- methods --------------------------------------------------------------
+
+  /**
+   * Remove duplicate members from group.
+   * Have a look at issue #439
+   *
+   *
+   * @param group group
+   */
+  private void removeDuplicateMembers(Group group)
+  {
+    List<String> members =
+      Lists.newArrayList(ImmutableSet.copyOf(group.getMembers()));
+
+    group.setMembers(members);
+  }
+
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
@@ -449,7 +467,4 @@ public class DefaultGroupManager extends AbstractGroupManager
 
   /** Field description */
   private Provider<Set<GroupListener>> groupListenerProvider;
-
-  /** Field description */
-  private Provider<SecurityContext> securityContextProvider;
 }

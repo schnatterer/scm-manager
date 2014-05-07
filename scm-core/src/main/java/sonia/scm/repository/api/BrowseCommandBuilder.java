@@ -106,10 +106,10 @@ public final class BrowseCommandBuilder
    * @param preProcessorUtil
    */
   BrowseCommandBuilder(CacheManager cacheManager, BrowseCommand browseCommand,
-                       Repository repository, PreProcessorUtil preProcessorUtil)
+    Repository repository, PreProcessorUtil preProcessorUtil)
   {
     this.cache = cacheManager.getCache(CacheKey.class, BrowserResult.class,
-                                       CACHE_NAME);
+      CACHE_NAME);
     this.browseCommand = browseCommand;
     this.repository = repository;
     this.preProcessorUtil = preProcessorUtil;
@@ -144,7 +144,7 @@ public final class BrowseCommandBuilder
    * @throws RepositoryException
    */
   public BrowserResult getBrowserResult()
-          throws IOException, RepositoryException
+    throws IOException, RepositoryException
   {
     BrowserResult result = null;
 
@@ -153,7 +153,7 @@ public final class BrowseCommandBuilder
       if (logger.isDebugEnabled())
       {
         logger.debug("create browser result for {} with disabled cache",
-                     request);
+          request);
       }
 
       result = browseCommand.getBrowserResult(request);
@@ -186,7 +186,7 @@ public final class BrowseCommandBuilder
 
     if (!disablePreProcessors && (result != null))
     {
-      preProcessorUtil.prepareForReturn(repository, result);
+      preProcessorUtil.prepareForReturn(repository, result, !disableEscaping);
 
       List<FileObject> fileObjects = result.getFiles();
 
@@ -218,6 +218,44 @@ public final class BrowseCommandBuilder
 
     return this;
   }
+  
+  /**
+   * Disable html escaping for the returned file objects. By default all
+   * file objects are html escaped.
+   *
+   *
+   * @param disableEscaping true to disable the html escaping
+   *
+   * @return {@code this}
+   *
+   * @since 1.35
+   */
+  public BrowseCommandBuilder setDisableEscaping(boolean disableEscaping)
+  {
+    this.disableEscaping = disableEscaping;
+
+    return this;
+  }
+
+  /**
+   * Disabling the last commit means that every call to
+   * {@link FileObject#getDescription()} and
+   * {@link FileObject#getLastModified()} will return {@code null}, but this
+   * will also reduce the execution time.
+   *
+   *
+   * @param disableLastCommit true to disable the last commit message
+   *
+   * @return {@code this}
+   *
+   * @since 1.26
+   */
+  public BrowseCommandBuilder setDisableLastCommit(boolean disableLastCommit)
+  {
+    this.request.setDisableLastCommit(disableLastCommit);
+
+    return this;
+  }
 
   /**
    * Disable the execution of pre processors.
@@ -228,9 +266,28 @@ public final class BrowseCommandBuilder
    * @return {@code this}
    */
   public BrowseCommandBuilder setDisablePreProcessors(
-          boolean disablePreProcessors)
+    boolean disablePreProcessors)
   {
     this.disablePreProcessors = disablePreProcessors;
+
+    return this;
+  }
+
+  /**
+   * Enable or disable the detection of sub repositories.
+   *
+   *
+   * @param disableSubRepositoryDetection true to disable sub repository detection.
+   *
+   * @return {@code this}
+   *
+   * @since 1.26
+   */
+  public BrowseCommandBuilder setDisableSubRepositoryDetection(
+    boolean disableSubRepositoryDetection)
+  {
+    this.request.setDisableSubRepositoryDetection(
+      disableSubRepositoryDetection);
 
     return this;
   }
@@ -246,6 +303,22 @@ public final class BrowseCommandBuilder
   public BrowseCommandBuilder setPath(String path)
   {
     request.setPath(path);
+
+    return this;
+  }
+
+  /**
+   * Enable or disable recursive file object browsing. Default is disabled.
+   *
+   * @param recursive true to enable recursive browsing
+   *
+   * @return {@code this}
+   *
+   * @since 1.26
+   */
+  public BrowseCommandBuilder setRecursive(boolean recursive)
+  {
+    this.request.setRecursive(recursive);
 
     return this;
   }
@@ -320,7 +393,7 @@ public final class BrowseCommandBuilder
       final CacheKey other = (CacheKey) obj;
 
       return Objects.equal(repositoryId, other.repositoryId)
-             && Objects.equal(request, other.request);
+        && Objects.equal(request, other.request);
     }
 
     /**
@@ -367,6 +440,9 @@ public final class BrowseCommandBuilder
   /** cache */
   private Cache<CacheKey, BrowserResult> cache;
 
+  /** disable escaping */
+  private boolean disableEscaping = false;
+  
   /** disables the cache */
   private boolean disableCache = false;
 

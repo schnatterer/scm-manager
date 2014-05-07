@@ -39,11 +39,17 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.Subject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sonia.scm.SCMContext;
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.user.User;
-import sonia.scm.util.AssertUtil;
 import sonia.scm.util.HttpUtil;
 import sonia.scm.util.Util;
 import sonia.scm.web.security.WebSecurityContext;
@@ -53,6 +59,8 @@ import sonia.scm.web.security.WebSecurityContext;
 import com.sun.jersey.core.util.Base64;
 
 import java.io.IOException;
+
+import java.util.Set;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -64,7 +72,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author Sebastian Sdorra
  */
 @Singleton
-public class BasicAuthenticationFilter extends HttpFilter
+public class BasicAuthenticationFilter extends AutoLoginFilter
 {
 
   /** Field description */
@@ -75,6 +83,9 @@ public class BasicAuthenticationFilter extends HttpFilter
 
   /** Field description */
   public static final String HEADER_AUTHORIZATION = "Authorization";
+
+  /** marker for failed authentication */
+  private static final String ATTRIBUTE_FAILED_AUTH = "sonia.scm.auth.failed";
 
   /** the logger for BasicAuthenticationFilter */
   private static final Logger logger =
@@ -87,12 +98,26 @@ public class BasicAuthenticationFilter extends HttpFilter
    *
    *
    * @param securityContextProvider
+   * @deprecated use the constructor with out arguments instead.
+   */
+  @Deprecated
+  public BasicAuthenticationFilter(
+    Provider<WebSecurityContext> securityContextProvider) {}
+
+  /**
+   * Constructs a new basic authenticaton filter
+   *
+   * @param configuration scm-manager global configuration
+   * @param autoLoginModules auto login modules
+   *
+   * @since 1.21
    */
   @Inject
-  public BasicAuthenticationFilter(
-          Provider<WebSecurityContext> securityContextProvider)
+  public BasicAuthenticationFilter(ScmConfiguration configuration,
+    Set<AutoLoginModule> autoLoginModules)
   {
-    this.securityContextProvider = securityContextProvider;
+    super(autoLoginModules);
+    this.configuration = configuration;
   }
 
   //~--- methods --------------------------------------------------------------
@@ -110,45 +135,49 @@ public class BasicAuthenticationFilter extends HttpFilter
    */
   @Override
   protected void doFilter(HttpServletRequest request,
-                          HttpServletResponse response, FilterChain chain)
-          throws IOException, ServletException
+    HttpServletResponse response, FilterChain chain)
+    throws IOException, ServletException
   {
-    WebSecurityContext securityContext = securityContextProvider.get();
+    Subject subject = SecurityUtils.getSubject();
+    User user = getAuthenticatedUser(request, response);
 
-    AssertUtil.assertIsNotNull(securityContext);
-
-    User user = null;
-    String authentication = request.getHeader(HEADER_AUTHORIZATION);
-
-    if (Util.startWithIgnoreCase(authentication, AUTHORIZATION_BASIC_PREFIX))
+    // Fallback to basic authentication scheme
+    if (user == null)
     {
-      if (logger.isTraceEnabled())
-      {
-        logger.trace("found basic authorization header, start authentication");
-      }
+      String authentication = request.getHeader(HEADER_AUTHORIZATION);
 
-      user = authenticate(request, response, securityContext, authentication);
-
-      if (logger.isTraceEnabled())
+      if (Util.startWithIgnoreCase(authentication, AUTHORIZATION_BASIC_PREFIX))
       {
-        if (user != null)
+        if (logger.isTraceEnabled())
         {
-          logger.trace("user {} successfully authenticated", user.getName());
+          logger.trace(
+            "found basic authorization header, start authentication");
         }
-        else
-        {
-          logger.trace("authentcation failed, user object is null");
-        }
-      }
-    }
-    else if (securityContext.isAuthenticated())
-    {
-      if (logger.isTraceEnabled())
-      {
-        logger.trace("user is allready authenticated");
-      }
 
-      user = securityContext.getUser();
+        user = authenticate(request, response, subject, authentication);
+
+        if (logger.isTraceEnabled())
+        {
+          if (user != null)
+          {
+            logger.trace("user {} successfully authenticated", user.getName());
+          }
+          else
+          {
+            logger.trace("authentcation failed, user object is null");
+          }
+        }
+      }
+      else if ((configuration != null)
+        && configuration.isAnonymousAccessEnabled())
+      {
+        if (logger.isTraceEnabled())
+        {
+          logger.trace("anonymous access granted");
+        }
+
+        user = SCMContext.ANONYMOUS;
+      }
     }
 
     if (user == null)
@@ -158,22 +187,22 @@ public class BasicAuthenticationFilter extends HttpFilter
         logger.trace("could not find user send unauthorized");
       }
 
-      HttpUtil.sendUnauthorized(request, response);
+      handleUnauthorized(request, response, chain);
     }
     else
     {
       chain.doFilter(new SecurityHttpServletRequestWrapper(request, user),
-                     response);
+        response);
     }
   }
 
   /**
-   * Method description
+   * Sends status code 403 back to client, if the authentication has failed.
+   * In all other cases the method will send status code 403 back to client.
    *
-   *
-   * @param request
-   * @param response
-   * @param chain
+   * @param request servlet request
+   * @param response servlet response
+   * @param chain filter chain
    *
    * @throws IOException
    * @throws ServletException
@@ -181,11 +210,54 @@ public class BasicAuthenticationFilter extends HttpFilter
    * @since 1.8
    */
   protected void handleUnauthorized(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain)
-          throws IOException, ServletException
+    HttpServletResponse response, FilterChain chain)
+    throws IOException, ServletException
   {
-    HttpUtil.sendUnauthorized(request, response);
+
+    // send only forbidden, if the authentication has failed.
+    // see https://bitbucket.org/sdorra/scm-manager/issue/545/git-clone-with-username-in-url-does-not
+    if (Boolean.TRUE.equals(request.getAttribute(ATTRIBUTE_FAILED_AUTH)))
+    {
+      sendFailedAuthenticationError(request, response);
+    }
+    else
+    {
+      sendUnauthorizedError(request, response);
+    }
+  }
+
+  /**
+   * Sends an error for a failed authentication back to client.
+   *
+   *
+   * @param request http request
+   * @param response http response
+   *
+   * @throws IOException
+   */
+  protected void sendFailedAuthenticationError(HttpServletRequest request,
+    HttpServletResponse response)
+    throws IOException
+  {
+    HttpUtil.sendUnauthorized(request, response,
+      configuration.getRealmDescription());
+  }
+
+  /**
+   * Sends an unauthorized error back to client.
+   *
+   *
+   * @param request http request
+   * @param response http response
+   *
+   * @throws IOException
+   */
+  protected void sendUnauthorizedError(HttpServletRequest request,
+    HttpServletResponse response)
+    throws IOException
+  {
+    HttpUtil.sendUnauthorized(request, response,
+      configuration.getRealmDescription());
   }
 
   /**
@@ -195,14 +267,13 @@ public class BasicAuthenticationFilter extends HttpFilter
    * @param request
    * @param response
    * @param securityContext
+   * @param subject
    * @param authentication
    *
    * @return
    */
   private User authenticate(HttpServletRequest request,
-                            HttpServletResponse response,
-                            WebSecurityContext securityContext,
-                            String authentication)
+    HttpServletResponse response, Subject subject, String authentication)
   {
     String token = authentication.substring(6);
 
@@ -223,8 +294,29 @@ public class BasicAuthenticationFilter extends HttpFilter
           logger.trace("try to authenticate user {}", username);
         }
 
-        user = securityContext.authenticate(request, response, username,
-                password);
+        try
+        {
+
+          subject.login(new UsernamePasswordToken(username, password,
+            request.getRemoteAddr()));
+          user = subject.getPrincipals().oneByType(User.class);
+        }
+        catch (AuthenticationException ex)
+        {
+
+          // add a marker to the request that the authentication has failed
+          request.setAttribute(ATTRIBUTE_FAILED_AUTH, Boolean.TRUE);
+
+          if (logger.isTraceEnabled())
+          {
+            logger.trace("authentication failed for user ".concat(username),
+              ex);
+          }
+          else if (logger.isWarnEnabled())
+          {
+            logger.warn("authentication failed for user {}", username);
+          }
+        }
       }
       else if (logger.isWarnEnabled())
       {
@@ -241,6 +333,6 @@ public class BasicAuthenticationFilter extends HttpFilter
 
   //~--- fields ---------------------------------------------------------------
 
-  /** Field description */
-  private Provider<WebSecurityContext> securityContextProvider;
+  /** scm main configuration */
+  protected ScmConfiguration configuration;
 }

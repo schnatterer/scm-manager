@@ -35,6 +35,7 @@ package sonia.scm.config;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -42,6 +43,8 @@ import org.slf4j.LoggerFactory;
 
 import sonia.scm.ConfigChangedListener;
 import sonia.scm.ListenerSupport;
+import sonia.scm.event.ScmEventBus;
+import sonia.scm.util.HttpUtil;
 import sonia.scm.xml.XmlSetStringAdapter;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -51,6 +54,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -69,11 +73,11 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 @XmlRootElement(name = "scm-config")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ScmConfiguration
-        implements ListenerSupport<ConfigChangedListener<ScmConfiguration>>
+  implements ListenerSupport<ConfigChangedListener<ScmConfiguration>>
 {
 
   /** Default JavaScript date format */
-  public static final String DEFAULT_DATEFORMAT = "Y-m-d H:i:s";
+  public static final String DEFAULT_DATEFORMAT = "YYYY-MM-DD HH:mm:ss";
 
   /** Default plugin url */
   public static final String DEFAULT_PLUGINURL =
@@ -115,7 +119,7 @@ public class ScmConfiguration
    */
   @Override
   public void addListeners(
-          Collection<ConfigChangedListener<ScmConfiguration>> listeners)
+    Collection<ConfigChangedListener<ScmConfiguration>> listeners)
   {
     listeners.addAll(listeners);
   }
@@ -140,6 +144,9 @@ public class ScmConfiguration
 
       listener.configChanged(this);
     }
+
+    // fire event to event bus
+    ScmEventBus.getInstance().post(new ScmConfigurationChangedEvent(this));
   }
 
   /**
@@ -151,7 +158,7 @@ public class ScmConfiguration
    */
   public void load(ScmConfiguration other)
   {
-    this.servername = other.servername;
+    this.realmDescription = other.realmDescription;
     this.dateFormat = other.dateFormat;
     this.pluginUrl = other.pluginUrl;
     this.anonymousAccessEnabled = other.anonymousAccessEnabled;
@@ -162,12 +169,17 @@ public class ScmConfiguration
     this.proxyServer = other.proxyServer;
     this.proxyUser = other.proxyUser;
     this.proxyPassword = other.proxyPassword;
+    this.proxyExcludes = other.proxyExcludes;
     this.forceBaseUrl = other.forceBaseUrl;
     this.baseUrl = other.baseUrl;
     this.disableGroupingGrid = other.disableGroupingGrid;
     this.enableRepositoryArchive = other.enableRepositoryArchive;
+    this.skipFailedAuthenticators = other.skipFailedAuthenticators;
+    this.loginAttemptLimit = other.loginAttemptLimit;
+    this.loginAttemptLimitTimeout = other.loginAttemptLimitTimeout;
 
     // deprecated fields
+    this.servername = other.servername;
     this.sslPort = other.sslPort;
     this.enableSSL = other.enableSSL;
     this.enablePortForward = other.enablePortForward;
@@ -224,11 +236,10 @@ public class ScmConfiguration
 
   /**
    * Returns the date format for the user interface. This format is a
-   * JavaScript date format, see
-   * {@link http://jacwright.com/projects/javascript/date_format}.
+   * JavaScript date format, from the library moment.js.
    *
-   *
-   * @return JavaScript date format
+   * @see <a href="http://momentjs.com/docs/#/parsing/" target="_blank">http://momentjs.com/docs/#/parsing/</a>
+   * @return moment.js date format
    */
   public String getDateFormat()
   {
@@ -249,6 +260,31 @@ public class ScmConfiguration
   }
 
   /**
+   * Returns maximum allowed login attempts.
+   *
+   * @return maximum allowed login attempts
+   *
+   * @since 1.34
+   */
+  public int getLoginAttemptLimit()
+  {
+    return loginAttemptLimit;
+  }
+
+  /**
+   * Returns the timeout in seconds for users which are temporary disabled,
+   * because of too many failed login attempts.
+   *
+   * @return login attempt timeout in seconds
+   *
+   * @since 1.34
+   */
+  public long getLoginAttemptLimitTimeout()
+  {
+    return loginAttemptLimitTimeout;
+  }
+
+  /**
    * Returns the url of the plugin repository. This url can contain placeholders.
    * Explanation of the {placeholders}:
    * <ul>
@@ -256,13 +292,31 @@ public class ScmConfiguration
    * <li><b>os</b> = Operation System</li>
    * <li><b>arch</b> = Architecture</li>
    * </ul>
-   * For example {@link http://plugins.scm-manager.org/scm-plugin-backend/api/{version}/plugins?os={os}&arch={arch}&snapshot=false"}
+   * For example http://plugins.scm-manager.org/scm-plugin-backend/api/{version}/plugins?os={os}&arch={arch}&snapshot=false
    *
    * @return the complete plugin url.
    */
   public String getPluginUrl()
   {
     return pluginUrl;
+  }
+
+  /**
+   * Returns a set of glob patterns for urls which should excluded from
+   * proxy settings.
+   *
+   *
+   * @return set of glob patterns
+   * @since 1.23
+   */
+  public Set<String> getProxyExcludes()
+  {
+    if (proxyExcludes == null)
+    {
+      proxyExcludes = Sets.newHashSet();
+    }
+
+    return proxyExcludes;
   }
 
   /**
@@ -309,6 +363,18 @@ public class ScmConfiguration
   public String getProxyUser()
   {
     return proxyUser;
+  }
+
+  /**
+   * Returns the realm description.
+   *
+   *
+   * @return realm description
+   * @since 1.36
+   */
+  public String getRealmDescription()
+  {
+    return realmDescription;
   }
 
   /**
@@ -418,6 +484,32 @@ public class ScmConfiguration
     return forceBaseUrl;
   }
 
+  /**
+   * Returns true if the login attempt limit is enabled.
+   *
+   *
+   * @return true if login attempt limit is enabled
+   *
+   * @since 1.37
+   */
+  public boolean isLoginAttemptLimitEnabled()
+  {
+    return loginAttemptLimit > 0;
+  }
+
+  /**
+   * Returns true if failed authenticators are skipped.
+   *
+   *
+   * @return true if failed authenticators are skipped
+   *
+   * @since 1.36
+   */
+  public boolean isSkipFailedAuthenticators()
+  {
+    return skipFailedAuthenticators;
+  }
+
   //~--- set methods ----------------------------------------------------------
 
   /**
@@ -466,10 +558,10 @@ public class ScmConfiguration
   }
 
   /**
-   * Method description
+   * Sets the date format for the ui.
    *
    *
-   * @param dateFormat
+   * @param dateFormat date format for ui
    */
   public void setDateFormat(String dateFormat)
   {
@@ -563,6 +655,32 @@ public class ScmConfiguration
   }
 
   /**
+   * Set maximum allowed login attempts.
+   *
+   *
+   * @param loginAttemptLimit login attempt limit
+   *
+   * @since 1.34
+   */
+  public void setLoginAttemptLimit(int loginAttemptLimit)
+  {
+    this.loginAttemptLimit = loginAttemptLimit;
+  }
+
+  /**
+   * Sets the timeout in seconds for users which are temporary disabled,
+   * because of too many failed login attempts.
+   *
+   * @param loginAttemptLimitTimeout login attempt timeout in seconds
+   *
+   * @since 1.34
+   */
+  public void setLoginAttemptLimitTimeout(long loginAttemptLimitTimeout)
+  {
+    this.loginAttemptLimitTimeout = loginAttemptLimitTimeout;
+  }
+
+  /**
    * Method description
    *
    *
@@ -571,6 +689,19 @@ public class ScmConfiguration
   public void setPluginUrl(String pluginUrl)
   {
     this.pluginUrl = pluginUrl;
+  }
+
+  /**
+   * Set glob patterns for urls which are should be excluded from proxy
+   * settings.
+   *
+   *
+   * @param proxyExcludes glob patterns
+   * @since 1.23
+   */
+  public void setProxyExcludes(Set<String> proxyExcludes)
+  {
+    this.proxyExcludes = proxyExcludes;
   }
 
   /**
@@ -620,6 +751,18 @@ public class ScmConfiguration
   }
 
   /**
+   * Sets the realm description.
+   *
+   *
+   * @param realmDescription
+   * @since 1.36
+   */
+  public void setRealmDescription(String realmDescription)
+  {
+    this.realmDescription = realmDescription;
+  }
+
+  /**
    * Method description
    *
    *
@@ -629,6 +772,19 @@ public class ScmConfiguration
   public void setServername(String servername)
   {
     this.servername = servername;
+  }
+
+  /**
+   * If set to true the authentication chain is not stopped, if an
+   * authenticator finds the user but fails to authenticate the user.
+   *
+   * @param skipFailedAuthenticators true to skip failed authenticators
+   *
+   * @since 1.36
+   */
+  public void setSkipFailedAuthenticators(boolean skipFailedAuthenticators)
+  {
+    this.skipFailedAuthenticators = skipFailedAuthenticators;
   }
 
   /**
@@ -661,9 +817,6 @@ public class ScmConfiguration
   private String baseUrl;
 
   /** Field description */
-  private boolean enableProxy = false;
-
-  /** Field description */
   @XmlElement(name = "force-base-url")
   private boolean forceBaseUrl;
 
@@ -671,9 +824,18 @@ public class ScmConfiguration
   @Deprecated
   private int forwardPort = 80;
 
-  /** Field description */
-  @XmlElement(name = "plugin-url")
-  private String pluginUrl = DEFAULT_PLUGINURL;
+  /**
+   * Maximum allowed login attempts.
+   *
+   * @since 1.34
+   */
+  @XmlElement(name = "login-attempt-limit")
+  private int loginAttemptLimit = -1;
+
+  /** glob patterns for urls which are excluded from proxy */
+  @XmlElement(name = "proxy-excludes")
+  @XmlJavaTypeAdapter(XmlSetStringAdapter.class)
+  private Set<String> proxyExcludes;
 
   /** Field description */
   private String proxyPassword;
@@ -690,9 +852,32 @@ public class ScmConfiguration
   /** @deprecated use {@link #baseUrl} */
   private String servername = "localhost";
 
+  /**
+   * Skip failed authenticators.
+   *
+   * @since 1.36
+   */
+  @XmlElement(name = "skip-failed-authenticators")
+  private boolean skipFailedAuthenticators = false;
+
+  /** Field description */
+  @XmlElement(name = "plugin-url")
+  private String pluginUrl = DEFAULT_PLUGINURL;
+
+  /**
+   * Login attempt timeout.
+   *
+   * @since 1.34
+   */
+  @XmlElement(name = "login-attempt-limit-timeout")
+  private long loginAttemptLimitTimeout = TimeUnit.MINUTES.toSeconds(5l);
+
   /** @deprecated use {@link #baseUrl} and {@link #forceBaseUrl} */
   @Deprecated
   private boolean enableSSL = false;
+
+  /** Field description */
+  private boolean enableProxy = false;
 
   /** @deprecated use {@link #baseUrl} */
   @Deprecated
@@ -701,6 +886,13 @@ public class ScmConfiguration
   /** @deprecated use {@link #baseUrl} and {@link #forceBaseUrl} */
   @Deprecated
   private int sslPort = 8181;
+
+  /**
+   *
+   * Authentication realm for basic authentication.
+   *
+   */
+  private String realmDescription = HttpUtil.AUTHENTICATION_REALM;
 
   /** Configuration change listeners */
   @XmlTransient
@@ -714,7 +906,8 @@ public class ScmConfiguration
   private boolean disableGroupingGrid = false;
 
   /**
-   * JavaScript date format, see http://jacwright.com/projects/javascript/date_format
+   * JavaScript date format from moment.js
+   * @see <a href="http://momentjs.com/docs/#/parsing/" target="_blank">http://momentjs.com/docs/#/parsing/</a>
    */
   private String dateFormat = DEFAULT_DATEFORMAT;
 

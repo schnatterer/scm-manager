@@ -43,13 +43,22 @@ Sonia.repository.InfoPanel = Ext.extend(Ext.Panel, {
   contactText: 'Contact: ',
   urlText: 'Url: ',
   changesetViewerText: 'Commits',
+  
+  accessText: 'Access:',
+  accessReadOnly: 'Read-Only access',
+  accessReadWrite: 'Read+Write access',
 
   initComponent: function(){
     
     var contact = '';
-    if ( this.item.contact != null ){
+    if ( this.item.contact ){
       contact = String.format(this.mailTemplate, this.item.contact);
     }
+    
+    var access = this.accessReadOnly;
+    if ( Sonia.repository.getPermissionType(this.item) !== 'READ' ){
+      access = this.accessReadWrite;
+    } 
     
     var items = [{
       xtype: 'label',
@@ -69,6 +78,12 @@ Sonia.repository.InfoPanel = Ext.extend(Ext.Panel, {
     },{
       xtype: 'box',
       html: contact
+    },{
+      xtype: 'label',
+      text: this.accessText
+    },{
+      xtype: 'box',
+      html: '<span style="font-weight: bold; color: #747170">' + access + '</span>'
     },{
       xtype: 'label',
       text: this.urlText
@@ -92,7 +107,7 @@ Sonia.repository.InfoPanel = Ext.extend(Ext.Panel, {
         style: 'font-size: 12px'
       },
       items: items
-    }
+    };
 
     this.modifyDefaultConfig(config);
     
@@ -106,11 +121,15 @@ Sonia.repository.InfoPanel = Ext.extend(Ext.Panel, {
   
   getRepositoryUrlWithUsername: function(){
     var uri = Sonia.repository.createUrlFromObject(this.item);
-    if ( state.user.name != 'anonymous' ){
+    if ( state.user.name !== 'anonymous' ){
       var index = uri.indexOf("://");
       if ( index > 0 ){
         index += 3;
-        uri = uri.substring(0, index) + state.user.name + "@" + uri.substring(index);
+        var username = state.user.name;
+        // escape backslash for active directory users
+        // see https://bitbucket.org/sdorra/scm-manager/issue/570/incorrect-git-checkout-url-generated-for
+        username = username.replace('\\', '\\\\');
+        uri = uri.substring(0, index) + username + "@" + uri.substring(index);
       }
     }
     return uri;
@@ -120,7 +139,7 @@ Sonia.repository.InfoPanel = Ext.extend(Ext.Panel, {
     var text = null;
     for ( var i=0; i<state.repositoryTypes.length; i++ ){
       var type = state.repositoryTypes[i];
-      if ( type.name == t ){
+      if ( type.name === t ){
         text = type.displayName + " (" + t + ")";
         break;
       }
@@ -157,7 +176,7 @@ Sonia.repository.InfoPanel = Ext.extend(Ext.Panel, {
   },
 
   openChangesetViewer: function(changesetViewer){
-    if ( changesetViewer == null ){
+    if ( ! changesetViewer ){
       changesetViewer = this.createChangesetViewer();
     }
     main.addTab(changesetViewer);

@@ -64,6 +64,14 @@
   <New id="scm-webapp" class="org.eclipse.jetty.webapp.WebAppContext">
     <Set name="contextPath">/scm</Set>
     <Set name="war"><SystemProperty name="basedir" default="."/>/var/webapp/scm-webapp.war</Set>
+    <!-- disable directory listings -->
+    <Call name="setInitParameter">
+      <Arg>org.eclipse.jetty.servlet.Default.dirAllowed</Arg>
+      <Arg>false</Arg>
+    </Call>
+    <Set name="tempDirectory">
+      <SystemProperty name="basedir" default="."/>/work
+    </Set>
   </New>
 
   <New id="docroot" class="org.eclipse.jetty.webapp.WebAppContext">
@@ -77,6 +85,9 @@
         </Arg>
       </New>
     </Set>
+    <Set name="tempDirectory">
+      <SystemProperty name="basedir" default="."/>/work
+    </Set>
   </New>
   
   <Set name="handler">
@@ -89,10 +100,30 @@
           <Item>
             <Ref id="docroot" />
           </Item>
+          <!--
+          <Item>
+            <New id="RequestLog" class="org.eclipse.jetty.server.handler.RequestLogHandler"/>
+          </Item>
+          -->
         </Array>
       </Set>
     </New>
   </Set>
+  
+  <!-- request logging -->
+  <!--
+  <Ref id="RequestLog">
+    <Set name="requestLog">
+      <New id="RequestLogImpl" class="org.eclipse.jetty.server.NCSARequestLog">
+        <Arg><SystemProperty name="basedir" default="."/>/var/log/yyyy_mm_dd.request.log</Arg>
+        <Set name="retainDays">90</Set>
+        <Set name="append">true</Set>
+        <Set name="extended">false</Set>
+        <Set name="LogTimeZone">GMT</Set>
+       </New>
+    </Set>
+  </Ref>
+  -->
 
   <!-- mod_proxy_ajp or mod_jk -->
   <!--

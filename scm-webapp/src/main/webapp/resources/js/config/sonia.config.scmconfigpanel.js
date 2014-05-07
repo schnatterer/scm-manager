@@ -34,6 +34,7 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
 
   titleText: 'General Settings',
   servnameText: 'Servername',
+  realmDescriptionText: 'Realm description',
   dateFormatText: 'Date format',
   enableForwardingText: 'Enable forwarding (mod_proxy)',
   forwardPortText: 'Forward Port',
@@ -49,11 +50,17 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
   errorMsgText: 'Could not load config.',
   errorSubmitMsgText: 'Could not submit config.',
   
+  // TODO i18n
+  skipFailedAuthenticatorsText: 'Skip failed authenticators',
+  loginAttemptLimitText: 'Login Attempt Limit',
+  loginAttemptLimitTimeoutText: 'Login Attempt Limit Timeout',
+  
   enableProxyText: 'Enable Proxy',
   proxyServerText: 'Proxy Server',
   proxyPortText: 'Proxy Port',
   proxyUserText: 'Proxy User',
   proxyPasswordText: 'Proxy Password',
+  proxyExcludesText: 'Proxy Excludes',
   baseUrlText: 'Base Url',
   forceBaseUrlText: 'Force Base Url',
   disableGroupingGridText: 'Disable repository Groups',
@@ -62,8 +69,12 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
 
   // help
   servernameHelpText: 'The name of this server. This name will be part of the repository url.',
-  // TODO
-  dateFormatHelpText: 'JavaScript date format.',
+  realmDescriptionHelpText: 'Enter authentication realm description',
+  // TODO i18n
+  dateFormatHelpText: 'Moments date format. Please have a look at \n\
+                      <a href="http://momentjs.com/docs/#/displaying/format/" target="_blank">http://momentjs.com/docs/#/displaying/format/</a>.<br />\n\
+                      <b>Note:</b><br />\n\
+                      {0} - is replaced by a "time ago" string (e.g. 2 hours ago).',
   pluginRepositoryHelpText: 'The url of the plugin repository.<br />Explanation of the {placeholders}:\n\
   <br /><b>version</b> = SCM-Manager Version<br /><b>os</b> = Operation System<br /><b>arch</b> = Architecture',
   enableForwardingHelpText: 'Enbale mod_proxy port forwarding.',
@@ -74,11 +85,19 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
   adminGroupsHelpText: 'Comma seperated list of groups with admin permissions.',
   adminUsersHelpText: 'Comma seperated list of users with admin permissions.',
   
+  // TODO i18n
+  skipFailedAuthenticatorsHelpText: 'Do not stop the authentication chain, \n\
+                                     if an authenticator finds the user but fails to authenticate the user.',
+  loginAttemptLimitHelpText: 'Maximum allowed login attempts. Use -1 to disable the login attempt limit.',
+  loginAttemptLimitTimeoutHelpText: 'Timeout in seconds for users which are temporary disabled,\
+                                     because of too many failed login attempts.',
+  
   enableProxyHelpText: 'Enable Proxy',
   proxyServerHelpText: 'The proxy server',
   proxyPortHelpText: 'The proxy port',
   proxyUserHelpText: 'The username for the proxy server authentication.',
   proxyPasswordHelpText: 'The password for the proxy server authentication.',
+  proxyExcludesHelpText: 'A comma separated list of glob patterns for hostnames which should be excluded from proxy settings.',
   baseUrlHelpText: 'The url of the application (with context path) i.e. http://localhost:8080/scm',
   forceBaseUrlHelpText: 'Redirects to the base url if the request comes from a other url',
   disableGroupingGridHelpText: 'Disable repository Groups. A complete page reload is required after a change of this value.',
@@ -87,7 +106,7 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
   initComponent: function(){
 
     var config = {
-      title: main.navGeneralConfigText,
+      title: main.tabGeneralConfigText,
       panels: [{
         xtype: 'configForm',
         title: this.titleText,
@@ -117,9 +136,16 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
           helpText: this.enableRepositoryArchiveHelpText
         },{
           xtype: 'textfield',
+          fieldLabel: this.realmDescriptionText,
+          name: 'realmDescription',
+          allowBlank: false,
+          helpText: this.realmDescriptionHelpText
+        },{
+          xtype: 'textfield',
           fieldLabel: this.dateFormatText,
           name: 'dateFormat',
           helpText: this.dateFormatHelpText,
+          helpDisableAutoHide: true,
           allowBlank: false
         },{
           xtype: 'textfield',
@@ -136,6 +162,24 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
           helpText: this.allowAnonymousAccessHelpText
         },{
           xtype: 'checkbox',
+          fieldLabel: this.skipFailedAuthenticatorsText,
+          name: 'skip-failed-authenticators',
+          inputValue: 'true',
+          helpText: this.skipFailedAuthenticatorsHelpText
+        },{
+          xtype: 'numberfield',
+          fieldLabel: this.loginAttemptLimitText,
+          name: 'login-attempt-limit',
+          allowBlank: false,
+          helpText: this.loginAttemptLimitHelpText          
+        },{
+          xtype: 'numberfield',
+          fieldLabel: this.loginAttemptLimitTimeoutText,
+          name: 'login-attempt-limit-timeout',
+          allowBlank: false,
+          helpText: this.loginAttemptLimitTimeoutHelpText          
+        },{
+          xtype: 'checkbox',
           fieldLabel: this.enableProxyText,
           name: 'enableProxy',
           inputValue: 'true',
@@ -146,6 +190,7 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
               Ext.getCmp('proxyPort').setDisabled( ! this.checked );
               Ext.getCmp('proxyUser').setDisabled( ! this.checked );
               Ext.getCmp('proxyPassword').setDisabled( ! this.checked );
+              Ext.getCmp('proxyExcludes').setDisabled( ! this.checked );
             }
           }
         },{
@@ -180,6 +225,14 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
           name: 'proxyPassword',
           disabled: true,
           helpText: this.proxyPasswordHelpText,
+          allowBlank: true
+        },{
+          id: 'proxyExcludes',
+          xtype: 'textfield',
+          fieldLabel: this.proxyExcludesText,
+          name: 'proxy-excludes',
+          disabled: true,
+          helpText: this.proxyExcludesHelpText,
           allowBlank: true
         },{
           xtype : 'textfield',
@@ -230,6 +283,9 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
               if ( obj.enableProxy ){
                 Ext.getCmp('proxyServer').setDisabled(false);
                 Ext.getCmp('proxyPort').setDisabled(false);
+                Ext.getCmp('proxyUser').setDisabled(false);
+                Ext.getCmp('proxyPassword').setDisabled(false);
+                Ext.getCmp('proxyExcludes').setDisabled(false);
               }
               clearTimeout(tid);
               el.unmask();
@@ -246,7 +302,7 @@ Sonia.config.ScmConfigPanel = Ext.extend(Sonia.config.ConfigPanel,{
           });
         }
       }, generalConfigPanels]
-    }
+    };
 
     Ext.apply(this, Ext.apply(this.initialConfig, config));
     Sonia.config.ScmConfigPanel.superclass.initComponent.apply(this, arguments);

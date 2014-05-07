@@ -36,23 +36,19 @@ package sonia.scm.repository.spi;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.aragost.javahg.Repository;
-import com.aragost.javahg.RepositoryConfiguration;
 
 import com.google.common.base.Strings;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import sonia.scm.repository.HgConfig;
-import sonia.scm.repository.spi.javahg.HgFileviewExtension;
+import sonia.scm.repository.HgHookManager;
+import sonia.scm.repository.HgRepositoryHandler;
+import sonia.scm.web.HgUtil;
 
 //~--- JDK imports ------------------------------------------------------------
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-
-import java.nio.charset.Charset;
 
 /**
  *
@@ -64,32 +60,50 @@ public class HgCommandContext implements Closeable
   /** Field description */
   private static final String PROPERTY_ENCODING = "hg.encoding";
 
-  /**
-   * the logger for HgCommandContext
-   */
-  private static final Logger logger =
-    LoggerFactory.getLogger(HgCommandContext.class);
-
   //~--- constructors ---------------------------------------------------------
 
   /**
    * Constructs ...
    *
    *
-   * @param config
+   *
+   * @param hookManager
+   * @param handler
    * @param repository
    * @param directory
    */
-  HgCommandContext(HgConfig config, sonia.scm.repository.Repository repository,
+  public HgCommandContext(HgHookManager hookManager,
+    HgRepositoryHandler handler, sonia.scm.repository.Repository repository,
     File directory)
   {
-    this.config = config;
+    this(hookManager, handler, repository, directory,
+      handler.getHgContext().isPending());
+  }
+
+  /**
+   * Constructs ...
+   *
+   *
+   *
+   * @param hookManager
+   * @param hanlder
+   * @param repository
+   * @param directory
+   * @param pending
+   */
+  public HgCommandContext(HgHookManager hookManager,
+    HgRepositoryHandler hanlder, sonia.scm.repository.Repository repository,
+    File directory, boolean pending)
+  {
+    this.hookManager = hookManager;
+    this.hanlder = hanlder;
     this.directory = directory;
-    encoding = repository.getProperty(PROPERTY_ENCODING);
+    this.encoding = repository.getProperty(PROPERTY_ENCODING);
+    this.pending = pending;
 
     if (Strings.isNullOrEmpty(encoding))
     {
-      encoding = config.getEncoding();
+      encoding = hanlder.getConfig().getEncoding();
     }
   }
 
@@ -120,44 +134,42 @@ public class HgCommandContext implements Closeable
   {
     if (repository == null)
     {
-      RepositoryConfiguration repoConfiguration =
-        RepositoryConfiguration.DEFAULT;
-
-      repoConfiguration.addExtension(HgFileviewExtension.class);
-
-      try
-      {
-        Charset charset = Charset.forName(encoding);
-
-        if (logger.isTraceEnabled())
-        {
-          logger.trace("set encoding {} for mercurial", encoding);
-        }
-
-        repoConfiguration.setEncoding(charset);
-      }
-      catch (IllegalArgumentException ex)
-      {
-        logger.error("could not set encoding for mercurial", ex);
-      }
-
-      repoConfiguration.setHgBin(config.getHgBinary());
-      repository = Repository.open(repoConfiguration, directory);
+      repository = HgUtil.open(hanlder, hookManager, directory, encoding,
+        pending);
     }
 
     return repository;
   }
 
-  //~--- fields ---------------------------------------------------------------
+  //~--- get methods ----------------------------------------------------------
 
-  /** Field description */
-  private HgConfig config;
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  public HgConfig getConfig()
+  {
+    return hanlder.getConfig();
+  }
+
+  //~--- fields ---------------------------------------------------------------
 
   /** Field description */
   private File directory;
 
   /** Field description */
   private String encoding;
+
+  /** Field description */
+  private HgRepositoryHandler hanlder;
+
+  /** Field description */
+  private HgHookManager hookManager;
+
+  /** Field description */
+  private boolean pending;
 
   /** Field description */
   private Repository repository;

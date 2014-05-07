@@ -35,6 +35,9 @@ package sonia.scm.search;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import sonia.scm.TransformFilter;
 import sonia.scm.util.Util;
 
@@ -50,8 +53,24 @@ import java.util.Locale;
  *
  * @author Sebastian Sdorra
  */
-public class SearchUtil
+public final class SearchUtil
 {
+
+  /**
+   * the logger for SearchUtil
+   */
+  private static final Logger logger =
+    LoggerFactory.getLogger(SearchUtil.class);
+
+  //~--- constructors ---------------------------------------------------------
+
+  /**
+   * Constructs ...
+   *
+   */
+  private SearchUtil() {}
+
+  //~--- methods --------------------------------------------------------------
 
   /**
    * Method description
@@ -64,7 +83,7 @@ public class SearchUtil
    * @return
    */
   public static boolean matchesAll(SearchRequest request, String value,
-                                   String... other)
+    String... other)
   {
     boolean result = false;
     String query = createStringQuery(request);
@@ -101,7 +120,7 @@ public class SearchUtil
    * @return
    */
   public static boolean matchesOne(SearchRequest request, String value,
-                                   String... other)
+    String... other)
   {
     boolean result = false;
     String query = createStringQuery(request);
@@ -141,7 +160,7 @@ public class SearchUtil
    * @return
    */
   public static <T> Collection<T> search(SearchRequest searchRequest,
-          Collection<T> collection, TransformFilter<T> filter)
+    Collection<T> collection, TransformFilter<T> filter)
   {
     List<T> items = new ArrayList<T>();
     int index = 0;
@@ -176,6 +195,77 @@ public class SearchUtil
    * Method description
    *
    *
+   * @param pattern
+   * @param c
+   */
+  private static void appendChar(StringBuilder pattern, char c)
+  {
+    switch (c)
+    {
+      case '*' :
+        pattern.append(".*");
+
+        break;
+
+      case '?' :
+        pattern.append(".");
+
+        break;
+
+      case '(' :
+        pattern.append("\\(");
+
+        break;
+
+      case ')' :
+        pattern.append("\\)");
+
+        break;
+
+      case '{' :
+        pattern.append("\\{");
+
+        break;
+
+      case '}' :
+        pattern.append("\\}");
+
+        break;
+
+      case '[' :
+        pattern.append("\\[");
+
+        break;
+
+      case ']' :
+        pattern.append("\\]");
+
+        break;
+
+      case '|' :
+        pattern.append("\\|");
+
+        break;
+
+      case '.' :
+        pattern.append("\\.");
+
+        break;
+
+      case '\\' :
+        pattern.append("\\\\");
+
+        break;
+
+      default :
+        pattern.append(c);
+    }
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param request
    *
    * @return
@@ -184,19 +274,26 @@ public class SearchUtil
   {
     String query = request.getQuery().trim();
 
+    StringBuilder pattern = new StringBuilder();
+
     if (request.isIgnoreCase())
     {
+      pattern.append("(?i)");
       query = query.toLowerCase(Locale.ENGLISH);
     }
 
-    query = query.replace("*", ".*").replace("?", ".");
-    query = ".*".concat(query).concat(".*");
+    pattern.append(".*");
 
-    if (request.isIgnoreCase())
+    for (char c : query.toCharArray())
     {
-      query = "(?i)".concat(query);
+      appendChar(pattern, c);
     }
 
-    return query;
+    pattern.append(".*");
+
+    logger.trace("converted query \"{}\" to regex pattern \"{}\"",
+      request.getQuery(), pattern);
+
+    return pattern.toString();
   }
 }

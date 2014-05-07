@@ -35,8 +35,11 @@ package sonia.scm.repository;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.base.Objects;
 import com.google.inject.Inject;
+import com.google.inject.OutOfScopeException;
 import com.google.inject.Provider;
+import com.google.inject.ProvisionException;
 import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -53,9 +56,6 @@ import sonia.scm.util.Util;
 //~--- JDK imports ------------------------------------------------------------
 
 import java.io.IOException;
-
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 import java.util.UUID;
 
@@ -85,14 +85,17 @@ public class HgHookManager implements ConfigChangedListener<ScmConfiguration>
    *
    *
    * @param configuration
+   * @param httpServletRequestProvider
    * @param httpClientProvider
    */
   @Inject
   public HgHookManager(ScmConfiguration configuration,
-                       Provider<HttpClient> httpClientProvider)
+    Provider<HttpServletRequest> httpServletRequestProvider,
+    Provider<HttpClient> httpClientProvider)
   {
     this.configuration = configuration;
     this.configuration.addListener(this);
+    this.httpServletRequestProvider = httpServletRequestProvider;
     this.httpClientProvider = httpClientProvider;
   }
 
@@ -139,6 +142,36 @@ public class HgHookManager implements ConfigChangedListener<ScmConfiguration>
     return hookUrl;
   }
 
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  public String createUrl()
+  {
+    String url = hookUrl;
+
+    if (url == null)
+    {
+      HttpServletRequest request = getHttpServletRequest();
+
+      if (request != null)
+      {
+        url = createUrl(request);
+      }
+      else
+      {
+        url = createConfiguredUrl();
+        logger.warn(
+          "created url {} without request, in some cases this could cause problems",
+          url);
+      }
+    }
+
+    return url;
+  }
+
   //~--- get methods ----------------------------------------------------------
 
   /**
@@ -180,7 +213,7 @@ public class HgHookManager implements ConfigChangedListener<ScmConfiguration>
       if (logger.isDebugEnabled())
       {
         logger.debug(
-            "create hook url from configured base url because force base url is enabled");
+          "create hook url from configured base url because force base url is enabled");
       }
 
       hookUrl = createConfiguredUrl();
@@ -204,8 +237,8 @@ public class HgHookManager implements ConfigChangedListener<ScmConfiguration>
         if (logger.isWarnEnabled())
         {
           logger.warn(
-              "hook url {} from request does not work, try now localhost",
-              hookUrl);
+            "hook url {} from request does not work, try now localhost",
+            hookUrl);
         }
 
         hookUrl = createLocalUrl(request);
@@ -215,8 +248,8 @@ public class HgHookManager implements ConfigChangedListener<ScmConfiguration>
           if (logger.isWarnEnabled())
           {
             logger.warn(
-                "localhost hook url {} does not work, try now from configured base url",
-                hookUrl);
+              "localhost hook url {} does not work, try now from configured base url",
+              hookUrl);
           }
 
           hookUrl = createConfiguredUrl();
@@ -238,8 +271,14 @@ public class HgHookManager implements ConfigChangedListener<ScmConfiguration>
    */
   private String createConfiguredUrl()
   {
+    //J-
     return HttpUtil.getUriWithoutEndSeperator(
-        configuration.getBaseUrl()).concat("/hook/hg/");
+      Objects.firstNonNull(
+        configuration.getBaseUrl(), 
+        "http://localhost:8080/scm"
+      )
+    ).concat("/hook/hg/");
+    //J+
   }
 
   /**
@@ -269,14 +308,40 @@ public class HgHookManager implements ConfigChangedListener<ScmConfiguration>
     if (logger.isErrorEnabled())
     {
       logger.error(
-          "disabling mercurial hooks, because hook url {} seems not to work",
-          hookUrl);
+        "disabling mercurial hooks, because hook url {} seems not to work",
+        hookUrl);
     }
 
     hookUrl = Util.EMPTY_STRING;
   }
 
   //~--- get methods ----------------------------------------------------------
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  private HttpServletRequest getHttpServletRequest()
+  {
+    HttpServletRequest request = null;
+
+    try
+    {
+      request = httpServletRequestProvider.get();
+    }
+    catch (ProvisionException ex)
+    {
+      logger.debug("http servlet request is not available");
+    }
+    catch (OutOfScopeException ex)
+    {
+      logger.debug("http servlet request is not available");
+    }
+
+    return request;
+  }
 
   /**
    * Method description
@@ -333,4 +398,7 @@ public class HgHookManager implements ConfigChangedListener<ScmConfiguration>
 
   /** Field description */
   private Provider<HttpClient> httpClientProvider;
+
+  /** Field description */
+  private Provider<HttpServletRequest> httpServletRequestProvider;
 }

@@ -35,21 +35,32 @@ package sonia.scm.repository;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+import org.eclipse.jgit.api.FetchCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffFormatter;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.RepositoryCache;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.util.FS;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sonia.scm.util.HttpUtil;
 import sonia.scm.util.Util;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -57,17 +68,18 @@ import sonia.scm.util.Util;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  *
  * @author Sebastian Sdorra
  */
-public class GitUtil
+public final class GitUtil
 {
-
-  /** Field description */
-  public static final int ID_LENGTH = 20;
 
   /** Field description */
   public static final String REF_HEAD = "HEAD";
@@ -79,13 +91,42 @@ public class GitUtil
   public static final String REF_MASTER = "master";
 
   /** Field description */
+  private static final String DIRECTORY_DOTGIT = ".git";
+
+  /** Field description */
+  private static final String DIRECTORY_OBJETCS = "objects";
+
+  /** Field description */
+  private static final String DIRECTORY_REFS = "refs";
+
+  /** Field description */
   private static final String PREFIX_HEADS = "refs/heads/";
 
   /** Field description */
   private static final String PREFIX_TAG = "refs/tags/";
 
+  /** Field description */
+  private static final String REFSPEC = "+refs/heads/*:refs/remote/scm/%s/*";
+
+  /** Field description */
+  private static final String REMOTE_REF = "refs/remote/scm/%s/%s";
+
+  /** Field description */
+  private static final int TIMEOUT = 5;
+
+  /** Field description */
+  private static final String USERAGENT_GIT = "git/";
+
   /** the logger for GitUtil */
   private static final Logger logger = LoggerFactory.getLogger(GitUtil.class);
+
+  //~--- constructors ---------------------------------------------------------
+
+  /**
+   * Constructs ...
+   *
+   */
+  private GitUtil() {}
 
   //~--- methods --------------------------------------------------------------
 
@@ -155,6 +196,40 @@ public class GitUtil
    * Method description
    *
    *
+   * @param git
+   * @param directory
+   * @param remoteRepository
+   *
+   * @return
+   *
+   * @throws GitAPIException
+   *
+   * @throws RepositoryException
+   */
+  public static FetchResult fetch(Git git, File directory,
+    Repository remoteRepository)
+    throws RepositoryException
+  {
+    try
+    {
+      FetchCommand fetch = git.fetch();
+
+      fetch.setRemote(directory.getAbsolutePath());
+      fetch.setRefSpecs(createRefSpec(remoteRepository));
+      fetch.setTimeout((int) TimeUnit.MINUTES.toSeconds(TIMEOUT));
+
+      return fetch.call();
+    }
+    catch (GitAPIException ex)
+    {
+      throw new RepositoryException("could not fetch", ex);
+    }
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param directory
    *
    * @return
@@ -164,8 +239,23 @@ public class GitUtil
   public static org.eclipse.jgit.lib.Repository open(File directory)
     throws IOException
   {
-    return RepositoryCache.open(RepositoryCache.FileKey.lenient(directory,
-      FS.DETECTED), true);
+    FS fs = FS.DETECTED;
+    FileRepositoryBuilder builder = new FileRepositoryBuilder();
+
+    builder.setFS(fs);
+
+    if (isGitDirectory(fs, directory))
+    {
+
+      // bare repository
+      builder.setGitDir(directory).setBare();
+    }
+    else
+    {
+      builder.setWorkTree(directory);
+    }
+
+    return builder.build();
   }
 
   /**
@@ -224,16 +314,34 @@ public class GitUtil
   {
     String branch = null;
 
-    String name = ref.getName();
+    if (ref != null)
+    {
+      branch = getBranch(ref.getName());
+    }
 
-    if (name.startsWith(PREFIX_HEADS))
+    return branch;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param name
+   *
+   * @return
+   */
+  public static String getBranch(String name)
+  {
+    String branch = null;
+
+    if (Util.isNotEmpty(name) && name.startsWith(PREFIX_HEADS))
     {
       branch = name.substring(PREFIX_HEADS.length());
     }
 
     return branch;
   }
-  
+
   /**
    * Method description
    *
@@ -250,19 +358,31 @@ public class GitUtil
     throws IOException
   {
     ObjectId branchId = null;
-    if ( ! branchName.startsWith(REF_HEAD) ){
+
+    if (!branchName.startsWith(REF_HEAD))
+    {
       branchName = PREFIX_HEADS.concat(branchName);
     }
-    
-    Ref ref = repo.getRef(branchName);
 
-    if (ref != null)
+    checkBranchName(repo, branchName);
+
+    try
     {
-      branchId = ref.getObjectId();
+      Ref ref = repo.getRef(branchName);
+
+      if (ref != null)
+      {
+        branchId = ref.getObjectId();
+      }
+      else if (logger.isWarnEnabled())
+      {
+        logger.warn("could not find branch for {}", branchName);
+      }
+
     }
-    else if (logger.isWarnEnabled())
+    catch (Exception ex)
     {
-      logger.warn("could not find branch for {}", branchName);
+      logger.warn("error occured during resolve of branch id", ex);
     }
 
     return branchId;
@@ -326,11 +446,82 @@ public class GitUtil
    * Method description
    *
    *
-   * @param repo
+   * @param objectId
    *
    * @return
    */
+  public static String getId(ObjectId objectId)
+  {
+    String id = Util.EMPTY_STRING;
+
+    if (objectId != null)
+    {
+      id = objectId.name();
+    }
+
+    return id;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param repository
+   * @param id
+   *
+   * @return
+   *
+   * @throws IncorrectObjectTypeException
+   * @throws MissingObjectException
+   *
+   * @throws IOException
+   */
+  public static Ref getRefForCommit(org.eclipse.jgit.lib.Repository repository,
+    ObjectId id)
+    throws IOException
+  {
+    Ref ref = null;
+    RevWalk walk = null;
+
+    try
+    {
+      walk = new RevWalk(repository);
+
+      RevCommit commit = walk.parseCommit(id);
+
+      for (Map.Entry<String, Ref> e : repository.getAllRefs().entrySet())
+      {
+        if (e.getKey().startsWith(Constants.R_HEADS))
+        {
+          if (walk.isMergedInto(commit,
+            walk.parseCommit(e.getValue().getObjectId())))
+          {
+            ref = e.getValue();
+          }
+        }
+      }
+
+    }
+    finally
+    {
+      release(walk);
+    }
+
+    return ref;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param repo
+   *
+   * @return
+   *
+   * @throws IOException
+   */
   public static ObjectId getRepositoryHead(org.eclipse.jgit.lib.Repository repo)
+    throws IOException
   {
     ObjectId id = null;
     String head = null;
@@ -359,9 +550,25 @@ public class GitUtil
       }
     }
 
+    if (id == null)
+    {
+      id = repo.resolve(Constants.HEAD);
+    }
+
     if (logger.isDebugEnabled())
     {
-      logger.debug("use {}:{} as repository head", head, id);
+      if ((head != null) && (id != null))
+      {
+        logger.debug("use {}:{} as repository head", head, id.name());
+      }
+      else if (id != null)
+      {
+        logger.debug("use {} as repository head", id.name());
+      }
+      else
+      {
+        logger.warn("could not find repository head");
+      }
     }
 
     return id;
@@ -400,6 +607,43 @@ public class GitUtil
    * Method description
    *
    *
+   * @param repository
+   * @param localBranch
+   *
+   * @return
+   */
+  public static String getScmRemoteRefName(Repository repository,
+    Ref localBranch)
+  {
+    return getScmRemoteRefName(repository, localBranch.getName());
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param repository
+   * @param localBranch
+   *
+   * @return
+   */
+  public static String getScmRemoteRefName(Repository repository,
+    String localBranch)
+  {
+    String branch = localBranch;
+
+    if (localBranch.startsWith(REF_HEAD_PREFIX))
+    {
+      branch = localBranch.substring(REF_HEAD_PREFIX.length());
+    }
+
+    return String.format(REMOTE_REF, repository.getId(), branch);
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param ref
    *
    * @return
@@ -414,6 +658,96 @@ public class GitUtil
     }
 
     return name;
+  }
 
+  /**
+   * Returns true if the request comes from a git client.
+   *
+   *
+   * @param request servlet request
+   *
+   * @return true if the client is git
+   */
+  public static boolean isGitClient(HttpServletRequest request)
+  {
+    return HttpUtil.userAgentStartsWith(request, USERAGENT_GIT);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param dir
+   *
+   * @return
+   */
+  public static boolean isGitDirectory(File dir)
+  {
+    return isGitDirectory(FS.DETECTED, dir);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param fs
+   * @param dir
+   *
+   * @return
+   */
+  public static boolean isGitDirectory(FS fs, File dir)
+  {
+    //J-
+    return fs.resolve(dir, DIRECTORY_OBJETCS).exists()
+      && fs.resolve(dir, DIRECTORY_REFS).exists() 
+      &&!fs.resolve(dir, DIRECTORY_DOTGIT).exists();
+    //J+
+  }
+
+  //~--- methods --------------------------------------------------------------
+
+  /**
+   * Method description
+   *
+   *
+   * @param repo
+   * @param branchName
+   *
+   * @throws IOException
+   */
+  @VisibleForTesting
+  static void checkBranchName(org.eclipse.jgit.lib.Repository repo,
+    String branchName)
+    throws IOException
+  {
+    if (branchName.contains(".."))
+    {
+      File repoDirectory = repo.getDirectory();
+      File branchFile = new File(repoDirectory, branchName);
+
+      if (!branchFile.getCanonicalPath().startsWith(
+        repoDirectory.getCanonicalPath()))
+      {
+        logger.error(
+          "branch \"{}\" is outside of the repository. It looks like path traversal attack",
+          branchName);
+
+        throw new IllegalArgumentException(
+          branchName.concat(" is an invalid branch name"));
+      }
+    }
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param repository
+   *
+   * @return
+   */
+  private static RefSpec createRefSpec(Repository repository)
+  {
+    return new RefSpec(String.format(REFSPEC, repository.getId()));
   }
 }

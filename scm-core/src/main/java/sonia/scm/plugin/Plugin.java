@@ -33,9 +33,9 @@
 
 package sonia.scm.plugin;
 
-//~--- JDK imports ------------------------------------------------------------
+//~--- non-JDK imports --------------------------------------------------------
 
-import java.net.URL;
+import com.google.common.base.Objects;
 
 import java.util.Set;
 
@@ -54,6 +54,73 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Plugin
 {
+
+  /**
+   * Method description
+   *
+   *
+   * @param obj
+   *
+   * @return
+   */
+  @Override
+  public boolean equals(Object obj)
+  {
+    if (obj == null)
+    {
+      return false;
+    }
+
+    if (getClass() != obj.getClass())
+    {
+      return false;
+    }
+
+    final Plugin other = (Plugin) obj;
+
+    return Objects.equal(condition, other.condition)
+      && Objects.equal(information, other.information)
+      && Objects.equal(packageSet, other.packageSet)
+      && Objects.equal(path, other.path) 
+      && Objects.equal(location, other.location)
+      && Objects.equal(resources, other.resources);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  @Override
+  public int hashCode()
+  {
+    return Objects.hashCode(condition, information, packageSet, packageSet,
+      resources, location);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  @Override
+  public String toString()
+  {
+    //J-
+    return Objects.toStringHelper(this)
+                  .add("condition", condition)
+                  .add("information", information)
+                  .add("packageSet", packageSet)
+                  .add("path", path)
+                  .add("location", location)
+                  .add("resources", resources)
+                  .toString();
+    //J+
+  }
+
+  //~--- get methods ----------------------------------------------------------
 
   /**
    * Method description
@@ -94,9 +161,8 @@ public class Plugin
    *
    * @return
    *
-   * @deprecated use {@link #getUrl()} instead.
+   * @deprecated use {@link #getLocation()} instead
    */
-  @Deprecated
   public String getPath()
   {
     return path;
@@ -113,15 +179,9 @@ public class Plugin
     return resources;
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @return
-   */
-  public URL getUrl()
+  public PluginLocation getLocation()
   {
-    return url;
+    return location;
   }
 
   //~--- set methods ----------------------------------------------------------
@@ -165,7 +225,7 @@ public class Plugin
    *
    *
    * @param path
-   * @deprecated use {@link #setUrl(java.net.URL)} instead
+   * @deprecated use {@link #setLocation(PluginLocation)} instead
    */
   public void setPath(String path)
   {
@@ -187,11 +247,11 @@ public class Plugin
    * Method description
    *
    *
-   * @param url
+   * @param location
    */
-  public void setUrl(URL url)
+  public void setLocation(PluginLocation location)
   {
-    this.url = url;
+    this.location = location;
   }
 
   //~--- fields ---------------------------------------------------------------
@@ -209,8 +269,9 @@ public class Plugin
   private Set<String> packageSet;
 
   /**
-   * @deprecated use {@link #url} instead.
+   * @deprecated use {@link #url} instead
    */
+  @Deprecated
   @XmlTransient
   private String path;
 
@@ -219,5 +280,5 @@ public class Plugin
 
   /** Field description */
   @XmlTransient
-  private URL url;
+  private PluginLocation location;
 }

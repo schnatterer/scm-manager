@@ -33,6 +33,16 @@
 
 package sonia.scm;
 
+//~--- non-JDK imports --------------------------------------------------------
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+//~--- JDK imports ------------------------------------------------------------
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * Detects the ServletContainer.
  * This class is inspired by
@@ -43,15 +53,52 @@ package sonia.scm;
 public class ServletContainerDetector
 {
 
+  /** Make usage of the logging framework. */
+  private static final Logger LOGGER =
+    LoggerFactory.getLogger(ServletContainerDetector.class);
+
+  //~--- constructors ---------------------------------------------------------
+
+  /**
+   * Constructs a new ServletContainerDetector.
+   * @deprecated Use {@link ServletContainerDetector#detect(HttpServletRequest)} instead.
+   */
+  @Deprecated
+  public ServletContainerDetector() {}
+
+  /**
+   * Constructs a new ServletContainerDetector depending on the ServletRequest.
+   * @param req The ServletRequest.
+   */
+  private ServletContainerDetector(final HttpServletRequest req)
+  {
+    request = req;
+  }
+
+  //~--- methods --------------------------------------------------------------
+
   /**
    * Detects the ServletContainer.
    *
-   *
+   * @deprecated Use {@link ServletContainerDetector#detect(HttpServletRequest)} instead.
    * @return the detected ServletContainer
    */
+  @Deprecated
   public static ServletContainer detect()
   {
     return new ServletContainerDetector().detectContainer();
+  }
+
+  /**
+   * Alternate detection of ServletContainer using DefaultServletDetection.
+   *
+   * @param req The used Servlet instance.
+   * @return the detected ServletContainer.
+   * @since 1.32
+   */
+  public static ServletContainer detect(final HttpServletRequest req)
+  {
+    return new ServletContainerDetector(req).detectContainer();
   }
 
   /**
@@ -62,6 +109,8 @@ public class ServletContainerDetector
    */
   public ServletContainer detectContainer()
   {
+    LOGGER.trace("Detecting servlet container...");
+
     ServletContainer container = ServletContainer.UNKNOWN;
 
     if (isScmServer())
@@ -104,15 +153,42 @@ public class ServletContainerDetector
     {
       container = ServletContainer.JETTY;
     }
+    else if (isEclipseJetty())
+    {
+      container = ServletContainer.ECLIPSE_JETTY;
+    }
     else if (isTomcat())
     {
       container = ServletContainer.TOMCAT;
+    }
+
+    if (ServletContainer.UNKNOWN.equals(container))
+    {
+      LOGGER.trace("Servlet container is unknown.");
     }
 
     return container;
   }
 
   //~--- get methods ----------------------------------------------------------
+
+  /**
+   * Returns true if the ServletContainer is a Eclipse Jetty.
+   *
+   * @since 1.32
+   * @return true if the ServletContainer is a Eclipse Jetty
+   */
+  public boolean isEclipseJetty()
+  {
+    boolean jetty = detect("/org/eclipse/jetty/server/Server.class");
+
+    if (!jetty && (null != request))
+    {
+      jetty = detectDefaultServlet("org.eclipse.jetty");
+    }
+
+    return jetty;
+  }
 
   /**
    * Returns true if the ServletContainer is a Geronimo.
@@ -133,7 +209,7 @@ public class ServletContainerDetector
    */
   public boolean isGlassfish()
   {
-    String value = System.getProperty("com.sun.aas.instanceRoot");
+    final String value = System.getProperty("com.sun.aas.instanceRoot");
 
     if (value != null)
     {
@@ -215,6 +291,8 @@ public class ServletContainerDetector
    */
   public boolean isScmServer()
   {
+    LOGGER.debug("App name is: " + System.getProperty("app.name"));
+
     return "scm-server".equals(System.getProperty("app.name"));
   }
 
@@ -261,26 +339,26 @@ public class ServletContainerDetector
   //~--- methods --------------------------------------------------------------
 
   /**
-   * Method description
+   * Returns true if the given class exists in the system classpath.
    *
    *
-   * @param clazz
+   * @param clazz class name to search in classpath
    *
-   * @return
+   * @return true if class exists in system classpath
    */
-  private boolean detect(String clazz)
+  private boolean detect(final String clazz)
   {
     try
     {
-      ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+      final ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
 
       systemClassLoader.loadClass(clazz);
 
       return true;
     }
-    catch (ClassNotFoundException cnfe)
+    catch (final ClassNotFoundException cnfe)
     {
-      Class<?> classObj = getClass();
+      final Class<?> classObj = getClass();
 
       if (classObj.getResource(clazz) != null)
       {
@@ -292,4 +370,34 @@ public class ServletContainerDetector
       }
     }
   }
+
+  /**
+   * An alternate detection. The default servlet that must be implemented by each application, so we can get it's
+   * class name and compare against our suggestion.
+   *
+   * @since 1.32
+   * @param keyword Part of the class path that is needed at the implementation class.
+   *
+   * @return
+   */
+  private boolean detectDefaultServlet(final String keyword)
+  {
+
+    // Request the default servlet (its pretty safe to say it will always be there)
+    final RequestDispatcher dispatcher =
+      request.getSession().getServletContext().getNamedDispatcher("default");
+
+    if (dispatcher == null)
+    {
+      return false;
+    }
+
+    // If the request dispatcher implementation contains the keyword, we can claim a match
+    return dispatcher.getClass().getName().contains(keyword);
+  }
+
+  //~--- fields ---------------------------------------------------------------
+
+  /** Servlet request for alternate detection method. */
+  private HttpServletRequest request = null;
 }

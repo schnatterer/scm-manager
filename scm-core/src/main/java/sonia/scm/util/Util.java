@@ -33,6 +33,10 @@
 
 package sonia.scm.util;
 
+//~--- non-JDK imports --------------------------------------------------------
+
+import com.google.common.base.Strings;
+
 //~--- JDK imports ------------------------------------------------------------
 
 import java.math.BigInteger;
@@ -55,7 +59,7 @@ import java.util.TimeZone;
  *
  * @author Sebastian Sdorra
  */
-public class Util
+public final class Util
 {
 
   /** Field description */
@@ -63,6 +67,14 @@ public class Util
 
   /** Field description */
   public static final String EMPTY_STRING = "";
+
+  //~--- constructors ---------------------------------------------------------
+
+  /**
+   * Constructs ...
+   *
+   */
+  private Util() {}
 
   //~--- methods --------------------------------------------------------------
 
@@ -107,7 +119,7 @@ public class Util
    * @return
    */
   public static <T> boolean containsOne(Collection<T> collection,
-          Collection<T> other)
+    Collection<T> other)
   {
     boolean result = false;
 
@@ -198,7 +210,7 @@ public class Util
    * @since 1.4
    */
   public static <T> Collection<T> createSubCollection(Collection<T> values,
-          Comparator<T> comparator, int start, int limit)
+    Comparator<T> comparator, int start, int limit)
   {
     return createSubCollection(values, comparator, null, start, limit);
   }
@@ -216,7 +228,7 @@ public class Util
    * @since 1.4
    */
   public static <T> Collection<T> createSubCollection(Collection<T> values,
-          int start, int limit)
+    int start, int limit)
   {
     return createSubCollection(values, null, null, start, limit);
   }
@@ -235,7 +247,7 @@ public class Util
    * @since 1.4
    */
   public static <T> Collection<T> createSubCollection(Collection<T> values,
-          CollectionAppender<T> appender, int start, int limit)
+    CollectionAppender<T> appender, int start, int limit)
   {
     return createSubCollection(values, null, appender, start, limit);
   }
@@ -256,8 +268,8 @@ public class Util
    * @since 1.4
    */
   public static <T> Collection<T> createSubCollection(Collection<T> values,
-          Comparator<T> comparator, CollectionAppender<T> appender, int start,
-          int limit)
+    Comparator<T> comparator, CollectionAppender<T> appender, int start,
+    int limit)
   {
     List<T> result = new ArrayList<T>();
     List<T> valueList = new ArrayList(values);
@@ -343,21 +355,37 @@ public class Util
   }
 
   /**
-   * Method description
+   * Returns an emtpy string, if the object is null. Otherwise the result of
+   * the toString method of the object is returned is returned.
    *
-   *
-   * @param value
-   *
+   * @param value object
    *
    * @since 1.13
    *
-   * @return
+   * @return string value or empty string
    */
   public static String nonNull(Object value)
   {
     return (value != null)
-           ? value.toString()
-           : "";
+      ? value.toString()
+      : "";
+  }
+
+  /**
+   * Returns an emtpy string, if the string is null. Otherwise the string
+   * is returned. The method is available to fix a possible linkage error which
+   * was introduced with version 1.14. Please have a look at:
+   * https://bitbucket.org/sdorra/scm-manager/issue/569/active-directory-plugin-not-working-in
+   *
+   * @param value string value
+   *
+   * @return string value or empty string
+   *
+   * @since 1.38
+   */
+  public static String nonNull(String value)
+  {
+    return Strings.nullToEmpty(value);
   }
 
   /**
@@ -372,7 +400,7 @@ public class Util
    * @throws ParseException
    */
   public static Date parseDate(String dateString, TimeZone tz)
-          throws ParseException
+    throws ParseException
   {
     SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
 
@@ -407,13 +435,13 @@ public class Util
    * @param start
    *
    * @return
-   * 
+   *
    * @since 1.17
    */
   public static boolean startWithIgnoreCase(String value, String start)
   {
     return (value != null) && (start != null)
-           && value.toUpperCase(Locale.ENGLISH).startsWith(start);
+      && value.toUpperCase(Locale.ENGLISH).startsWith(start);
   }
 
   /**
@@ -584,8 +612,8 @@ public class Util
   public static boolean isEquals(Object object, Object other)
   {
     return (object == null)
-           ? other == null
-           : object.equals(other);
+      ? other == null
+      : object.equals(other);
   }
 
   /**

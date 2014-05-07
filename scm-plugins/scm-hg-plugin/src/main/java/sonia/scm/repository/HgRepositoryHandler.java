@@ -101,7 +101,8 @@ public class HgRepositoryHandler
   /** Field description */
   public static final Type TYPE = new RepositoryType(TYPE_NAME,
                                     TYPE_DISPLAYNAME,
-                                    HgRepositoryServiceProvider.COMMANDS);
+                                    HgRepositoryServiceProvider.COMMANDS,
+                                    HgRepositoryServiceProvider.FEATURES);
 
   /** the logger for HgRepositoryHandler */
   private static final Logger logger =
@@ -190,7 +191,7 @@ public class HgRepositoryHandler
     // fix wrong hg.bat from package installation
     if (SystemUtil.isWindows())
     {
-      HgPyFix.fixHgPy(context, getConfig());
+      HgWindowsPackageFix.fixHgPackage(context, getConfig());
     }
   }
 
@@ -307,6 +308,24 @@ public class HgRepositoryHandler
     }
 
     return diffViewer;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  public HgContext getHgContext()
+  {
+    HgContext context = hgContextProvider.get();
+
+    if (context == null)
+    {
+      context = new HgContext();
+    }
+
+    return context;
   }
 
   /**
@@ -545,6 +564,9 @@ public class HgRepositoryHandler
   {
     ExtendedCommand cmd = new ExtendedCommand(config.getHgBinary(), "init",
                             directory.getAbsolutePath());
+
+    // copy system environment, because of the PATH variable
+    cmd.setUseSystemEnvironment(true);
 
     // issue-97
     cmd.setWorkDirectory(baseDirectory);

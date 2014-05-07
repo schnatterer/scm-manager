@@ -30,11 +30,15 @@
  */
 Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
 
+  // templates
+  typeIconTemplate: '<img src="{0}" alt="{1}" title="{2}">',
+
   colNameText: 'Name',
   colTypeText: 'Type',
   colContactText: 'Contact',
   colDescriptionText: 'Description',
   colCreationDateText: 'Creation date',
+  colLastModifiedText: 'Last modified',
   colUrlText: 'Url',
   colArchiveText: 'Archive',
   emptyText: 'No repository is configured',
@@ -42,6 +46,7 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
   unknownType: 'Unknown',
   
   archiveIcon: 'resources/images/archive.png',
+  warningIcon: 'resources/images/warning.png',
   
   filterRequest: null,
   
@@ -87,6 +92,8 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
         },{
           name: 'creationDate'
         },{
+          name: 'lastModified'
+        },{
           name: 'public'
         },{
           name:'permissions'
@@ -94,6 +101,9 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
           name: 'properties'
         },{
           name: 'archived'
+        },{
+          name: 'healthCheckFailures',
+          defaultValue: null
         }]
       }),
       sortInfo: {
@@ -121,6 +131,11 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
         width: 125
       },
       columns: [{
+        id: 'iconType',
+        dataIndex: 'type',
+        renderer: this.renderTypeIcon,
+        width: 20
+      },{
         id: 'name', 
         header: this.colNameText, 
         dataIndex: 'name', 
@@ -131,7 +146,8 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
         header: this.colTypeText, 
         dataIndex: 'type', 
         renderer: this.renderRepositoryType, 
-        width: 80
+        width: 80,
+        hidden: true
       },{
         id: 'contact', 
         header: this.colContactText, 
@@ -146,6 +162,12 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
         header: this.colCreationDateText, 
         dataIndex: 'creationDate', 
         renderer: Ext.util.Format.formatTimestamp
+      },{
+        id: 'lastModified', 
+        header: this.colLastModifiedText, 
+        dataIndex: 'lastModified', 
+        renderer: Ext.util.Format.formatTimestamp,
+        hidden: true
       },{
         id: 'Url', 
         header: this.colUrlText, 
@@ -200,12 +222,21 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
         }
       },
       view: new Ext.grid.GroupingView({
+        idPrefix: '{grid.id}',
         enableGrouping: ! state.clientConfig.disableGroupingGrid,
         enableNoGroups: false,
         forceFit: true,
         groupMode: 'value',
         enableGroupingMenu: false,
-        groupTextTpl: '{group} ({[values.rs.length]} {[values.rs.length > 1 ? "Repositories" : "Repository"]})'
+        groupTextTpl: '{group} ({[values.rs.length]} {[values.rs.length > 1 ? "Repositories" : "Repository"]})',
+        getRowClass: function(record){
+          var rowClass = '';
+          var healthFailures = record.get('healthCheckFailures');
+          if (healthFailures && healthFailures.length > 0){
+            rowClass = 'unhealthy';
+          }
+          return rowClass;
+        }
       })
     };
     
@@ -217,6 +248,33 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
     if (this.parentPanel){
       this.parentPanel.repositoryGrid = this;
     }
+  },
+  
+  renderTypeIcon: function(type, meta, record){
+    var result;
+    if ( record ){
+      var healthFailures = record.get('healthCheckFailures');
+      if (healthFailures && healthFailures.length > 0){
+         result = String.format(this.typeIconTemplate, this.warningIcon, type, type);
+      }
+    }
+    if (!result){
+      result = this.getTypeIcon(type);
+    }
+    return result;
+  },
+  
+  getTypeIcon: function(type){
+    var icon = Sonia.repository.getTypeIcon(type);
+    if ( icon ){
+      var displayName = type;
+      var t = Sonia.repository.getTypeByName(type);
+      if (t){
+        displayName = t.displayName;
+      }
+      result = String.format(this.typeIconTemplate, icon, type, displayName);
+    }
+    return result;
   },
   
   renderRepositoryUrl: function(name, meta, record){
@@ -251,7 +309,7 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
   },
   
   renderGroupName: function(v){
-    if (v == 'zzz__'){
+    if (v === 'zzz__'){
       v = this.mainGroup;
     }
     return v;
@@ -326,7 +384,7 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
         var desc = rec.get('description');
         return (! query || rec.get('name').toLowerCase().indexOf(query) >= 0 ||
                (desc && desc.toLowerCase().indexOf(query) >= 0)) && 
-               (! this.filterRequest.type || rec.get('type') == this.filterRequest.type) &&
+               (! this.filterRequest.type || rec.get('type') === this.filterRequest.type) &&
                (archived || ! rec.get('archived'));
       }, this);
     }
@@ -348,7 +406,7 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
         var desc = rec.get('description');
         return (! search || rec.get('name').toLowerCase().indexOf(search) >= 0 ||
                (desc && desc.toLowerCase().indexOf(search) >= 0)) && 
-               (! this.typeFilter || rec.get('type') == this.typeFilter);
+               (! this.typeFilter || rec.get('type') === this.typeFilter);
       }, this);
     }
   },
@@ -401,18 +459,27 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
         }
       });
       
-      // call open listeners
-      Ext.each(Sonia.repository.openListeners, function(listener){
-        if (Ext.isFunction(listener)){
-          listener(item, panels);
-        } else {
-          listener.call(listener.scope, item, panels);
-        }
-      });
-      
     } else {
       Ext.getCmp('repoRmButton').setDisabled(true);
     }
+    
+    if (admin && item.healthCheckFailures && item.healthCheckFailures.length > 0){
+      panels.push({
+        xtype: 'repositoryHealthCheckFailurePanel',
+        grid: this,
+        repository: item,
+        healthCheckFailures: item.healthCheckFailures
+      });
+    }
+    
+    // call open listeners
+    Ext.each(Sonia.repository.openListeners, function(listener){
+      if (Ext.isFunction(listener)){
+        listener(item, panels);
+      } else {
+        listener.call(listener.scope, item, panels);
+      }
+    });
 
     Sonia.repository.setEditPanel(panels);
   },
@@ -420,7 +487,7 @@ Sonia.repository.Grid = Ext.extend(Sonia.rest.Grid, {
   renderRepositoryType: function(repositoryType){
     var displayName = this.unknownType;
     var rec = repositoryTypeStore.queryBy(function(rec){
-      return rec.data.name == repositoryType;
+      return rec.data.name === repositoryType;
     }).itemAt(0);
     if ( rec ){
       displayName = rec.get('displayName');

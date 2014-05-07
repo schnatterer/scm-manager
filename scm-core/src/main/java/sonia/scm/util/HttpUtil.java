@@ -35,6 +35,10 @@ package sonia.scm.util;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
+import com.google.common.io.ByteStreams;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,10 +47,15 @@ import sonia.scm.config.ScmConfiguration;
 //~--- JDK imports ------------------------------------------------------------
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -56,7 +65,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author Sebastian Sdorra
  */
-public class HttpUtil
+public final class HttpUtil
 {
 
   /** authentication realm for basic authentication */
@@ -70,6 +79,9 @@ public class HttpUtil
    * @since 1.19
    */
   public static final String HEADER_SCM_CLIENT = "X-SCM-Client";
+
+  /** Field description */
+  public static final String HEADER_USERAGENT = "User-Agent";
 
   /** authentication header */
   public static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
@@ -152,8 +164,33 @@ public class HttpUtil
   public static final String STATUS_UNAUTHORIZED_MESSAGE =
     "Authorization Required";
 
+  /** Field description */
+  private static final int SKIP_SIZE = 4096;
+
   /** the logger for HttpUtil */
   private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
+
+  /**
+   * Pattern for url normalization
+   * @since 1.26
+   */
+  private static final Pattern PATTERN_URLNORMALIZE =
+    Pattern.compile("(?:(http://[^:]+):80(/.+)?|(https://[^:]+):443(/.+)?)");
+
+  /**
+   * CharMatcher to select cr/lf and '%' characters
+   * @since 1.28
+   */
+  private static final CharMatcher CRLF_CHARMATCHER =
+    CharMatcher.anyOf("\n\r%");
+
+  //~--- constructors ---------------------------------------------------------
+
+  /**
+   * Constructs ...
+   *
+   */
+  private HttpUtil() {}
 
   //~--- methods --------------------------------------------------------------
 
@@ -169,7 +206,11 @@ public class HttpUtil
    */
   public static String append(String uri, String suffix)
   {
-    if (!uri.endsWith(SEPARATOR_PATH) &&!suffix.startsWith(SEPARATOR_PATH))
+    if (uri.endsWith(SEPARATOR_PATH) && suffix.startsWith(SEPARATOR_PATH))
+    {
+      uri = uri.substring(0, uri.length() - 1);
+    }
+    else if (!uri.endsWith(SEPARATOR_PATH) &&!suffix.startsWith(SEPARATOR_PATH))
     {
       uri = uri.concat(SEPARATOR_PATH);
     }
@@ -221,6 +262,30 @@ public class HttpUtil
   }
 
   /**
+   * Throws an {@link IllegalArgumentException} if the parameter contains
+   * illegal characters which could imply a CRLF injection attack.
+   * <stronng>Note:</strong> the current implementation throws the
+   * {@link IllegalArgumentException} also if the parameter contains a "%". So
+   * you have to decode your parameters before the check,
+   *
+   * @param parameter value
+   *
+   * @since 1.28
+   */
+  public static void checkForCRLFInjection(String parameter)
+  {
+    if (CRLF_CHARMATCHER.matchesAnyOf(parameter))
+    {
+      logger.error(
+        "parameter \"{}\" contains a character which could be an indicator for a crlf injection",
+        parameter);
+
+      throw new IllegalArgumentException(
+        "parameter contains an illegal character");
+    }
+  }
+
+  /**
    * Method description
    *
    *
@@ -241,6 +306,38 @@ public class HttpUtil
     }
 
     return value;
+  }
+
+  /**
+   * Skips to complete body of a request.
+   *
+   *
+   * @param request http request
+   *
+   * @since 1.37
+   */
+  public static void drainBody(HttpServletRequest request)
+  {
+    if (isChunked(request) || (request.getContentLength() > 0))
+    {
+      InputStream in = null;
+
+      try
+      {
+        in = request.getInputStream();
+
+        while ((0 < in.skip(SKIP_SIZE)) || (0 <= in.read()))
+        {
+
+          // nothing
+        }
+      }
+      catch (IOException e) {}
+      finally
+      {
+        IOUtil.close(in);
+      }
+    }
   }
 
   /**
@@ -267,6 +364,67 @@ public class HttpUtil
   }
 
   /**
+   * Returns the normalized url.
+   *
+   *
+   * @param url to normalize
+   *
+   * @return normalized url
+   *
+   * @since 1.26
+   */
+  public static String normalizeUrl(String url)
+  {
+    if (!Strings.isNullOrEmpty(url))
+    {
+      Matcher m = PATTERN_URLNORMALIZE.matcher(url);
+
+      if (m.matches())
+      {
+        String prefix = m.group(1);
+        String suffix;
+
+        if (prefix == null)
+        {
+          prefix = m.group(3);
+          suffix = m.group(4);
+        }
+        else
+        {
+          suffix = m.group(2);
+        }
+
+        if (suffix != null)
+        {
+          url = prefix.concat(suffix);
+        }
+        else
+        {
+          url = prefix;
+        }
+      }
+    }
+
+    return url;
+  }
+
+  /**
+   * Remove all chars from the given parameter, which could be used for
+   * CRLF injection attack. <stronng>Note:</strong> the current implementation
+   * the "%" char is also removed from the source parameter.
+   *
+   * @param parameter value
+   *
+   * @return the parameter value without crlf chars
+   *
+   * @since 1.28
+   */
+  public static String removeCRLFInjectionChars(String parameter)
+  {
+    return CRLF_CHARMATCHER.removeFrom(parameter);
+  }
+
+  /**
    * Method description
    *
    *
@@ -277,7 +435,7 @@ public class HttpUtil
    */
   public static String removeMatrixParameter(String uri)
   {
-    int index = uri.indexOf(";");
+    int index = uri.indexOf(';');
 
     if (index > 0)
     {
@@ -299,7 +457,7 @@ public class HttpUtil
     throws IOException
   {
 
-    sendUnauthorized(null, response);
+    sendUnauthorized(null, response, AUTHENTICATION_REALM);
   }
 
   /**
@@ -310,17 +468,52 @@ public class HttpUtil
    * @param response http response
    *
    * @throws IOException
-   *
-   * @since 1.19
    */
   public static void sendUnauthorized(HttpServletRequest request,
     HttpServletResponse response)
     throws IOException
   {
+    sendUnauthorized(request, response, AUTHENTICATION_REALM);
+  }
+
+  /**
+   * Send an unauthorized header back to the client
+   *
+   *
+   * @param response - the http response
+   * @param realmDescription - realm description
+   *
+   * @throws IOException
+   *
+   * @since 1.36
+   */
+  public static void sendUnauthorized(HttpServletResponse response,
+    String realmDescription)
+    throws IOException
+  {
+    sendUnauthorized(null, response, realmDescription);
+  }
+
+  /**
+   * Send an unauthorized header back to the client
+   *
+   *
+   * @param request http request
+   * @param response http response
+   * @param realmDescription realm description
+   *
+   * @throws IOException
+   *
+   * @since 1.19
+   */
+  public static void sendUnauthorized(HttpServletRequest request,
+    HttpServletResponse response, String realmDescription)
+    throws IOException
+  {
     if ((request == null) ||!isWUIRequest(request))
     {
       response.setHeader(HEADER_WWW_AUTHENTICATE,
-        "Basic realm=\"".concat(AUTHENTICATION_REALM).concat("\""));
+        "Basic realm=\"".concat(realmDescription).concat("\""));
 
     }
     else if (logger.isTraceEnabled())
@@ -331,6 +524,26 @@ public class HttpUtil
 
     response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
       STATUS_UNAUTHORIZED_MESSAGE);
+  }
+
+  /**
+   * Returns true if the User-Agent header of the current request starts with
+   * the given string.
+   *
+   *
+   * @param request http request
+   * @param userAgent string to test against the header
+   *
+   * @return true if the header starts with the given string
+   *
+   * @since 1.37
+   */
+  public static boolean userAgentStartsWith(HttpServletRequest request,
+    String userAgent)
+  {
+    return Strings.nullToEmpty(request.getHeader(HEADER_USERAGENT)).toLowerCase(
+      Locale.ENGLISH).startsWith(
+      Strings.nullToEmpty(userAgent).toLowerCase(Locale.ENGLISH));
   }
 
   //~--- get methods ----------------------------------------------------------
@@ -377,18 +590,7 @@ public class HttpUtil
   public static String getCompleteUrl(ScmConfiguration configuration,
     String path)
   {
-    String url = configuration.getBaseUrl();
-
-    if (url.endsWith(SEPARATOR_PATH) && path.startsWith(SEPARATOR_PATH))
-    {
-      url = url.substring(0, url.length());
-    }
-    else if (!path.startsWith(SEPARATOR_PATH))
-    {
-      path = SEPARATOR_PATH.concat(path);
-    }
-
-    return url.concat(path);
+    return append(configuration.getBaseUrl(), path);
   }
 
   /**
@@ -528,6 +730,21 @@ public class HttpUtil
     }
 
     return uri;
+  }
+
+  /**
+   * Returns true if the body of the request is chunked.
+   *
+   *
+   * @param request http request
+   *
+   * @return true if the request is chunked
+   *
+   * @since 1.37
+   */
+  public static boolean isChunked(HttpServletRequest request)
+  {
+    return "chunked".equals(request.getHeader("Transfer-Encoding"));
   }
 
   /**

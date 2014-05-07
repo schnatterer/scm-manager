@@ -30,18 +30,39 @@
  */
 
 
+
 package sonia.scm.repository;
 
 //~--- non-JDK imports --------------------------------------------------------
 
 import org.junit.Assume;
 
+import sonia.scm.SCMContext;
+import sonia.scm.io.FileSystem;
+import sonia.scm.store.MemoryStoreFactory;
+
+import static org.mockito.Mockito.*;
+
+//~--- JDK imports ------------------------------------------------------------
+
+import java.io.File;
+
+import javax.servlet.http.HttpServletRequest;
+
 /**
  *
  * @author Sebastian Sdorra
  */
-public class HgTestUtil
+public final class HgTestUtil
 {
+
+  /**
+   * Constructs ...
+   *
+   */
+  private HgTestUtil() {}
+
+  //~--- methods --------------------------------------------------------------
 
   /**
    * Method description
@@ -51,6 +72,7 @@ public class HgTestUtil
    */
   public static void checkForSkip(HgRepositoryHandler handler)
   {
+
     // skip tests if hg not in path
     if (!handler.isConfigured())
     {
@@ -63,5 +85,50 @@ public class HgTestUtil
       System.out.println("WARNING mercurial test are disabled");
       Assume.assumeTrue(false);
     }
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param directory
+   *
+   * @return
+   */
+  public static HgRepositoryHandler createHandler(File directory)
+  {
+    TempSCMContextProvider context =
+      (TempSCMContextProvider) SCMContext.getContext();
+
+    context.setBaseDirectory(directory);
+
+    FileSystem fileSystem = mock(FileSystem.class);
+
+    HgRepositoryHandler handler =
+      new HgRepositoryHandler(new MemoryStoreFactory(), fileSystem,
+        new HgContextProvider());
+
+    handler.init(context);
+
+    return handler;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  public static HgHookManager createHookManager()
+  {
+    HgHookManager hookManager = mock(HgHookManager.class);
+
+    when(hookManager.getChallenge()).thenReturn("challenge");
+    when(hookManager.createUrl()).thenReturn(
+      "http://localhost:8081/scm/hook/hg/");
+    when(hookManager.createUrl(any(HttpServletRequest.class))).thenReturn(
+      "http://localhost:8081/scm/hook/hg/");
+
+    return hookManager;
   }
 }

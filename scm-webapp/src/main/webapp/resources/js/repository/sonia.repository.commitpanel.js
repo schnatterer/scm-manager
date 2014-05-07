@@ -45,7 +45,7 @@ Sonia.repository.CommitPanel = Ext.extend(Ext.Panel, {
                        </div>\n\
                        <div class="left-content left-side">\n\
                         <h1>Commit {id}</h1>\n\
-                        <p>{description}</p>\n\
+                        <p>{description:convertLineBreaks}</p>\n\
                         <p>\n\
                           <tpl for="author">\n\
                             {name}<tpl if="mail"> &lt;<a href="mailto:{mail}">{mail}</a>&gt;</tpl>\n\
@@ -97,7 +97,7 @@ Sonia.repository.CommitPanel = Ext.extend(Ext.Panel, {
       padding: 10,
       autoScroll: true,
       items: [this.commitPanel, this.diffPanel]
-    }
+    };
     
     Ext.apply(this, Ext.apply(this.initialConfig, config));
     Sonia.repository.CommitPanel.superclass.initComponent.apply(this, arguments);
@@ -122,7 +122,7 @@ Sonia.repository.CommitPanel = Ext.extend(Ext.Panel, {
       scope: this,
       success: function(response){
         var changeset = Ext.decode(response.responseText);
-        this.update(changeset)
+        this.update(changeset);
       },
       failure: function(result){
         main.handleRestFailure(
