@@ -40,6 +40,8 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sonia.scm.ServletContainer;
+import sonia.scm.ServletContainerDetector;
 import sonia.scm.util.WebUtil;
 import sonia.scm.web.filter.HttpFilter;
 
@@ -96,15 +98,25 @@ public class GZipFilter extends HttpFilter
    */
   @Override
   protected void doFilter(HttpServletRequest request,
-                          HttpServletResponse response, FilterChain chain)
-          throws IOException, ServletException
+    HttpServletResponse response, FilterChain chain)
+    throws IOException, ServletException
   {
-    if (WebUtil.isGzipSupported(request))
+
+    if (container == null)
     {
-      if (logger.isTraceEnabled())
+      container = ServletContainerDetector.detect(request);
+
+      if (container == ServletContainer.JBOSS)
       {
-        logger.trace("compress output with gzip");
+        logger.warn(
+          "disable gzip filter, because the servlet container undertow of wildfly does not like it");
       }
+    }
+
+    if (WebUtil.isGzipSupported(request)
+      && (container != ServletContainer.JBOSS))
+    {
+      logger.trace("compress output with gzip");
 
       GZipResponseWrapper wrappedResponse = new GZipResponseWrapper(response,
                                               config);
@@ -122,4 +134,7 @@ public class GZipFilter extends HttpFilter
 
   /** gzip filter configuration */
   private GZipFilterConfig config = new GZipFilterConfig();
+
+  /** Field description */
+  private ServletContainer container;
 }
