@@ -36,6 +36,7 @@ http://bitbucket.org/sdorra/scm-manager
     <!-- which gives basically the same effect as removing the subsystem, but it only affects single deployment -->
     <exclude-subsystems>
       <subsystem name="resteasy" />
+      <subsystem name="weld" />
     </exclude-subsystems>
   </deployment>
 </jboss-deployment-structure>
