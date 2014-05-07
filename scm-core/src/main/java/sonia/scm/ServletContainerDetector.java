@@ -230,7 +230,9 @@ public class ServletContainerDetector
   public boolean isJBoss()
   {
     return detect("/org/jboss/Main.class")
-      || detect("/org/jboss/as/server/Main.class");
+      || detect("/org/jboss/as/server/Main.class")
+      // not only jboss ??
+      || detectDefaultServlet(".undertow.");
   }
 
   /**
