@@ -233,7 +233,11 @@ public class DefaultPluginManager
 
     try
     {
-      new ZipUnArchiver().extractArchive(packageStream, tempDirectory);
+      //J-
+      new ZipUnArchiver()
+        .translatePath(true)
+        .extractArchive(packageStream, tempDirectory);
+      //J+
 
       Plugin plugin = JAXB.unmarshal(new File(tempDirectory, "plugin.xml"),
                         Plugin.class);
@@ -256,7 +260,6 @@ public class DefaultPluginManager
       aph.install(plugin.getInformation().getId());
       plugin.getInformation().setState(PluginState.INSTALLED);
       installedPlugins.put(plugin.getInformation().getId(), plugin);
-
     }
     finally
     {

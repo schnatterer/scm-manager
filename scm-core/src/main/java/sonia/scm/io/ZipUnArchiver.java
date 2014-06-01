@@ -35,10 +35,14 @@ package sonia.scm.io;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sonia.scm.Platform;
 import sonia.scm.util.IOUtil;
+import sonia.scm.util.SystemUtil;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -92,6 +96,49 @@ public class ZipUnArchiver extends AbstractUnArchiver
   }
 
   /**
+   * Translate path of zip entries.
+   *
+   *
+   * @param translatePath true to enable path translation.
+   *
+   * @return {@code this}
+   *
+   * @since 1.39
+   */
+  public ZipUnArchiver translatePath(boolean translatePath)
+  {
+    this.translatePath = translatePath;
+
+    return this;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param path
+   * @param platform
+   *
+   * @return
+   */
+  @VisibleForTesting
+  String translatePath(String path, Platform platform)
+  {
+    String result;
+
+    if (platform.isWindows())
+    {
+      result = path.replace("/", "\\");
+    }
+    else
+    {
+      result = path.replace("\\", "/");
+    }
+
+    return result;
+  }
+
+  /**
    * Method description
    *
    *
@@ -137,6 +184,11 @@ public class ZipUnArchiver extends AbstractUnArchiver
     if (name.contains(".."))
     {
       throw new IllegalArgumentException("name is invalid");
+    }
+
+    if (translatePath)
+    {
+      name = translatePath(name);
     }
 
     return new File(outputDirectory, name);
@@ -209,4 +261,22 @@ public class ZipUnArchiver extends AbstractUnArchiver
       IOUtil.close(output);
     }
   }
+
+  /**
+   * Method description
+   *
+   *
+   * @param path
+   *
+   * @return
+   */
+  private String translatePath(String path)
+  {
+    return translatePath(path, SystemUtil.getPlatform());
+  }
+
+  //~--- fields ---------------------------------------------------------------
+
+  /** Field description */
+  private boolean translatePath;
 }
