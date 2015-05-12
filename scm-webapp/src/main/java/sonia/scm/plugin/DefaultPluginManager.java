@@ -251,7 +251,10 @@ public class DefaultPluginManager
 
     try
     {
-      new ZipUnArchiver().extractArchive(packageStream, tempDirectory);
+      // convert backslashes on non windows system
+      // https://bitbucket.org/sdorra/scm-manager/issue/720/plug-in-installation-fails-only-in-linux
+      new ZipUnArchiver().convertBackslash(true)
+                         .extractArchive(packageStream, tempDirectory);
 
       Plugin plugin = JAXB.unmarshal(new File(tempDirectory, "plugin.xml"),
                         Plugin.class);

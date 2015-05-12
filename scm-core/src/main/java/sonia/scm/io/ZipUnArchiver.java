@@ -35,10 +35,13 @@ package sonia.scm.io;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import sonia.scm.util.IOUtil;
+import sonia.scm.util.SystemUtil;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -68,6 +71,22 @@ public class ZipUnArchiver extends AbstractUnArchiver
   //~--- methods --------------------------------------------------------------
 
   /**
+   * Option to enable the converting of backslashes to normal slashed, on non 
+   * windows instances.
+   *
+   *
+   * @param convertBackslash true to convert backslashes
+   *
+   * @return {@code this}
+   */
+  public ZipUnArchiver convertBackslash(boolean convertBackslash)
+  {
+    this.convertBackslash = convertBackslash;
+
+    return this;
+  }
+
+  /**
    * Method description
    *
    *
@@ -90,6 +109,54 @@ public class ZipUnArchiver extends AbstractUnArchiver
       entry = input.getNextEntry();
     }
   }
+
+  /**
+   * Returns the converted filename of the entry. The method convert backslashes
+   * to slashes, if the option is enabled with
+   * {@link #convertBackslash(boolean)}.
+   *
+   *
+   * @param name entry name
+   *
+   * @return converted filename
+   *
+   * @throws IllegalArgumentException if the name contains a path back reference (..)
+   */
+  @VisibleForTesting
+  String createFileName(String name)
+  {
+    if (name.contains(".."))
+    {
+      throw new IllegalArgumentException("name is invalid");
+    }
+
+    String filename = name;
+
+    if (convertBackslash &&!isWindows())
+    {
+      filename = name.replace("\\", "/");
+    }
+
+    return filename;
+  }
+
+  //~--- get methods ----------------------------------------------------------
+
+  /**
+   * Returns {@code true} if the underlying operating system is windows. The
+   * method is only visible to simplify unit tests for the
+   * {@link #createFileName(String)} method.
+   *
+   *
+   * @return {@code true} if scm-manager runs on windows
+   */
+  @VisibleForTesting
+  boolean isWindows()
+  {
+    return SystemUtil.isWindows();
+  }
+
+  //~--- methods --------------------------------------------------------------
 
   /**
    * Method description
@@ -134,12 +201,7 @@ public class ZipUnArchiver extends AbstractUnArchiver
    */
   private File createFile(File outputDirectory, String name)
   {
-    if (name.contains(".."))
-    {
-      throw new IllegalArgumentException("name is invalid");
-    }
-
-    return new File(outputDirectory, name);
+    return new File(outputDirectory, createFileName(name));
   }
 
   /**
@@ -209,4 +271,9 @@ public class ZipUnArchiver extends AbstractUnArchiver
       IOUtil.close(output);
     }
   }
+
+  //~--- fields ---------------------------------------------------------------
+
+  /** convert backslash */
+  private boolean convertBackslash = false;
 }
