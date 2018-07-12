@@ -35,26 +35,10 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import sonia.scm.config.ScmConfiguration;
-import sonia.scm.repository.Repository;
-import sonia.scm.repository.RepositoryTestData;
-
-import static org.junit.Assert.*;
-
-import static sonia.scm.it.IntegrationTestUtil.*;
-import static sonia.scm.it.RepositoryITUtil.*;
-
 //~--- JDK imports ------------------------------------------------------------
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 
 
 /**
@@ -64,120 +48,120 @@ import com.sun.jersey.api.client.WebResource;
 @RunWith(Parameterized.class)
 public class RepositoryArchiveITCase extends RepositoryTypeITCaseBase
 {
-
-  /**
-   * Constructs ...
-   *
-   *
-   * @param type
-   */
-  public RepositoryArchiveITCase(String type)
-  {
-    this.type = type;
-  }
-
-  //~--- methods --------------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   */
-  @Before
-  public void createTestRepository()
-  {
-    repository = RepositoryTestData.createHeartOfGold(type);
-    client = createAdminClient();
-    repository = createRepository(client, repository);
-  }
-
-  /**
-   * Method description
-   *
-   */
-  @After
-  public void deleteTestRepository()
-  {
-    setArchiveMode(false);
-
-    if (repository != null)
-    {
-      deleteRepository(client, repository.getId());
-    }
-
-    logoutClient(client);
-  }
-
-  /**
-   * Method description
-   *
-   */
-  @Test
-  public void testDeleteAllowed()
-  {
-    setArchiveMode(true);
-
-    WebResource resource = createResource(client,
-                             "repositories/".concat(repository.getId()));
-
-    repository.setArchived(true);
-
-    ClientResponse response = resource.put(ClientResponse.class, repository);
-
-    assertNotNull(response);
-    assertEquals(204, response.getStatus());
-    response = resource.delete(ClientResponse.class);
-    assertNotNull(response);
-    assertEquals(204, response.getStatus());
-    repository = null;
-  }
-
-  /**
-   * Method description
-   *
-   */
-  @Test
-  public void testDeleteDenied()
-  {
-    setArchiveMode(true);
-
-    WebResource resource = createResource(client,
-                             "repositories/".concat(repository.getId()));
-    ClientResponse response = resource.delete(ClientResponse.class);
-
-    assertNotNull(response);
-    assertEquals(412, response.getStatus());
-  }
-
-  //~--- set methods ----------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @param archive
-   */
-  private void setArchiveMode(boolean archive)
-  {
-    WebResource resource = createResource(client, "config");
-    ScmConfiguration config = resource.get(ScmConfiguration.class);
-
-    assertNotNull(config);
-    config.setEnableRepositoryArchive(archive);
-
-    ClientResponse resp = resource.post(ClientResponse.class, config);
-
-    assertNotNull(resp);
-    assertEquals(201, resp.getStatus());
-  }
-
-  //~--- fields ---------------------------------------------------------------
-
-  /** Field description */
-  private Client client;
-
-  /** Field description */
-  private Repository repository;
-
-  /** Field description */
-  private String type;
+//
+//  /**
+//   * Constructs ...
+//   *
+//   *
+//   * @param type
+//   */
+//  public RepositoryArchiveITCase(String type)
+//  {
+//    this.type = type;
+//  }
+//
+//  //~--- methods --------------------------------------------------------------
+//
+//  /**
+//   * Method description
+//   *
+//   */
+//  @Before
+//  public void createTestRepository()
+//  {
+//    repository = RepositoryTestData.createHeartOfGold(type);
+//    client = createAdminClient();
+//    repository = createRepository(client, repository);
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   */
+//  @After
+//  public void deleteTestRepository()
+//  {
+//    setArchiveMode(false);
+//
+//    if (repository != null)
+//    {
+//      deleteRepository(client, repository.getId());
+//    }
+//
+//    logoutClient(client);
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   */
+//  @Test
+//  public void testDeleteAllowed()
+//  {
+//    setArchiveMode(true);
+//
+//    WebResource resource = createResource(client,
+//                             "repositories/".concat(repository.getId()));
+//
+//    repository.setArchived(true);
+//
+//    ClientResponse response = resource.put(ClientResponse.class, repository);
+//
+//    assertNotNull(response);
+//    assertEquals(204, response.getStatus());
+//    response = resource.delete(ClientResponse.class);
+//    assertNotNull(response);
+//    assertEquals(204, response.getStatus());
+//    repository = null;
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   */
+//  @Test
+//  public void testDeleteDenied()
+//  {
+//    setArchiveMode(true);
+//
+//    WebResource resource = createResource(client,
+//                             "repositories/".concat(repository.getId()));
+//    ClientResponse response = resource.delete(ClientResponse.class);
+//
+//    assertNotNull(response);
+//    assertEquals(412, response.getStatus());
+//  }
+//
+//  //~--- set methods ----------------------------------------------------------
+//
+//  /**
+//   * Method description
+//   *
+//   *
+//   * @param archive
+//   */
+//  private void setArchiveMode(boolean archive)
+//  {
+//    WebResource resource = createResource(client, "config");
+//    ScmConfiguration config = resource.get(ScmConfiguration.class);
+//
+//    assertNotNull(config);
+//    config.setEnableRepositoryArchive(archive);
+//
+//    ClientResponse resp = resource.post(ClientResponse.class, config);
+//
+//    assertNotNull(resp);
+//    assertEquals(201, resp.getStatus());
+//  }
+//
+//  //~--- fields ---------------------------------------------------------------
+//
+//  /** Field description */
+//  private Client client;
+//
+//  /** Field description */
+//  private Repository repository;
+//
+//  /** Field description */
+//  private String type;
 }

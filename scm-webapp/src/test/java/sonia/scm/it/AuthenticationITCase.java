@@ -35,16 +35,17 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.junit.Test;
-
-import static org.junit.Assert.*;
-
-import static sonia.scm.it.IntegrationTestUtil.*;
-
-//~--- JDK imports ------------------------------------------------------------
-
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static sonia.scm.it.IntegrationTestUtil.authenticate;
+import static sonia.scm.it.IntegrationTestUtil.authenticateAdmin;
+import static sonia.scm.it.IntegrationTestUtil.createClient;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
@@ -91,6 +92,6 @@ public class AuthenticationITCase
     Client client = createClient();
 
     authenticateAdmin(client);
-    logoutClient(client);
+//    logoutClient(client);
   }
 }

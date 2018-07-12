@@ -35,28 +35,30 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.WebResource;
 import org.junit.AfterClass;
 import org.junit.Test;
-
 import sonia.scm.ScmState;
 import sonia.scm.Type;
 import sonia.scm.user.User;
 import sonia.scm.user.UserTestData;
 
-import static org.junit.Assert.*;
-
-import static sonia.scm.it.IntegrationTestUtil.*;
-
-//~--- JDK imports ------------------------------------------------------------
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.WebResource;
-
+import javax.ws.rs.core.MediaType;
 import java.util.Collection;
 
-import javax.ws.rs.core.MediaType;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static sonia.scm.it.IntegrationTestUtil.authenticate;
+import static sonia.scm.it.IntegrationTestUtil.authenticateAdmin;
+import static sonia.scm.it.IntegrationTestUtil.createClient;
+import static sonia.scm.it.IntegrationTestUtil.createResource;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
@@ -118,7 +120,7 @@ public class UserITCase extends AbstractAdminITCaseBase
     marvin = getUser(marvin.getName());
     marvin.setDisplayName("Paranoid Android");
 
-    WebResource wr = createResource(client, "users/".concat(marvin.getName()));
+    WebResource.Builder wr = createResource(client, "users/".concat(marvin.getName()));
     ClientResponse response =
       wr.type(MediaType.APPLICATION_XML).put(ClientResponse.class, marvin);
 
@@ -154,7 +156,7 @@ public class UserITCase extends AbstractAdminITCaseBase
   @Test
   public void getAll()
   {
-    WebResource wr = createResource(client, "users");
+    WebResource.Builder wr = createResource(client, "users");
     ClientResponse response = wr.get(ClientResponse.class);
 
     assertNotNull(response);
@@ -218,7 +220,7 @@ public class UserITCase extends AbstractAdminITCaseBase
    */
   private void createUser(User user)
   {
-    WebResource wr = createResource(client, "users");
+    WebResource.Builder wr = createResource(client, "users");
     ClientResponse response =
       wr.type(MediaType.APPLICATION_XML).post(ClientResponse.class, user);
 
@@ -243,7 +245,7 @@ public class UserITCase extends AbstractAdminITCaseBase
    */
   private void deleteUser(User user)
   {
-    WebResource wr = createResource(client, "users/".concat(user.getName()));
+    WebResource.Builder wr = createResource(client, "users/".concat(user.getName()));
     ClientResponse response = wr.delete(ClientResponse.class);
 
     assertNotNull(response);
@@ -281,7 +283,7 @@ public class UserITCase extends AbstractAdminITCaseBase
    */
   private User getUser(String username)
   {
-    WebResource wr = createResource(client, "users/".concat(username));
+    WebResource.Builder wr = createResource(client, "users/".concat(username));
     ClientResponse response = wr.get(ClientResponse.class);
 
     assertNotNull(response);

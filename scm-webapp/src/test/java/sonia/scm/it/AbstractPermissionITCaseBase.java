@@ -35,28 +35,29 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
-
 import sonia.scm.user.User;
 import sonia.scm.user.UserTestData;
 
-import static org.junit.Assert.*;
-
-import static sonia.scm.it.IntegrationTestUtil.*;
-
-//~--- JDK imports ------------------------------------------------------------
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-
 import java.util.ArrayList;
 import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static sonia.scm.it.IntegrationTestUtil.authenticate;
+import static sonia.scm.it.IntegrationTestUtil.authenticateAdmin;
+import static sonia.scm.it.IntegrationTestUtil.createClient;
+import static sonia.scm.it.IntegrationTestUtil.createResource;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
@@ -115,13 +116,13 @@ public abstract class AbstractPermissionITCaseBase<T>
 
     authenticateAdmin(client);
 
-    WebResource wr = createResource(client, "users");
+    WebResource.Builder wr = createResource(client, "users");
     ClientResponse response = wr.post(ClientResponse.class, trillian);
 
     assertNotNull(response);
     assertEquals(201, response.getStatus());
     response.close();
-    logoutClient(client);
+//    logoutClient(client);
     client.destroy();
   }
 
@@ -220,7 +221,7 @@ public abstract class AbstractPermissionITCaseBase<T>
   @Test
   public void create()
   {
-    WebResource wr = createResource(client, getBasePath());
+    WebResource.Builder wr = createResource(client, getBasePath());
 
     checkResponse(wr.post(ClientResponse.class, getCreateItem()));
   }
@@ -232,7 +233,7 @@ public abstract class AbstractPermissionITCaseBase<T>
   @Test
   public void delete()
   {
-    WebResource wr = createResource(client, getDeletePath());
+    WebResource.Builder wr = createResource(client, getDeletePath());
 
     checkResponse(wr.delete(ClientResponse.class));
   }
@@ -244,7 +245,7 @@ public abstract class AbstractPermissionITCaseBase<T>
   @Test
   public void modify()
   {
-    WebResource wr = createResource(client, getModifyPath());
+    WebResource.Builder wr = createResource(client, getModifyPath());
 
     checkResponse(wr.put(ClientResponse.class, getModifyItem()));
   }
@@ -258,7 +259,7 @@ public abstract class AbstractPermissionITCaseBase<T>
   @Test
   public void get()
   {
-    WebResource wr = createResource(client, getGetPath());
+    WebResource.Builder wr = createResource(client, getGetPath());
 
     checkGetResponse(wr.get(ClientResponse.class));
   }
@@ -270,7 +271,7 @@ public abstract class AbstractPermissionITCaseBase<T>
   @Test
   public void getAll()
   {
-    WebResource wr = createResource(client, getBasePath());
+    WebResource.Builder wr = createResource(client, getBasePath());
 
     checkGetAllResponse(wr.get(ClientResponse.class));
   }
@@ -342,7 +343,7 @@ public abstract class AbstractPermissionITCaseBase<T>
   {
     if (!credentials.isAnonymous())
     {
-      logoutClient(client);
+//      logoutClient(client);
     }
   }
 

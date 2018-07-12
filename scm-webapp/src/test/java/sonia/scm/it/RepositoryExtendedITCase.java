@@ -35,27 +35,10 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import sonia.scm.repository.Repository;
-import sonia.scm.user.User;
-import sonia.scm.util.IOUtil;
-
-import static org.junit.Assert.*;
-
-import static sonia.scm.it.IntegrationTestUtil.*;
-
 //~--- JDK imports ------------------------------------------------------------
-
-import java.io.File;
-import java.io.IOException;
-
-import sonia.scm.repository.client.api.RepositoryClient;
-import sonia.scm.repository.client.api.RepositoryClientException;
 
 /**
  *
@@ -64,121 +47,121 @@ import sonia.scm.repository.client.api.RepositoryClientException;
 @RunWith(Parameterized.class)
 public class RepositoryExtendedITCase extends RepositoryITCaseBase
 {
-
-  /**
-   * Constructs ...
-   *
-   *
-   * @param repository
-   * @param owner
-   * @param write
-   * @param read
-   * @param noperm
-   * @param password
-   */
-  public RepositoryExtendedITCase(Repository repository, User owner,
-                                  User write, User read, User noperm,
-                                  String password)
-  {
-    super(repository, owner, write, read, noperm, password);
-  }
-
-  //~--- methods --------------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @throws IOException
-   */
-  @After
-  public void cleanupTest() throws IOException
-  {
-    IOUtil.delete(directory);
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @throws IOException
-   */
-  @Test(expected = RepositoryClientException.class)
-  public void readFailed() throws IOException
-  {
-    RepositoryClient rc = createRepositoryClient(nopermUser, directory);
-
-    // rc.checkout();
-
-    // ugly workaround
-    if (repository.getType().equals("git"))
-    {
-      for (File f : directory.listFiles())
-      {
-        if (!".git".equals(f.getName()))
-        {
-          fail("checkout works");
-        }
-      }
-
-      throw new IOException("checkout failed");
-    }
-  }
-
-  /**
-   * Method description
-   *
-   */
-  @Before
-  public void setupTest()
-  {
-    directory = createTempDirectory();
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @throws IOException
-   */
-  @Test
-  public void simpleRead() throws IOException
-  {
-    RepositoryClient rc = createRepositoryClient(readUser, directory);
-
-    // rc.checkout();
-  }
-
-  /**
-   * Method description
-   *
-   * @throws IOException
-   */
-  @Test
-  public void simpleWrite() throws IOException
-  {
-    RepositoryClient rc = createRepositoryClient(writeUser, directory);
-
-    // rc.checkout();
-    addTestFiles(rc);
-  }
-
-  /**
-   * Method description
-   *
-   * @throws IOException
-   */
-  @Test(expected = IOException.class)
-  public void writeFailed() throws IOException
-  {
-    RepositoryClient rc = createRepositoryClient(readUser, directory);
-
-    // rc.checkout();
-    addTestFiles(rc);
-  }
-
-  //~--- fields ---------------------------------------------------------------
-
-  /** Field description */
-  private File directory;
+//
+//  /**
+//   * Constructs ...
+//   *
+//   *
+//   * @param repository
+//   * @param owner
+//   * @param write
+//   * @param read
+//   * @param noperm
+//   * @param password
+//   */
+//  public RepositoryExtendedITCase(Repository repository, User owner,
+//                                  User write, User read, User noperm,
+//                                  String password)
+//  {
+//    super(repository, owner, write, read, noperm, password);
+//  }
+//
+//  //~--- methods --------------------------------------------------------------
+//
+//  /**
+//   * Method description
+//   *
+//   *
+//   * @throws IOException
+//   */
+//  @After
+//  public void cleanupTest() throws IOException
+//  {
+//    IOUtil.delete(directory);
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   *
+//   * @throws IOException
+//   */
+//  @Test(expected = RepositoryClientException.class)
+//  public void readFailed() throws IOException
+//  {
+//    RepositoryClient rc = createRepositoryClient(nopermUser, directory);
+//
+//    // rc.checkout();
+//
+//    // ugly workaround
+//    if (repository.getType().equals("git"))
+//    {
+//      for (File f : directory.listFiles())
+//      {
+//        if (!".git".equals(f.getName()))
+//        {
+//          fail("checkout works");
+//        }
+//      }
+//
+//      throw new IOException("checkout failed");
+//    }
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   */
+//  @Before
+//  public void setupTest()
+//  {
+//    directory = createTempDirectory();
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   *
+//   * @throws IOException
+//   */
+//  @Test
+//  public void simpleRead() throws IOException
+//  {
+//    RepositoryClient rc = createRepositoryClient(readUser, directory);
+//
+//    // rc.checkout();
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   * @throws IOException
+//   */
+//  @Test
+//  public void simpleWrite() throws IOException
+//  {
+//    RepositoryClient rc = createRepositoryClient(writeUser, directory);
+//
+//    // rc.checkout();
+//    addTestFiles(rc);
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   * @throws IOException
+//   */
+//  @Test(expected = IOException.class)
+//  public void writeFailed() throws IOException
+//  {
+//    RepositoryClient rc = createRepositoryClient(readUser, directory);
+//
+//    // rc.checkout();
+//    addTestFiles(rc);
+//  }
+//
+//  //~--- fields ---------------------------------------------------------------
+//
+//  /** Field description */
+//  private File directory;
 }

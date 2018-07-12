@@ -35,22 +35,22 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
 import sonia.scm.group.Group;
 
-import static org.junit.Assert.*;
-
-import static sonia.scm.it.IntegrationTestUtil.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static sonia.scm.it.IntegrationTestUtil.authenticateAdmin;
+import static sonia.scm.it.IntegrationTestUtil.createClient;
+import static sonia.scm.it.IntegrationTestUtil.createResource;
 
 //~--- JDK imports ------------------------------------------------------------
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 
 /**
  *
@@ -99,13 +99,13 @@ public class GroupPermissionITCase extends AbstractPermissionITCaseBase<Group>
 
     authenticateAdmin(client);
 
-    WebResource wr = createResource(client, "groups");
+    WebResource.Builder wr = createResource(client, "groups");
     ClientResponse response = wr.post(ClientResponse.class, testGroup);
 
     assertNotNull(response);
     assertEquals(201, response.getStatus());
     response.close();
-    logoutClient(client);
+//    logoutClient(client);
     client.destroy();
   }
 

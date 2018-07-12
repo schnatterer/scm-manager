@@ -34,25 +34,26 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import sonia.scm.user.User;
-import sonia.scm.user.UserTestData;
-
-import static org.junit.Assert.*;
-
-import static sonia.scm.it.IntegrationTestUtil.*;
-
-//~--- JDK imports ------------------------------------------------------------
-
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-import javax.servlet.http.HttpServletResponse;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import sonia.scm.user.User;
+import sonia.scm.user.UserTestData;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static sonia.scm.it.IntegrationTestUtil.authenticate;
+import static sonia.scm.it.IntegrationTestUtil.createAdminClient;
+import static sonia.scm.it.IntegrationTestUtil.createClient;
+import static sonia.scm.it.IntegrationTestUtil.createResource;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
@@ -72,7 +73,7 @@ public class DeactivatedUserITCase
 
     try
     {
-      WebResource wr = createResource(client, "users");
+      WebResource.Builder wr = createResource(client, "users");
 
       slarti = UserTestData.createSlarti();
       slarti.setPassword("slart123");
@@ -102,7 +103,7 @@ public class DeactivatedUserITCase
 
     try
     {
-      WebResource wr = createResource(client,
+      WebResource.Builder wr = createResource(client,
                                       "users/".concat(slarti.getName()));
       ClientResponse response =
         wr.type(MediaType.APPLICATION_XML).delete(ClientResponse.class);

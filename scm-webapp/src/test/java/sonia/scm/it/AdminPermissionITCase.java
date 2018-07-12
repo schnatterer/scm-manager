@@ -35,6 +35,8 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -43,23 +45,22 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
 import sonia.scm.group.Group;
 import sonia.scm.user.User;
 import sonia.scm.user.UserTestData;
 import sonia.scm.util.IOUtil;
 
-import static org.junit.Assert.*;
-
-import static sonia.scm.it.IntegrationTestUtil.*;
-
-//~--- JDK imports ------------------------------------------------------------
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-
 import java.util.ArrayList;
 import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static sonia.scm.it.IntegrationTestUtil.authenticate;
+import static sonia.scm.it.IntegrationTestUtil.createAdminClient;
+import static sonia.scm.it.IntegrationTestUtil.createClient;
+import static sonia.scm.it.IntegrationTestUtil.createResource;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
@@ -161,7 +162,7 @@ public class AdminPermissionITCase
   {
     if (!credentials.isAnonymous())
     {
-      logoutClient(client);
+//      logoutClient(client);
     }
   }
 

@@ -35,30 +35,10 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.junit.After;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-
-import sonia.scm.repository.Repository;
-import sonia.scm.repository.RepositoryTestData;
-import sonia.scm.util.IOUtil;
-
-import static org.junit.Assert.*;
-
-import static sonia.scm.it.IntegrationTestUtil.*;
-import static sonia.scm.it.RepositoryITUtil.*;
 
 //~--- JDK imports ------------------------------------------------------------
-
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-
-import java.io.IOException;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  *
@@ -67,125 +47,125 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class CreateRepositoriesITCase extends AbstractAdminITCaseBase
 {
-
-  /**
-   * Constructs ...
-   *
-   *
-   * @param repositoryType
-   */
-  public CreateRepositoriesITCase(String repositoryType)
-  {
-    this.repositoryType = repositoryType;
-  }
-
-  //~--- methods --------------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @return
-   */
-  @Parameters
-  public static Collection<String[]> createParameters()
-  {
-    Collection<String[]> params = new ArrayList<>();
-
-    params.add(new String[] { "git" });
-    params.add(new String[] { "svn" });
-
-    if (IOUtil.search("hg") != null)
-    {
-      params.add(new String[] { "hg" });
-    }
-
-    return params;
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @throws IOException
-   */
-  @After
-  public void cleanup() throws IOException
-  {
-    deleteRepository(client, repository.getId());
-  }
-
-  /**
-   * Method description
-   *
-   */
-  @Test
-  public void testCreate()
-  {
-    repository = RepositoryTestData.createHeartOfGold(repositoryType);
-    repository = createRepository(client, repository);
-  }
-
-  /**
-   * Method description
-   *
-   */
-  @Test
-  public void testCreateAllreadyExists()
-  {
-    repository = RepositoryTestData.create42Puzzle(repositoryType);
-    repository = createRepository(client, repository);
-
-    WebResource wr = createResource(client, "repositories");
-    ClientResponse response =
-      wr.post(ClientResponse.class,
-              RepositoryTestData.create42Puzzle(repositoryType));
-
-    assertNotNull(response);
-    assertEquals(500, response.getStatus());
-    response.close();
-  }
-
-  /**
-   * Method description
-   *
-   */
-  @Test
-  public void testCreateAllreadyExistsWithStructure()
-  {
-    repository = RepositoryTestData.create42Puzzle(repositoryType);
-    repository = createRepository(client, repository);
-
-    Repository r = RepositoryTestData.create42Puzzle(repositoryType);
-
-    r.setName(r.getName() + "/" + r.getName());
-
-    WebResource wr = createResource(client, "repositories");
-    ClientResponse response = wr.post(ClientResponse.class, r);
-
-    assertNotNull(response);
-    System.out.println( response.getStatus() );
-    assertEquals(500, response.getStatus());
-    response.close();
-  }
-
-  /**
-   * Method description
-   *
-   */
-  @Test
-  public void testCreateWithStructure()
-  {
-    repository = RepositoryTestData.createHeartOfGold(repositoryType);
-    repository.setName("test/".concat(repository.getName()));
-    repository = createRepository(client, repository);
-  }
-
-  //~--- fields ---------------------------------------------------------------
-
-  /** Field description */
-  private Repository repository;
-
-  /** Field description */
-  private String repositoryType;
+//
+//  /**
+//   * Constructs ...
+//   *
+//   *
+//   * @param repositoryType
+//   */
+//  public CreateRepositoriesITCase(String repositoryType)
+//  {
+//    this.repositoryType = repositoryType;
+//  }
+//
+//  //~--- methods --------------------------------------------------------------
+//
+//  /**
+//   * Method description
+//   *
+//   *
+//   * @return
+//   */
+//  @Parameters
+//  public static Collection<String[]> createParameters()
+//  {
+//    Collection<String[]> params = new ArrayList<>();
+//
+//    params.add(new String[] { "git" });
+//    params.add(new String[] { "svn" });
+//
+//    if (IOUtil.search("hg") != null)
+//    {
+//      params.add(new String[] { "hg" });
+//    }
+//
+//    return params;
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   *
+//   * @throws IOException
+//   */
+//  @After
+//  public void cleanup() throws IOException
+//  {
+//    deleteRepository(client, repository.getId());
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   */
+//  @Test
+//  public void testCreate()
+//  {
+//    repository = RepositoryTestData.createHeartOfGold(repositoryType);
+//    repository = createRepository(client, repository);
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   */
+//  @Test
+//  public void testCreateAllreadyExists()
+//  {
+//    repository = RepositoryTestData.create42Puzzle(repositoryType);
+//    repository = createRepository(client, repository);
+//
+//    WebResource wr = createResource(client, "repositories");
+//    ClientResponse response =
+//      wr.post(ClientResponse.class,
+//              RepositoryTestData.create42Puzzle(repositoryType));
+//
+//    assertNotNull(response);
+//    assertEquals(500, response.getStatus());
+//    response.close();
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   */
+//  @Test
+//  public void testCreateAllreadyExistsWithStructure()
+//  {
+//    repository = RepositoryTestData.create42Puzzle(repositoryType);
+//    repository = createRepository(client, repository);
+//
+//    Repository r = RepositoryTestData.create42Puzzle(repositoryType);
+//
+//    r.setName(r.getName() + "/" + r.getName());
+//
+//    WebResource wr = createResource(client, "repositories");
+//    ClientResponse response = wr.post(ClientResponse.class, r);
+//
+//    assertNotNull(response);
+//    System.out.println( response.getStatus() );
+//    assertEquals(500, response.getStatus());
+//    response.close();
+//  }
+//
+//  /**
+//   * Method description
+//   *
+//   */
+//  @Test
+//  public void testCreateWithStructure()
+//  {
+//    repository = RepositoryTestData.createHeartOfGold(repositoryType);
+//    repository.setName("test/".concat(repository.getName()));
+//    repository = createRepository(client, repository);
+//  }
+//
+//  //~--- fields ---------------------------------------------------------------
+//
+//  /** Field description */
+//  private Repository repository;
+//
+//  /** Field description */
+//  private String repositoryType;
 }

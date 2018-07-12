@@ -35,25 +35,26 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import sonia.scm.repository.Repository;
-
-import static org.junit.Assert.*;
-
-import static sonia.scm.it.IntegrationTestUtil.*;
-
-//~--- JDK imports ------------------------------------------------------------
-
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import sonia.scm.repository.Repository;
 
 import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static sonia.scm.it.IntegrationTestUtil.authenticateAdmin;
+import static sonia.scm.it.IntegrationTestUtil.createClient;
+import static sonia.scm.it.IntegrationTestUtil.createResource;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
@@ -99,7 +100,7 @@ public class RepositorySimplePermissionITCase
 
     authenticateAdmin(client);
 
-    WebResource wr = createResource(client, "repositories");
+    WebResource.Builder wr = createResource(client, "repositories");
     ClientResponse response = wr.post(ClientResponse.class, repository);
 
     assertNotNull(response);
@@ -109,8 +110,7 @@ public class RepositorySimplePermissionITCase
 
     assertNotNull(repositoryUrl);
     response.close();
-    wr = client.resource(repositoryUrl);
-    response = wr.get(ClientResponse.class);
+    response = client.resource(repositoryUrl).get(ClientResponse.class);
     assertNotNull(response);
     assertEquals(200, response.getStatus());
     repository = response.getEntity(Repository.class);
@@ -118,7 +118,7 @@ public class RepositorySimplePermissionITCase
     REPOSITORY_UUID = repository.getId();
     assertNotNull(REPOSITORY_UUID);
     response.close();
-    logoutClient(client);
+//    logoutClient(client);
     client.destroy();
   }
 

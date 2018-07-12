@@ -35,25 +35,27 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.junit.AfterClass;
-import org.junit.Test;
-
-import sonia.scm.group.Group;
-
-import static org.junit.Assert.*;
-
-import static sonia.scm.it.IntegrationTestUtil.*;
-
-//~--- JDK imports ------------------------------------------------------------
-
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
+import org.junit.AfterClass;
+import org.junit.Test;
+import sonia.scm.group.Group;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static sonia.scm.it.IntegrationTestUtil.authenticateAdmin;
+import static sonia.scm.it.IntegrationTestUtil.createClient;
+import static sonia.scm.it.IntegrationTestUtil.createResource;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
@@ -134,7 +136,7 @@ public class GroupITCase extends AbstractAdminITCaseBase
     group = getGroup(group.getName());
     group.setDescription("GROUP D");
 
-    WebResource wr = createResource(client, "groups/group-d");
+    WebResource.Builder wr = createResource(client, "groups/group-d");
     ClientResponse response = wr.put(ClientResponse.class, group);
 
     assertNotNull(response);
@@ -163,7 +165,7 @@ public class GroupITCase extends AbstractAdminITCaseBase
     group.setName("group-c");
     createGroup(group);
 
-    WebResource wr = createResource(client, "groups");
+    WebResource.Builder wr = createResource(client, "groups");
     ClientResponse response = wr.get(ClientResponse.class);
     Collection<Group> groups =
       response.getEntity(new GenericType<Collection<Group>>() {}
@@ -198,7 +200,7 @@ public class GroupITCase extends AbstractAdminITCaseBase
    */
   private void createGroup(Group group)
   {
-    WebResource wr = createResource(client, "groups");
+    WebResource.Builder wr = createResource(client, "groups");
     ClientResponse response = wr.post(ClientResponse.class, group);
 
     assertNotNull(response);
@@ -224,7 +226,7 @@ public class GroupITCase extends AbstractAdminITCaseBase
    */
   private void deleteGroup(String name)
   {
-    WebResource wr = createResource(client, "groups/".concat(name));
+    WebResource.Builder wr = createResource(client, "groups/".concat(name));
     ClientResponse response = wr.delete(ClientResponse.class);
 
     assertNotNull(response);
@@ -249,7 +251,7 @@ public class GroupITCase extends AbstractAdminITCaseBase
    */
   private Group getGroup(String groupname)
   {
-    WebResource wr = createResource(client, "groups/".concat(groupname));
+    WebResource.Builder wr = createResource(client, "groups/".concat(groupname));
     ClientResponse response = wr.get(ClientResponse.class);
 
     assertNotNull(response);
