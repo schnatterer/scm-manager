@@ -56,12 +56,12 @@ import static sonia.scm.it.RestUtil.given;
 //~--- JDK imports ------------------------------------------------------------
 
 @RunWith(Parameterized.class)
-public class GetRepositoriesITCase {
+public class CreateRepositoriesITCase {
 
   private final String repositoryType;
   private String repositoryUrl;
 
-  public GetRepositoriesITCase(String repositoryType) {
+  public CreateRepositoriesITCase(String repositoryType) {
     this.repositoryType = repositoryType;
   }
 
@@ -89,7 +89,7 @@ public class GetRepositoriesITCase {
   }
 
   @Test
-  public void testGet() throws IOException {
+  public void shouldCreateSuccessfully() throws IOException {
     String repositoryJson = RestUtil.readJson("repository-" + repositoryType + ".json");
     given(VndMediaType.REPOSITORY)
       .body(repositoryJson)
@@ -115,6 +115,28 @@ public class GetRepositoriesITCase {
         "creationDate", matchesPattern("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d+Z"),
         "lastModified", Matchers.is(Matchers.nullValue())
       );
+  }
+
+  @Test
+  public void shouldRejectMultipleCreations() throws IOException {
+    String repositoryJson = RestUtil.readJson("repository-" + repositoryType + ".json");
+    given(VndMediaType.REPOSITORY)
+      .body(repositoryJson)
+
+      .when()
+      .post(createResourceUrl("repositories"))
+
+      .then()
+      .statusCode(201);
+
+    given(VndMediaType.REPOSITORY)
+      .body(repositoryJson)
+
+      .when()
+      .post(createResourceUrl("repositories"))
+
+      .then()
+      .statusCode(409);
   }
 
 
