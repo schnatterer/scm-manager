@@ -33,9 +33,6 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -52,6 +49,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.regex.Pattern;
+
+import static sonia.scm.it.RestUtil.createResourceUrl;
+import static sonia.scm.it.RestUtil.given;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -91,17 +91,16 @@ public class GetRepositoriesITCase {
   @Test
   public void testGet() throws IOException {
     String repositoryJson = RestUtil.readJson("repository-" + repositoryType + ".json");
-    Response x = given(VndMediaType.REPOSITORY)
+    given(VndMediaType.REPOSITORY)
       .body(repositoryJson)
 
       .when()
-      .post(RestUtil.createResourceUrl("repositories"));
+      .post(createResourceUrl("repositories"))
 
-    x.then()
+      .then()
       .statusCode(201);
 
-    String location = x.getHeader("location");
-    repositoryUrl = location;
+    repositoryUrl = RestUtil.lastResponse.getHeader("location");
 
     given(VndMediaType.REPOSITORY)
 
@@ -118,12 +117,6 @@ public class GetRepositoriesITCase {
       );
   }
 
-  private static RequestSpecification given(String mediaType) {
-    return RestAssured.given()
-      .contentType(mediaType)
-      .accept(mediaType)
-      .auth().preemptive().basic("scmadmin", "scmadmin");
-  }
 
   public static Matcher<String> matchesPattern(String pattern) {
     return new RegExMatcher(pattern);
