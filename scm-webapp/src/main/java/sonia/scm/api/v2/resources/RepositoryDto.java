@@ -6,7 +6,7 @@ import de.otto.edison.hal.Links;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -14,11 +14,11 @@ import java.util.Map;
 public class RepositoryDto extends HalRepresentation {
 
   private String contact;
-  private Date creationDate;
+  private Instant creationDate;
   private String description;
   private List<HealthCheckFailureDto> healthCheckFailures;
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private Date lastModified;
+  private Instant lastModified;
   private String namespace;
   private String name;
   private boolean archived = false;

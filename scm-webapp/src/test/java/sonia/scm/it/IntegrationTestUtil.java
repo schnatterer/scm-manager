@@ -266,7 +266,7 @@ public final class IntegrationTestUtil
    */
   public static URI createResourceUrl(String url)
   {
-    return URI.create(REST_BASE_URL.concat(url));
+    return URI.create(REST_BASE_URL).resolve(url);
   }
   
   /**
