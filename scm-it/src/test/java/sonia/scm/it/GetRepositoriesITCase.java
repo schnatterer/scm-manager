@@ -34,10 +34,12 @@ package sonia.scm.it;
 //~--- non-JDK imports --------------------------------------------------------
 
 import io.restassured.RestAssured;
+import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,18 +53,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.regex.Pattern;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static sonia.scm.it.IntegrationTestUtil.createResourceUrl;
-import static sonia.scm.it.IntegrationTestUtil.readJson;
-
 //~--- JDK imports ------------------------------------------------------------
 
 @RunWith(Parameterized.class)
-public class GetRepositoriesITCase extends AbstractAdminITCaseBase {
+public class GetRepositoriesITCase {
 
   private final String repositoryType;
+  private String repositoryUrl;
 
   public GetRepositoriesITCase(String repositoryType) {
     this.repositoryType = repositoryType;
@@ -70,7 +67,7 @@ public class GetRepositoriesITCase extends AbstractAdminITCaseBase {
 
   @Parameters(name = "{0}")
   public static Collection<String[]> createParameters() {
-    Collection<String[]> params = new ArrayList<String[]>();
+    Collection<String[]> params = new ArrayList<>();
 
     params.add(new String[]{"git"});
     params.add(new String[]{"svn"});
@@ -84,35 +81,40 @@ public class GetRepositoriesITCase extends AbstractAdminITCaseBase {
 
   @After
   public void cleanup() {
-    given(VndMediaType.REPOSITORY)
-      .when()
-      .delete(createResourceUrl("repositories/scmadmin/HeartOfGold-" + repositoryType));
+    if (repositoryUrl != null) {
+      given(VndMediaType.REPOSITORY)
+        .when()
+        .delete(repositoryUrl);
+    }
   }
 
   @Test
-  public void testGetById() throws IOException {
-    String repositoryJson = readJson("repository-" + repositoryType + ".json");
-    given(VndMediaType.REPOSITORY)
+  public void testGet() throws IOException {
+    String repositoryJson = RestUtil.readJson("repository-" + repositoryType + ".json");
+    Response x = given(VndMediaType.REPOSITORY)
       .body(repositoryJson)
 
       .when()
-      .post(createResourceUrl("repositories"))
+      .post(RestUtil.createResourceUrl("repositories"));
 
-      .then()
+    x.then()
       .statusCode(201);
+
+    String location = x.getHeader("location");
+    repositoryUrl = location;
 
     given(VndMediaType.REPOSITORY)
 
       .when()
-      .get(createResourceUrl("repositories/scmadmin/HeartOfGold-" + repositoryType))
+      .get(repositoryUrl)
 
       .then()
       .statusCode(200)
       .body(
-        "name", equalTo("HeartOfGold-" + repositoryType),
-        "type", equalTo(repositoryType),
+        "name", Matchers.equalTo("HeartOfGold-" + repositoryType),
+        "type", Matchers.equalTo(repositoryType),
         "creationDate", matchesPattern("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d+Z"),
-        "lastModified", is(nullValue())
+        "lastModified", Matchers.is(Matchers.nullValue())
       );
   }
 
