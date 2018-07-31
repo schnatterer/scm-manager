@@ -33,10 +33,6 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,18 +44,18 @@ import sonia.scm.web.VndMediaType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.regex.Pattern;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static sonia.scm.it.RegExMatcher.matchesPattern;
 import static sonia.scm.it.RestUtil.createResourceUrl;
 import static sonia.scm.it.RestUtil.given;
-
-//~--- JDK imports ------------------------------------------------------------
 
 @RunWith(Parameterized.class)
 public class CreateRepositoriesITCase {
 
   private final String repositoryType;
-  private String repositoryUrl;
 
   public CreateRepositoriesITCase(String repositoryType) {
     this.repositoryType = repositoryType;
@@ -81,26 +77,23 @@ public class CreateRepositoriesITCase {
 
   @After
   public void cleanup() {
-    if (repositoryUrl != null) {
-      given(VndMediaType.REPOSITORY)
-        .when()
-        .delete(repositoryUrl);
-    }
+    TestData.cleanup();
   }
 
   @Test
   public void shouldCreateSuccessfully() throws IOException {
     String repositoryJson = RestUtil.readJson("repository-" + repositoryType + ".json");
-    given(VndMediaType.REPOSITORY)
+    String repositoryUrl =
+      given(VndMediaType.REPOSITORY)
       .body(repositoryJson)
 
       .when()
       .post(createResourceUrl("repositories"))
 
       .then()
-      .statusCode(201);
-
-    repositoryUrl = RestUtil.lastResponse.getHeader("location");
+      .statusCode(201)
+      .extract()
+      .header("location");
 
     given(VndMediaType.REPOSITORY)
 
@@ -110,10 +103,11 @@ public class CreateRepositoriesITCase {
       .then()
       .statusCode(200)
       .body(
-        "name", Matchers.equalTo("HeartOfGold-" + repositoryType),
-        "type", Matchers.equalTo(repositoryType),
+        "name", equalTo("HeartOfGold-" + repositoryType),
+        "type", equalTo(repositoryType),
         "creationDate", matchesPattern("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d+Z"),
-        "lastModified", Matchers.is(Matchers.nullValue())
+        "lastModified", is(nullValue()),
+        "_links.self.href", equalTo(repositoryUrl)
       );
   }
 
@@ -137,28 +131,5 @@ public class CreateRepositoriesITCase {
 
       .then()
       .statusCode(409);
-  }
-
-
-  public static Matcher<String> matchesPattern(String pattern) {
-    return new RegExMatcher(pattern);
-  }
-
-  private static class RegExMatcher extends BaseMatcher<String> {
-    private final String pattern;
-
-    private RegExMatcher(String pattern) {
-      this.pattern = pattern;
-    }
-
-    @Override
-    public void describeTo(Description description) {
-      description.appendText("matching to regex pattern \"" + pattern + "\"");
-    }
-
-    @Override
-    public boolean matches(Object o) {
-      return Pattern.compile(pattern).matcher(o.toString()).matches();
-    }
   }
 }
