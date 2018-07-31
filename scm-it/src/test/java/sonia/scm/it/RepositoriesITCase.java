@@ -33,6 +33,7 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import org.apache.http.HttpStatus;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,13 +52,14 @@ import static org.hamcrest.Matchers.nullValue;
 import static sonia.scm.it.RegExMatcher.matchesPattern;
 import static sonia.scm.it.RestUtil.createResourceUrl;
 import static sonia.scm.it.RestUtil.given;
+import static sonia.scm.it.RestUtil.readJson;
 
 @RunWith(Parameterized.class)
-public class CreateRepositoriesITCase {
+public class RepositoriesITCase {
 
   private final String repositoryType;
 
-  public CreateRepositoriesITCase(String repositoryType) {
+  public RepositoriesITCase(String repositoryType) {
     this.repositoryType = repositoryType;
   }
 
@@ -82,18 +84,7 @@ public class CreateRepositoriesITCase {
 
   @Test
   public void shouldCreateSuccessfully() throws IOException {
-    String repositoryJson = RestUtil.readJson("repository-" + repositoryType + ".json");
-    String repositoryUrl =
-      given(VndMediaType.REPOSITORY)
-      .body(repositoryJson)
-
-      .when()
-      .post(createResourceUrl("repositories"))
-
-      .then()
-      .statusCode(201)
-      .extract()
-      .header("location");
+    String repositoryUrl = createRepository();
 
     given(VndMediaType.REPOSITORY)
 
@@ -101,7 +92,7 @@ public class CreateRepositoriesITCase {
       .get(repositoryUrl)
 
       .then()
-      .statusCode(200)
+      .statusCode(HttpStatus.SC_OK)
       .body(
         "name", equalTo("HeartOfGold-" + repositoryType),
         "type", equalTo(repositoryType),
@@ -112,16 +103,30 @@ public class CreateRepositoriesITCase {
   }
 
   @Test
+  public void shouldDeleteSuccessfully() throws IOException {
+    String repositoryUrl = createRepository();
+
+    given(VndMediaType.REPOSITORY)
+
+      .when()
+      .delete(repositoryUrl)
+
+      .then()
+      .statusCode(HttpStatus.SC_NO_CONTENT);
+
+    given(VndMediaType.REPOSITORY)
+
+      .when()
+      .get(repositoryUrl)
+
+      .then()
+      .statusCode(HttpStatus.SC_NOT_FOUND);
+  }
+
+  @Test
   public void shouldRejectMultipleCreations() throws IOException {
-    String repositoryJson = RestUtil.readJson("repository-" + repositoryType + ".json");
-    given(VndMediaType.REPOSITORY)
-      .body(repositoryJson)
-
-      .when()
-      .post(createResourceUrl("repositories"))
-
-      .then()
-      .statusCode(201);
+    String repositoryJson = readJson("repository-" + repositoryType + ".json");
+    createRepository();
 
     given(VndMediaType.REPOSITORY)
       .body(repositoryJson)
@@ -130,6 +135,19 @@ public class CreateRepositoriesITCase {
       .post(createResourceUrl("repositories"))
 
       .then()
-      .statusCode(409);
+      .statusCode(HttpStatus.SC_CONFLICT);
+  }
+
+  private String createRepository() throws IOException {
+    return given(VndMediaType.REPOSITORY)
+      .body(readJson("repository-" + repositoryType + ".json"))
+
+      .when()
+      .post(createResourceUrl("repositories"))
+
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .extract()
+      .header("location");
   }
 }
