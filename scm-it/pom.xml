@@ -83,6 +83,19 @@
         </configuration>
       </plugin>
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.12</version>
+        <configuration>
+          <properties>
+            <property>
+              <name>listener</name>
+              <value>sonia.scm.it.IntegrationTestListener</value>
+            </property>
+          </properties>
+        </configuration>
+      </plugin>
     </plugins>
 
     <finalName>scm-it</finalName>
@@ -142,6 +155,7 @@
                 </systemProperty>
               </systemProperties>
               <jettyXml>${project.basedir}/src/main/conf/jetty.xml</jettyXml>
+              <war>${project.basedir}/../scm-webapp/target/scm-webapp.war</war>
               <scanIntervalSeconds>0</scanIntervalSeconds>
               <daemon>true</daemon>
             </configuration>
