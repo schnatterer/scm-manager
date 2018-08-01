@@ -640,6 +640,12 @@
               <includes>
                 <include>sonia/scm/it/*ITCase.java</include>
               </includes>
+              <properties>
+                <property>
+                  <name>listener</name>
+                  <value>sonia.scm.it.IntegrationTestListener</value>
+                </property>
+              </properties>
             </configuration>
             <executions>
               <execution>

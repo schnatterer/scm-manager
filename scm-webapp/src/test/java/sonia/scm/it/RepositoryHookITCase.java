@@ -108,7 +108,9 @@ public class RepositoryHookITCase extends AbstractAdminITCaseBase
   @After
   public void removeTestRepository()
   {
-    deleteRepository(client, repository);
+    if (repository != null) {
+      deleteRepository(client, repository);
+    }
   }
   
   /**
@@ -188,7 +190,7 @@ public class RepositoryHookITCase extends AbstractAdminITCaseBase
   private RepositoryClient createRepositoryClient() throws IOException 
   {
     return REPOSITORY_CLIENT_FACTORY.create(repositoryType, 
-      IntegrationTestUtil.BASE_URL + repositoryType + "/" + repository.getName(), 
+      IntegrationTestUtil.BASE_URL + repositoryType + "/" + repository.getNamespace() + "/" + repository.getName(),
       IntegrationTestUtil.ADMIN_USERNAME, IntegrationTestUtil.ADMIN_PASSWORD, workingCopy
     );
   }
@@ -199,7 +201,7 @@ public class RepositoryHookITCase extends AbstractAdminITCaseBase
    *
    * @return repository types test parameter
    */
-  @Parameters
+  @Parameters(name = "{0}")
   public static Collection<String[]> createParameters()
   {
     Collection<String[]> params = Lists.newArrayList();

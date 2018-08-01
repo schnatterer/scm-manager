@@ -38,14 +38,17 @@ package sonia.scm.it;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import sonia.scm.api.rest.ObjectMapperProvider;
 import sonia.scm.api.v2.resources.RepositoryDto;
 import sonia.scm.repository.Repository;
 import sonia.scm.web.VndMediaType;
 
+import java.io.IOException;
 import java.net.URI;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static sonia.scm.it.IntegrationTestUtil.createResource;
 import static sonia.scm.it.IntegrationTestUtil.getLink;
 
@@ -111,7 +114,13 @@ public final class RepositoryITUtil
     assertNotNull(response);
     assertEquals(200, response.getStatus());
 
-    RepositoryDto repository = response.getEntity(RepositoryDto.class);
+    String json = response.getEntity(String.class);
+    RepositoryDto repository = null;
+    try {
+      repository = new ObjectMapperProvider().get().readerFor(RepositoryDto.class).readValue(json);
+    } catch (IOException e) {
+      fail("could not read json:\n" + json);
+    }
 
     response.close();
     assertNotNull(repository);
