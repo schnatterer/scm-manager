@@ -37,15 +37,11 @@ import com.github.sdorra.shiro.ShiroRule;
 import com.github.sdorra.shiro.SubjectAware;
 import com.google.common.collect.ImmutableSet;
 import org.apache.shiro.authz.UnauthorizedException;
-import org.apache.shiro.util.ThreadContext;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.invocation.InvocationOnMock;
-import sonia.scm.HandlerEventType;
-import sonia.scm.Manager;
-import sonia.scm.ManagerTestBase;
-import sonia.scm.Type;
+import sonia.scm.*;
 import sonia.scm.config.ScmConfiguration;
 import sonia.scm.event.ScmEventBus;
 import sonia.scm.repository.api.HookContext;
@@ -58,23 +54,10 @@ import sonia.scm.security.KeyGenerator;
 import sonia.scm.store.ConfigurationStoreFactory;
 import sonia.scm.store.JAXBConfigurationStoreFactory;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -98,6 +81,8 @@ public class DefaultRepositoryManagerTest extends ManagerTestBase<Repository, Re
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
+
+  private ScmConfiguration configuration;
 
   private String mockedNamespace = "default_namespace";
 
@@ -139,7 +124,8 @@ public class DefaultRepositoryManagerTest extends ManagerTestBase<Repository, Re
 
   @Test(expected = RepositoryIsNotArchivedException.class)
   public void testDeleteNonArchived() throws RepositoryException {
-    delete(createRepositoryManager(true), createTestRepository());
+    configuration.setEnableRepositoryArchive(true);
+    delete(manager, createTestRepository());
   }
 
   @Test(expected = RepositoryNotFoundException.class)
@@ -307,7 +293,7 @@ public class DefaultRepositoryManagerTest extends ManagerTestBase<Repository, Re
     assertNotNull(hearReference);
     assertEquals(hearReference.getDescription(), "prototype ship");
   }
-  
+
   @Test
   @SubjectAware(username = "crato")
   public void testModifyWithoutRequiredPermissions() throws RepositoryException {
@@ -492,7 +478,7 @@ public class DefaultRepositoryManagerTest extends ManagerTestBase<Repository, Re
 
     XmlRepositoryDAO repositoryDAO = new XmlRepositoryDAO(factory);
 
-    ScmConfiguration configuration = new ScmConfiguration();
+    this.configuration = new ScmConfiguration();
 
     configuration.setEnableRepositoryArchive(archiveEnabled);
 

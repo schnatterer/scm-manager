@@ -38,7 +38,6 @@ package sonia.scm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
 import com.google.inject.servlet.RequestScoped;
 import com.google.inject.servlet.ServletModule;
 import com.google.inject.throwingproviders.ThrowingProviderBinder;
@@ -76,7 +75,6 @@ import sonia.scm.template.MustacheTemplateEngine;
 import sonia.scm.template.TemplateEngine;
 import sonia.scm.template.TemplateEngineFactory;
 import sonia.scm.template.TemplateServlet;
-import sonia.scm.url.*;
 import sonia.scm.user.DefaultUserManager;
 import sonia.scm.user.UserDAO;
 import sonia.scm.user.UserManager;
@@ -277,17 +275,6 @@ public class ScmServletModule extends ServletModule
     {
       bind(ResourceManager.class, DefaultResourceManager.class);
     }
-
-    // bind url provider staff
-    bind(UrlProvider.class).annotatedWith(
-      Names.named(UrlProviderFactory.TYPE_RESTAPI_JSON)).toProvider(
-      RestJsonUrlProvider.class);
-    bind(UrlProvider.class).annotatedWith(
-      Names.named(UrlProviderFactory.TYPE_RESTAPI_XML)).toProvider(
-      RestXmlUrlProvider.class);
-    bind(UrlProvider.class).annotatedWith(
-      Names.named(UrlProviderFactory.TYPE_WUI)).toProvider(
-      WebUIUrlProvider.class);
 
     // bind repository service factory
     bind(RepositoryServiceFactory.class);

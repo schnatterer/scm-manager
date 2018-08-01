@@ -70,9 +70,9 @@
     <module>scm-test</module>
     <module>scm-plugins</module>
     <module>scm-dao-xml</module>
+    <module>scm-ui</module>
     <module>scm-webapp</module>
     <module>scm-server</module>
-    <module>scm-clients</module>
     <module>scm-it</module>
   </modules>
 
@@ -93,7 +93,6 @@
       </snapshots>
     </repository>
 
-    <!-- TODO remove jitpack after edison hal bugfix -->
     <repository>
       <id>jitpack</id>
       <url>https://jitpack.io</url>
@@ -146,10 +145,58 @@
       <version>${mokito.version}</version>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <!-- Dependency used in Jenkinsfile. Including this in maven provides code completion in Jenkinsfile. -->
+      <groupId>com.github.cloudogu</groupId>
+      <artifactId>ces-build-lib</artifactId>
+      <!-- Keep this version in sync with the one used in Jenkinsfile -->
+      <version>9aadeeb</version>
+      <!-- Don't ship this dependency with the app -->
+      <optional>true</optional>
+    </dependency>
     
   </dependencies>
 
+  <dependencyManagement>
+    <dependencies>
+
+      <dependency>
+        <groupId>com.github.sdorra</groupId>
+        <artifactId>shiro-unit</artifactId>
+        <version>1.0.1</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- TODO replace by proper version from maven central (group: com.github.sdorra) once its there. -->
+      <dependency>
+        <groupId>com.github.sdorra.shiro-static-permissions</groupId>
+        <artifactId>ssp-lib</artifactId>
+        <version>${ssp.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.sdorra.shiro-static-permissions</groupId>
+        <artifactId>ssp-processor</artifactId>
+        <version>${ssp.version}</version>
+        <optional>true</optional>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
+
   <build>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.0.1</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
     <plugins>
       
       <plugin>
@@ -206,6 +253,25 @@
       </plugin>
 
       <plugin>
+        <groupId>com.github.legman</groupId>
+        <artifactId>legman-maven-plugin</artifactId>
+        <version>${legman.version}</version>
+        <configuration>
+          <fail>true</fail>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>process-classes</phase>
+            <goals>
+              <!-- Prevent usage of guava annotations that would be silently ignored -> hard to find.
+                   We use legman annotations instead, that provide additional features such as weak references.  -->
+              <goal>guava-migration-check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.5.1</version>
@@ -255,7 +321,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.9</version>
         <configuration>
           <useStandardDocletOptions>true</useStandardDocletOptions>
           <charset>${project.build.sourceEncoding}</charset>
@@ -440,7 +505,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.8.1</version>
             <configuration>
               <doclet>org.jboss.apiviz.APIviz</doclet>
               <docletArtifact>
@@ -495,14 +559,14 @@
     <guice.version>4.0</guice.version>
     
     <!-- event bus -->
-    <legman.version>1.2.0</legman.version>
+    <legman.version>1.3.0</legman.version>
     
     <!-- webserver -->
     <jetty.version>9.2.10.v20150310</jetty.version>
     <jetty.maven.version>9.2.10.v20150310</jetty.maven.version>
 
     <!-- security libraries -->
-    <ssp.version>1.0.0-SNAPSHOT</ssp.version>
+    <ssp.version>967c8fd521</ssp.version>
     <shiro.version>1.4.0</shiro.version>
 
     <!-- repostitory libraries -->
