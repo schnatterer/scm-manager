@@ -35,6 +35,8 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -179,6 +181,15 @@ public final class IntegrationTestUtil
     config.getProperties().put(ApacheHttpClientConfig.PROPERTY_HANDLE_COOKIES, true);
 
     return ApacheHttpClient.create(config);
+  }
+
+  public static String serialize(Object o) {
+    ObjectMapper mapper = new ObjectMapperProvider().get();
+    try {
+      return mapper.writeValueAsString(o);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
