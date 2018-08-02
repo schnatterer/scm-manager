@@ -37,9 +37,9 @@ package sonia.scm.it;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
 import sonia.scm.user.User;
 import sonia.scm.user.UserTestData;
+import sonia.scm.web.VndMediaType;
 
 /**
  *
@@ -55,7 +55,7 @@ public class UserPermissionITCase extends AbstractPermissionITCaseBase<User>
    *
    * @param credentials
    */
-  public UserPermissionITCase(Credentials credentials)
+  public UserPermissionITCase(Credentials credentials, String ignore_testCaseName)
   {
     super(credentials);
   }
@@ -139,5 +139,10 @@ public class UserPermissionITCase extends AbstractPermissionITCaseBase<User>
   protected String getModifyPath()
   {
     return "users/scmadmin";
+  }
+
+  @Override
+  protected String getMediaType() {
+    return VndMediaType.USER;
   }
 }

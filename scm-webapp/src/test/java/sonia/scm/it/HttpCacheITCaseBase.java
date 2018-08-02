@@ -35,7 +35,6 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.junit.After;
@@ -190,7 +189,7 @@ public abstract class HttpCacheITCaseBase<T>
    */
   private ClientResponse getCollectionResponse()
   {
-    Client client = createAdminClient();
+    ScmClient client = createAdminClient();
     WebResource.Builder resource = createResource(client, getCollectionUrlPart());
     ClientResponse response = resource.get(ClientResponse.class);
 

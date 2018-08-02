@@ -39,14 +39,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.client.apache.ApacheHttpClient;
 import com.sun.jersey.client.apache.config.ApacheHttpClientConfig;
 import com.sun.jersey.client.apache.config.DefaultApacheHttpClientConfig;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 import de.otto.edison.hal.HalRepresentation;
-import sonia.scm.ScmState;
 import sonia.scm.api.rest.JSONContextResolver;
 import sonia.scm.api.rest.ObjectMapperProvider;
 import sonia.scm.repository.Person;
@@ -54,7 +51,6 @@ import sonia.scm.repository.client.api.ClientCommand;
 import sonia.scm.repository.client.api.RepositoryClient;
 import sonia.scm.util.IOUtil;
 
-import javax.ws.rs.core.MultivaluedMap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -62,7 +58,6 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -99,73 +94,10 @@ public final class IntegrationTestUtil
 
   //~--- methods --------------------------------------------------------------
 
-  /**
-   * Method description
-   *
-   *
-   * @param client
-   * @param username
-   * @param password
-   *
-   * @return
-   */
-  public static ClientResponse authenticate(Client client, String username, String password) {
-    WebResource wr =  client.resource(createResourceUrl("auth/access_token"));
-    MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
 
-    formData.add("username", username);
-    formData.add("password", password);
-    formData.add("cookie", "true");
-    formData.add("grant_type", "password");
-
-    return wr.type("application/x-www-form-urlencoded").post(ClientResponse.class, formData);
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param client
-   *
-   * @return
-   */
-  public static ScmState authenticateAdmin(Client client)
+  public static ScmClient createAdminClient()
   {
-    ClientResponse cr = authenticate(client, ADMIN_USERNAME, ADMIN_PASSWORD);
-//    ScmState state = cr.getEntity(ScmState.class);
-
-    cr.close();
-//    assertNotNull(state);
-//    assertTrue(state.isSuccess());
-//
-//    User user = state.getUser();
-//
-//    assertNotNull(user);
-//    assertEquals("scmadmin", user.getName());
-//    assertTrue(user.isAdmin());
-//
-//    Collection<Type> types = state.getRepositoryTypes();
-//
-//    assertNotNull(types);
-//    assertFalse(types.isEmpty());
-//
-//    return state;
-    return null;
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @return
-   */
-  public static Client createAdminClient()
-  {
-    Client client = createClient();
-
-    authenticateAdmin(client);
-
-    return client;
+    return new ScmClient("scmadmin", "scmadmin");
   }
 
   /**
@@ -254,17 +186,11 @@ public final class IntegrationTestUtil
     return URI.create(object.getLinks().getLinkBy("delete").get().getHref());
   }
 
-  public static WebResource.Builder createResource(Client client, String url) {
+  public static WebResource.Builder createResource(ScmClient client, String url) {
     return createResource(client, createResourceUrl(url));
   }
-  public static WebResource.Builder createResource(Client client, URI url) {
-    return client
-      .resource(url)
-      .header("Authorization", createAuthHeaderValue());
-  }
-
-  public static String createAuthHeaderValue() {
-    return "Basic " + Base64.getEncoder().encodeToString("scmadmin:scmadmin".getBytes());
+  public static WebResource.Builder createResource(ScmClient client, URI url) {
+    return client.resource(url.toString());
   }
 
   /**
@@ -294,8 +220,12 @@ public final class IntegrationTestUtil
     return directory;
   }
 
-  public static String readJson(String jsonFileName) throws IOException {
+  public static String readJson(String jsonFileName) {
     URL url = Resources.getResource(jsonFileName);
-    return Resources.toString(url, Charset.forName("UTF-8"));
+    try {
+      return Resources.toString(url, Charset.forName("UTF-8"));
+    } catch (IOException e) {
+      throw new RuntimeException("could not read json file " + jsonFileName, e);
+    }
   }
 }

@@ -36,7 +36,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.common.base.Charsets;
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.hamcrest.Matchers;
@@ -47,6 +46,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
+import sonia.scm.api.rest.ObjectMapperProvider;
 import sonia.scm.api.v2.resources.RepositoryDto;
 import sonia.scm.repository.PermissionType;
 import sonia.scm.repository.Repository;
@@ -62,9 +62,7 @@ import java.util.UUID;
 import static org.junit.Assert.assertArrayEquals;
 import static sonia.scm.it.IntegrationTestUtil.BASE_URL;
 import static sonia.scm.it.IntegrationTestUtil.REST_BASE_URL;
-import static sonia.scm.it.IntegrationTestUtil.authenticate;
 import static sonia.scm.it.IntegrationTestUtil.createAdminClient;
-import static sonia.scm.it.IntegrationTestUtil.createClient;
 import static sonia.scm.it.IntegrationTestUtil.readJson;
 import static sonia.scm.it.RepositoryITUtil.createRepository;
 import static sonia.scm.it.RepositoryITUtil.deleteRepository;
@@ -84,7 +82,7 @@ public class GitLfsITCase {
 
   private final ObjectMapper mapper = new ObjectMapper();
 
-  private Client adminClient;
+  private ScmClient adminClient;
 
   private RepositoryDto repository;
 
@@ -103,7 +101,6 @@ public class GitLfsITCase {
   @After
   public void tearDownTestDependencies() {
     deleteRepository(adminClient, repository);
-    adminClient.destroy();
   }
 
   // tests
@@ -129,8 +126,7 @@ public class GitLfsITCase {
 //      repository.getPermissions().add(new Permission(trillian.getId(), permissionType));
 //      modifyRepository(repository);
 
-      Client client = createClient();
-      authenticate(client, trillian.getId(), "secret123");
+      ScmClient client = new ScmClient(trillian.getId(), "secret123");
 
       uploadAndDownload(client);
     } finally {
@@ -172,9 +168,7 @@ public class GitLfsITCase {
 //      repository.getPermissions().add(new Permission(trillian.getId(), PermissionType.READ));
 //      modifyRepository(repository);
 
-      Client client = createClient();
-      authenticate(client, trillian.getId(), "secret123");
-
+      ScmClient client = new ScmClient(trillian.getId(), "secret123");
       uploadAndDownload(client);
     } finally {
       removeUser(trillian);
@@ -199,8 +193,7 @@ public class GitLfsITCase {
       byte[] dataAsBytes = data.getBytes(Charsets.UTF_8);
       LfsObject lfsObject = upload(adminClient, dataAsBytes);
 
-      Client client = createClient();
-      authenticate(client, trillian.getId(), "secret123");
+      ScmClient client = new ScmClient(trillian.getId(), "secret123");
 
       // download as user
       byte[] downloadedData = download(client, lfsObject);
@@ -214,7 +207,7 @@ public class GitLfsITCase {
 
   // lfs api
 
-  private void uploadAndDownload(Client client) throws IOException {
+  private void uploadAndDownload(ScmClient client) throws IOException {
     String data = UUID.randomUUID().toString();
     byte[] dataAsBytes = data.getBytes(Charsets.UTF_8);
     LfsObject lfsObject = upload(client, dataAsBytes);
@@ -222,7 +215,7 @@ public class GitLfsITCase {
     assertArrayEquals(dataAsBytes, downloadedData);
   }
 
-  private LfsObject upload(Client client, byte[] data) throws IOException {
+  private LfsObject upload(ScmClient client, byte[] data) throws IOException {
     LfsObject lfsObject = createLfsObject(data);
     LfsRequestBody request = LfsRequestBody.createUploadRequest(lfsObject);
     LfsResponseBody response = request(client, request);
@@ -233,15 +226,16 @@ public class GitLfsITCase {
     return lfsObject;
   }
 
-  private LfsResponseBody request(Client client, LfsRequestBody request) throws IOException {
+  private LfsResponseBody request(ScmClient client, LfsRequestBody request) throws IOException {
     String batchUrl = createBatchUrl();
     String requestAsString = mapper.writeValueAsString(request);
 
-    return client
+    String json = client
       .resource(batchUrl)
       .accept("application/vnd.git-lfs+json")
       .header("Content-Type", "application/vnd.git-lfs+json")
-      .post(LfsResponseBody.class, requestAsString);
+      .post(String.class, requestAsString);
+    return new ObjectMapperProvider().get().readValue(json, LfsResponseBody.class);
   }
 
   private String createBatchUrl() {
@@ -249,7 +243,7 @@ public class GitLfsITCase {
     return url + "/info/lfs/objects/batch";
   }
 
-  private byte[] download(Client client, LfsObject lfsObject) throws IOException {
+  private byte[] download(ScmClient client, LfsObject lfsObject) throws IOException {
     LfsRequestBody request = LfsRequestBody.createDownloadRequest(lfsObject);
     LfsResponseBody response = request(client, request);
 

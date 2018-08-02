@@ -67,4 +67,8 @@ public class TestData {
       .statusCode(HttpStatus.SC_NO_CONTENT);
     LOG.info("deleted {}", url);
   }
+
+  public static void main(String[] args) {
+    cleanup();
+  }
 }

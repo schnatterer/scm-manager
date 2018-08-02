@@ -35,7 +35,6 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.junit.After;
@@ -176,7 +175,7 @@ public class RepositoryArchiveITCase extends RepositoryTypeITCaseBase
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
-  private Client client;
+  private ScmClient client;
 
   /** Field description */
   private RepositoryDto repository;

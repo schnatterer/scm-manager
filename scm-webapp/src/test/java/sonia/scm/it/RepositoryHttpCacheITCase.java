@@ -34,9 +34,9 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import org.junit.Ignore;
 import sonia.scm.repository.Repository;
 import sonia.scm.repository.RepositoryTestData;
 
@@ -51,6 +51,7 @@ import static sonia.scm.it.IntegrationTestUtil.createResource;
  *
  * @author Sebastian Sdorra
  */
+@Ignore()
 public class RepositoryHttpCacheITCase extends HttpCacheITCaseBase<Repository>
 {
 
@@ -64,7 +65,7 @@ public class RepositoryHttpCacheITCase extends HttpCacheITCaseBase<Repository>
   protected Repository createSampleItem()
   {
     Repository repository = RepositoryTestData.createHeartOfGold("git");
-    Client client = createAdminClient();
+    ScmClient client = createAdminClient();
     WebResource.Builder resource = createResource(client, "repositories");
     ClientResponse response = resource.post(ClientResponse.class, repository);
 
@@ -93,7 +94,7 @@ public class RepositoryHttpCacheITCase extends HttpCacheITCaseBase<Repository>
   @Override
   protected void destroy(Repository item)
   {
-    Client client = createAdminClient();
+    ScmClient client = createAdminClient();
     WebResource.Builder resource = createResource(client,
                              "repositories/".concat(item.getId()));
     ClientResponse response = resource.delete(ClientResponse.class);

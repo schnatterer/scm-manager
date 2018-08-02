@@ -32,7 +32,6 @@ package sonia.scm.it;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.sun.jersey.api.client.Client;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -70,7 +69,7 @@ public class GitRepositoryPathMatcherITCase {
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
 
-  private Client apiClient;
+  private ScmClient apiClient;
   private RepositoryDto repository;
 
   @Before

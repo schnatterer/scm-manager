@@ -35,7 +35,6 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import sonia.scm.api.rest.ObjectMapperProvider;
@@ -49,6 +48,7 @@ import java.net.URI;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static sonia.scm.it.IntegrationTestUtil.BASE_URL;
 import static sonia.scm.it.IntegrationTestUtil.createResource;
 import static sonia.scm.it.IntegrationTestUtil.getLink;
 
@@ -67,7 +67,7 @@ public final class RepositoryITUtil
     assertEquals(repository.getType(), other.getType());
   }
 
-  public static RepositoryDto createRepository(Client client, String repositoryJson) {
+  public static RepositoryDto createRepository(ScmClient client, String repositoryJson) {
     ClientResponse response =
       createResource(client, "repositories")
         .accept("*/*")
@@ -90,7 +90,7 @@ public final class RepositoryITUtil
     return other;
   }
 
-  public static void deleteRepository(Client client, RepositoryDto repository)
+  public static void deleteRepository(ScmClient client, RepositoryDto repository)
   {
     URI deleteUrl = getLink(repository, "delete");
     ClientResponse response = createResource(client, deleteUrl).delete(ClientResponse.class);
@@ -106,7 +106,7 @@ public final class RepositoryITUtil
     response.close();
   }
 
-  public static RepositoryDto getRepository(Client client, URI url)
+  public static RepositoryDto getRepository(ScmClient client, URI url)
   {
     WebResource.Builder wr = createResource(client, url);
     ClientResponse response = wr.get(ClientResponse.class);
@@ -128,7 +128,11 @@ public final class RepositoryITUtil
     return repository;
   }
 
-  public static Repository getRepositoryById(Client client, String id)
+  public static String createUrl(RepositoryDto repository) {
+    return BASE_URL + repository.getType() + "/" + repository.getNamespace() + "/" + repository.getName();
+  }
+
+  public static Repository getRepositoryById(ScmClient client, String id)
   {
     ClientResponse response = createResource(client, "repositories/".concat(id)).get(ClientResponse.class);
 

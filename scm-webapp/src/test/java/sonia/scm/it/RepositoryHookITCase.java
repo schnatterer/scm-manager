@@ -31,7 +31,6 @@
 package sonia.scm.it;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import org.junit.After;
 import org.junit.Assume;
@@ -48,7 +47,6 @@ import sonia.scm.repository.Person;
 import sonia.scm.repository.client.api.ClientCommand;
 import sonia.scm.repository.client.api.RepositoryClient;
 import sonia.scm.repository.client.api.RepositoryClientFactory;
-import sonia.scm.util.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -204,13 +202,7 @@ public class RepositoryHookITCase extends AbstractAdminITCaseBase
   @Parameters(name = "{0}")
   public static Collection<String[]> createParameters()
   {
-    Collection<String[]> params = Lists.newArrayList();
-    params.add(new String[] { "git" });
-    params.add(new String[] { "svn" });
-    if (IOUtil.search("hg") != null) {
-       params.add(new String[] { "hg" });
-    }
-    return params;
+    return IntegrationTestUtil.createRepositoryTypeParameters();
   }
   
 }
