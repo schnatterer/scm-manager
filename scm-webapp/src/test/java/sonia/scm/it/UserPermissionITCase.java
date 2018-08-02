@@ -35,11 +35,20 @@ package sonia.scm.it;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.sun.jersey.api.client.ClientResponse;
+import de.otto.edison.hal.HalRepresentation;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import sonia.scm.api.rest.ObjectMapperProvider;
 import sonia.scm.user.User;
 import sonia.scm.user.UserTestData;
 import sonia.scm.web.VndMediaType;
+
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -144,5 +153,27 @@ public class UserPermissionITCase extends AbstractPermissionITCaseBase<User>
   @Override
   protected String getMediaType() {
     return VndMediaType.USER;
+  }
+
+  @Override
+  protected void checkGetAllResponse(ClientResponse response)
+  {
+    if (!credentials.isAnonymous())
+    {
+      assertNotNull(response);
+      assertEquals(200, response.getStatus());
+
+      HalRepresentation repositories =
+        null;
+      try {
+        repositories = new ObjectMapperProvider().get().readValue(response.getEntity(String.class), HalRepresentation.class);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
+      assertNotNull(repositories);
+      assertTrue(repositories.getEmbedded().getItemsBy("users").isEmpty());
+      response.close();
+    }
   }
 }
