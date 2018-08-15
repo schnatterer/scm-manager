@@ -1,5 +1,6 @@
 package sonia.scm.api.v2.resources;
 
+import com.google.inject.assistedinject.Assisted;
 import com.webcohesion.enunciate.metadata.rs.ResponseCode;
 import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 import com.webcohesion.enunciate.metadata.rs.TypeHint;
@@ -8,8 +9,14 @@ import sonia.scm.group.GroupException;
 import sonia.scm.group.GroupManager;
 import sonia.scm.web.VndMediaType;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 public class GroupResource {
@@ -19,19 +26,20 @@ public class GroupResource {
   private final IdResourceManagerAdapter<Group, GroupDto, GroupException> adapter;
 
   @Inject
-  public GroupResource(GroupManager manager, GroupToGroupDtoMapper groupToGroupDtoMapper,
-                       GroupDtoToGroupMapper groupDtoToGroupMapper) {
+  public GroupResource(
+    GroupManager manager,
+    GroupToGroupDtoMapper groupToGroupDtoMapper,
+    GroupDtoToGroupMapper groupDtoToGroupMapper,
+    @Nullable @Assisted Group group) {
     this.groupToGroupDtoMapper = groupToGroupDtoMapper;
     this.dtoToGroupMapper = groupDtoToGroupMapper;
-    this.adapter = new IdResourceManagerAdapter<>(manager, Group.class);
+    this.adapter = new IdResourceManagerAdapter<>(manager, group, Group.class);
   }
 
   /**
    * Returns a group.
    *
    * <strong>Note:</strong> This method requires "group" privilege.
-   *
-   * @param id the id/name of the group
    *
    */
   @GET
@@ -45,16 +53,14 @@ public class GroupResource {
     @ResponseCode(code = 404, condition = "not found, no group with the specified id/name available"),
     @ResponseCode(code = 500, condition = "internal server error")
   })
-  public Response get(@PathParam("id") String id) {
-    return adapter.get(id, groupToGroupDtoMapper::map);
+  public Response get() {
+    return adapter.get(groupToGroupDtoMapper::map);
   }
 
   /**
    * Deletes a group.
    *
    * <strong>Note:</strong> This method requires "group" privilege.
-   *
-   * @param name the name of the group to delete.
    *
    */
   @DELETE
@@ -66,8 +72,8 @@ public class GroupResource {
     @ResponseCode(code = 500, condition = "internal server error")
   })
   @TypeHint(TypeHint.NO_CONTENT.class)
-  public Response delete(@PathParam("id") String name) {
-    return adapter.delete(name);
+  public Response delete() {
+    return adapter.delete();
   }
 
   /**
@@ -75,7 +81,6 @@ public class GroupResource {
    *
    * <strong>Note:</strong> This method requires "group" privilege.
    *
-   * @param name name of the group to be modified
    * @param groupDto group object to modify
    */
   @PUT
@@ -90,7 +95,7 @@ public class GroupResource {
     @ResponseCode(code = 500, condition = "internal server error")
   })
   @TypeHint(TypeHint.NO_CONTENT.class)
-  public Response update(@PathParam("id") String name, GroupDto groupDto) {
-    return adapter.update(name, existing -> dtoToGroupMapper.map(groupDto));
+  public Response update(GroupDto groupDto) {
+    return adapter.update(existing -> dtoToGroupMapper.map(groupDto));
   }
 }

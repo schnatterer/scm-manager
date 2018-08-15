@@ -13,6 +13,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import sonia.scm.repository.Branch;
 import sonia.scm.repository.Branches;
 import sonia.scm.repository.NamespaceAndName;
+import sonia.scm.repository.Repository;
+import sonia.scm.repository.RepositoryManager;
 import sonia.scm.repository.api.BranchesCommandBuilder;
 import sonia.scm.repository.api.RepositoryService;
 import sonia.scm.repository.api.RepositoryServiceFactory;
@@ -36,6 +38,8 @@ public class BranchRootResourceTest {
   @Mock
   private RepositoryService service;
   @Mock
+  private RepositoryManager repositoryManager;
+  @Mock
   private BranchesCommandBuilder branchesCommandBuilder;
 
   @InjectMocks
@@ -45,10 +49,12 @@ public class BranchRootResourceTest {
   public void prepareEnvironment() throws Exception {
     BranchCollectionToDtoMapper branchCollectionToDtoMapper = new BranchCollectionToDtoMapper(branchToDtoMapper, resourceLinks);
     BranchRootResource branchRootResource = new BranchRootResource(serviceFactory, branchToDtoMapper, branchCollectionToDtoMapper);
-    RepositoryRootResource repositoryRootResource = new RepositoryRootResource(MockProvider.of(new RepositoryResource(null, null, null, null, MockProvider.of(branchRootResource), null, null, null)), null);
+    RepositoryResourceFactory repositoryResourceFactory = RepositoryResourceFactoryMock.get(null, null, null, null, MockProvider.of(branchRootResource), null, null, null);
+    RepositoryRootResource repositoryRootResource = new RepositoryRootResource(repositoryResourceFactory, null, repositoryManager);
     dispatcher.getRegistry().addSingletonResource(repositoryRootResource);
 
     when(serviceFactory.create(new NamespaceAndName("space", "repo"))).thenReturn(service);
+    mockRepository("space", "repo");
     when(service.getBranchesCommand()).thenReturn(branchesCommandBuilder);
   }
 
@@ -76,5 +82,16 @@ public class BranchRootResourceTest {
     assertEquals(200, response.getStatus());
     System.out.println(response.getContentAsString());
     assertTrue(response.getContentAsString().contains("\"revision\":\"revision\""));
+  }
+
+  private Repository mockRepository(String namespace, String name) {
+    Repository repository = new Repository();
+    repository.setNamespace(namespace);
+    repository.setName(name);
+    String id = namespace + "-" + name;
+    repository.setId(id);
+    when(repositoryManager.get(new NamespaceAndName(namespace, name))).thenReturn(repository);
+    when(repositoryManager.get(id)).thenReturn(repository);
+    return repository;
   }
 }

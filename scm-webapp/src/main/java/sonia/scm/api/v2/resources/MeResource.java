@@ -4,8 +4,6 @@ import com.webcohesion.enunciate.metadata.rs.ResponseCode;
 import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 import com.webcohesion.enunciate.metadata.rs.TypeHint;
 import org.apache.shiro.SecurityUtils;
-import sonia.scm.user.User;
-import sonia.scm.user.UserException;
 import sonia.scm.user.UserManager;
 import sonia.scm.web.VndMediaType;
 
@@ -27,12 +25,12 @@ public class MeResource {
   static final String ME_PATH_V2 = "v2/me/";
 
   private final UserToUserDtoMapper userToDtoMapper;
+  private final UserManager manager;
 
-  private final IdResourceManagerAdapter<User, UserDto, UserException> adapter;
   @Inject
   public MeResource(UserToUserDtoMapper userToDtoMapper, UserManager manager) {
     this.userToDtoMapper = userToDtoMapper;
-    this.adapter = new IdResourceManagerAdapter<>(manager, User.class);
+    this.manager = manager;
   }
 
   /**
@@ -48,8 +46,7 @@ public class MeResource {
     @ResponseCode(code = 500, condition = "internal server error")
   })
   public Response get(@Context Request request, @Context UriInfo uriInfo) {
-
     String id = (String) SecurityUtils.getSubject().getPrincipals().getPrimaryPrincipal();
-    return adapter.get(id, userToDtoMapper::map);
+    return Response.ok(userToDtoMapper.map(manager.get(id))).build();
   }
 }

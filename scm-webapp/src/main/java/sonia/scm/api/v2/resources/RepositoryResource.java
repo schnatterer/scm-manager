@@ -1,5 +1,6 @@
 package sonia.scm.api.v2.resources;
 
+import com.google.inject.assistedinject.Assisted;
 import com.webcohesion.enunciate.metadata.rs.ResponseCode;
 import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 import com.webcohesion.enunciate.metadata.rs.TypeHint;
@@ -10,6 +11,7 @@ import sonia.scm.repository.RepositoryIsNotArchivedException;
 import sonia.scm.repository.RepositoryManager;
 import sonia.scm.web.VndMediaType;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.ws.rs.Consumes;
@@ -17,7 +19,6 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.util.Optional;
@@ -37,6 +38,8 @@ public class RepositoryResource {
   private final Provider<SourceRootResource> sourceRootResource;
   private final Provider<PermissionRootResource> permissionRootResource;
 
+  private final Repository repository;
+
   @Inject
   public RepositoryResource(
     RepositoryToRepositoryDtoMapper repositoryToDtoMapper,
@@ -44,7 +47,9 @@ public class RepositoryResource {
     Provider<TagRootResource> tagRootResource,
     Provider<BranchRootResource> branchRootResource,
     Provider<ChangesetRootResource> changesetRootResource,
-    Provider<SourceRootResource> sourceRootResource, Provider<PermissionRootResource> permissionRootResource) {
+    Provider<SourceRootResource> sourceRootResource,
+    Provider<PermissionRootResource> permissionRootResource,
+    @Nullable @Assisted Repository repository) {
     this.dtoToRepositoryMapper = dtoToRepositoryMapper;
     this.manager = manager;
     this.repositoryToDtoMapper = repositoryToDtoMapper;
@@ -54,15 +59,13 @@ public class RepositoryResource {
     this.changesetRootResource = changesetRootResource;
     this.sourceRootResource = sourceRootResource;
     this.permissionRootResource = permissionRootResource;
+    this.repository = repository;
   }
 
   /**
    * Returns a repository.
    *
    * <strong>Note:</strong> This method requires "repository" privilege.
-   *
-   * @param namespace the namespace of the repository
-   * @param name the name of the repository
    *
    */
   @GET
@@ -76,17 +79,14 @@ public class RepositoryResource {
     @ResponseCode(code = 404, condition = "not found, no repository with the specified name available in the namespace"),
     @ResponseCode(code = 500, condition = "internal server error")
   })
-  public Response get(@PathParam("namespace") String namespace, @PathParam("name") String name) {
-    return adapter.get(loadBy(namespace, name), repositoryToDtoMapper::map);
+  public Response get() {
+    return adapter.get(repository, repositoryToDtoMapper::map);
   }
 
   /**
    * Deletes a repository.
    *
    * <strong>Note:</strong> This method requires "repository" privilege.
-   *
-   * @param namespace the namespace of the repository to delete
-   * @param name the name of the repository to delete
    *
    */
   @DELETE
@@ -98,8 +98,8 @@ public class RepositoryResource {
     @ResponseCode(code = 500, condition = "internal server error")
   })
   @TypeHint(TypeHint.NO_CONTENT.class)
-  public Response delete(@PathParam("namespace") String namespace, @PathParam("name") String name) {
-    return adapter.delete(loadBy(namespace, name));
+  public Response delete() {
+    return adapter.delete(repository);
   }
 
   /**
@@ -107,8 +107,6 @@ public class RepositoryResource {
    *
    * <strong>Note:</strong> This method requires "repository" privilege.
    *
-   * @param namespace the namespace of the repository to be modified
-   * @param name the name of the repository to be modified
    * @param repositoryDto repository object to modify
    */
   @PUT
@@ -123,11 +121,11 @@ public class RepositoryResource {
     @ResponseCode(code = 500, condition = "internal server error")
   })
   @TypeHint(TypeHint.NO_CONTENT.class)
-  public Response update(@PathParam("namespace") String namespace, @PathParam("name") String name, RepositoryDto repositoryDto) {
+  public Response update(RepositoryDto repositoryDto) {
     return adapter.update(
-      loadBy(namespace, name),
+      repository,
       existing -> dtoToRepositoryMapper.map(repositoryDto, existing.getId()),
-      nameAndNamespaceStaysTheSame(namespace, name)
+      nameAndNamespaceStaysTheSame()
     );
   }
 
@@ -137,7 +135,7 @@ public class RepositoryResource {
   }
 
   @Path("branches/")
-  public BranchRootResource branches(@PathParam("namespace") String namespace, @PathParam("name") String name) {
+  public BranchRootResource branches() {
     return branchRootResource.get();
   }
 
@@ -168,7 +166,7 @@ public class RepositoryResource {
     return () -> Optional.ofNullable(manager.get(new NamespaceAndName(namespace, name)));
   }
 
-  private Predicate<Repository> nameAndNamespaceStaysTheSame(String namespace, String name) {
-    return changed -> changed.getName().equals(name) && changed.getNamespace().equals(namespace);
+  private Predicate<Repository> nameAndNamespaceStaysTheSame() {
+    return changed -> changed.getName().equals(repository.getName()) && changed.getNamespace().equals(repository.getNamespace());
   }
 }

@@ -22,25 +22,27 @@ class IdResourceManagerAdapter<MODEL_OBJECT extends ModelObject,
                              EXCEPTION extends Exception> {
 
   private final Manager<MODEL_OBJECT, EXCEPTION> manager;
+  private final MODEL_OBJECT object;
 
   private final SingleResourceManagerAdapter<MODEL_OBJECT, DTO, EXCEPTION> singleAdapter;
   private final CollectionResourceManagerAdapter<MODEL_OBJECT, DTO, EXCEPTION> collectionAdapter;
 
-  IdResourceManagerAdapter(Manager<MODEL_OBJECT, EXCEPTION> manager, Class<MODEL_OBJECT> type) {
+  IdResourceManagerAdapter(Manager<MODEL_OBJECT, EXCEPTION> manager, MODEL_OBJECT object, Class<MODEL_OBJECT> type) {
     this.manager = manager;
+    this.object = object;
     singleAdapter = new SingleResourceManagerAdapter<>(manager, type);
     collectionAdapter = new CollectionResourceManagerAdapter<>(manager, type);
   }
 
-  Response get(String id, Function<MODEL_OBJECT, DTO> mapToDto) {
-    return singleAdapter.get(loadBy(id), mapToDto);
+  Response get(Function<MODEL_OBJECT, DTO> mapToDto) {
+    return singleAdapter.get(object, mapToDto);
   }
 
-  public Response update(String id, Function<MODEL_OBJECT, MODEL_OBJECT> applyChanges) {
+  public Response update(Function<MODEL_OBJECT, MODEL_OBJECT> applyChanges) {
     return singleAdapter.update(
-      loadBy(id),
+      object,
       applyChanges,
-      idStaysTheSame(id)
+      idStaysTheSame()
     );
   }
 
@@ -52,15 +54,15 @@ class IdResourceManagerAdapter<MODEL_OBJECT extends ModelObject,
     return collectionAdapter.create(dto, modelObjectSupplier, uriCreator);
   }
 
-  public Response delete(String id) {
-    return singleAdapter.delete(id);
+  public Response delete() {
+    return singleAdapter.delete(object);
   }
 
   private Supplier<Optional<MODEL_OBJECT>> loadBy(String id) {
     return () -> Optional.ofNullable(manager.get(id));
   }
 
-  private Predicate<MODEL_OBJECT> idStaysTheSame(String id) {
-    return changed -> changed.getId().equals(id);
+  private Predicate<MODEL_OBJECT> idStaysTheSame() {
+    return changed -> changed.getId().equals(object.getId());
   }
 }
