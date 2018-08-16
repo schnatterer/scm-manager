@@ -12,12 +12,12 @@ public class RepositoryResourceFactoryMock {
   public static RepositoryResourceFactory get(RepositoryToRepositoryDtoMapper repositoryToDtoMapper,
     RepositoryDtoToRepositoryMapper dtoToRepositoryMapper, RepositoryManager manager,
     Provider<TagRootResource> tagRootResource,
-    Provider<BranchRootResource> branchRootResource,
+    BranchRootResourceFactory branchRootResourceFactory,
     Provider<ChangesetRootResource> changesetRootResource,
     Provider<SourceRootResource> sourceRootResource,
     Provider<PermissionRootResource> permissionRootResource) {
     RepositoryResourceFactory repositoryResourceFactory = mock(RepositoryResourceFactory.class);
-    when(repositoryResourceFactory.create(any())).thenAnswer(invocation -> new RepositoryResource(repositoryToDtoMapper, dtoToRepositoryMapper, manager, tagRootResource, branchRootResource, changesetRootResource, sourceRootResource, permissionRootResource, invocation.getArgument(0)));
+    when(repositoryResourceFactory.create(any())).thenAnswer(invocation -> new RepositoryResource(repositoryToDtoMapper, dtoToRepositoryMapper, manager, tagRootResource, branchRootResourceFactory, changesetRootResource, sourceRootResource, permissionRootResource, invocation.getArgument(0)));
     return repositoryResourceFactory;
   }
 }

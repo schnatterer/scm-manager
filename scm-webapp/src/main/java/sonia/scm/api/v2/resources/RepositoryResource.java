@@ -33,7 +33,7 @@ public class RepositoryResource {
   private final RepositoryManager manager;
   private final SingleResourceManagerAdapter<Repository, RepositoryDto, RepositoryException> adapter;
   private final Provider<TagRootResource> tagRootResource;
-  private final Provider<BranchRootResource> branchRootResource;
+  private final BranchRootResourceFactory branchRootResourceFactory;
   private final Provider<ChangesetRootResource> changesetRootResource;
   private final Provider<SourceRootResource> sourceRootResource;
   private final Provider<PermissionRootResource> permissionRootResource;
@@ -45,7 +45,7 @@ public class RepositoryResource {
     RepositoryToRepositoryDtoMapper repositoryToDtoMapper,
     RepositoryDtoToRepositoryMapper dtoToRepositoryMapper, RepositoryManager manager,
     Provider<TagRootResource> tagRootResource,
-    Provider<BranchRootResource> branchRootResource,
+    BranchRootResourceFactory branchRootResourceFactory,
     Provider<ChangesetRootResource> changesetRootResource,
     Provider<SourceRootResource> sourceRootResource,
     Provider<PermissionRootResource> permissionRootResource,
@@ -55,7 +55,7 @@ public class RepositoryResource {
     this.repositoryToDtoMapper = repositoryToDtoMapper;
     this.adapter = new SingleResourceManagerAdapter<>(manager, Repository.class, this::handleNotArchived);
     this.tagRootResource = tagRootResource;
-    this.branchRootResource = branchRootResource;
+    this.branchRootResourceFactory = branchRootResourceFactory;
     this.changesetRootResource = changesetRootResource;
     this.sourceRootResource = sourceRootResource;
     this.permissionRootResource = permissionRootResource;
@@ -136,7 +136,7 @@ public class RepositoryResource {
 
   @Path("branches/")
   public BranchRootResource branches() {
-    return branchRootResource.get();
+    return branchRootResourceFactory.create(repository);
   }
 
   @Path("changesets/")

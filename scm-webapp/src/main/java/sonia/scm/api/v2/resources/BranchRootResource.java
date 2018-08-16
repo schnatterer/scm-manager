@@ -1,10 +1,11 @@
 package sonia.scm.api.v2.resources;
 
+import com.google.inject.assistedinject.Assisted;
 import com.webcohesion.enunciate.metadata.rs.ResponseCode;
 import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 import com.webcohesion.enunciate.metadata.rs.TypeHint;
 import sonia.scm.repository.Branches;
-import sonia.scm.repository.NamespaceAndName;
+import sonia.scm.repository.Repository;
 import sonia.scm.repository.RepositoryException;
 import sonia.scm.repository.RepositoryNotFoundException;
 import sonia.scm.repository.api.CommandNotSupportedException;
@@ -26,11 +27,18 @@ public class BranchRootResource {
   private final BranchToBranchDtoMapper branchToDtoMapper;
   private final BranchCollectionToDtoMapper branchCollectionToDtoMapper;
 
+  private final Repository repository;
+
   @Inject
-  public BranchRootResource(RepositoryServiceFactory servicefactory, BranchToBranchDtoMapper branchToDtoMapper, BranchCollectionToDtoMapper branchCollectionToDtoMapper) {
+  public BranchRootResource(
+    RepositoryServiceFactory servicefactory,
+    BranchToBranchDtoMapper branchToDtoMapper,
+    BranchCollectionToDtoMapper branchCollectionToDtoMapper,
+    @Assisted Repository repository) {
     this.servicefactory = servicefactory;
     this.branchToDtoMapper = branchToDtoMapper;
     this.branchCollectionToDtoMapper = branchCollectionToDtoMapper;
+    this.repository = repository;
   }
 
   /**
@@ -38,8 +46,6 @@ public class BranchRootResource {
    *
    * <strong>Note:</strong> This method requires "repository" privilege.
    *
-   * @param namespace the namespace of the repository
-   * @param name the name of the repository
    * @param branchName the name of the branch
    *
    */
@@ -55,14 +61,14 @@ public class BranchRootResource {
     @ResponseCode(code = 404, condition = "not found, no branch with the specified name for the repository available or repository not found"),
     @ResponseCode(code = 500, condition = "internal server error")
   })
-  public Response get(@PathParam("namespace") String namespace, @PathParam("name") String name, @PathParam("branch") String branchName) throws IOException, RepositoryException {
-    try (RepositoryService repositoryService = servicefactory.create(new NamespaceAndName(namespace, name))) {
+  public Response get(@PathParam("branch") String branchName) throws IOException, RepositoryException {
+    try (RepositoryService repositoryService = servicefactory.create(repository)) {
       Branches branches = repositoryService.getBranchesCommand().getBranches();
       return branches.getBranches()
         .stream()
         .filter(branch -> branchName.equals(branch.getName()))
         .findFirst()
-        .map(branch -> branchToDtoMapper.map(branch, new NamespaceAndName(namespace, name)))
+        .map(branch -> branchToDtoMapper.map(branch, repository.getNamespaceAndName()))
         .map(Response::ok)
         .orElse(Response.status(Response.Status.NOT_FOUND))
         .build();
@@ -75,7 +81,7 @@ public class BranchRootResource {
 
   @Path("{branch}/changesets/")
   @GET
-  public Response history(@PathParam("namespace") String namespace, @PathParam("name") String name, @PathParam("branch") String branchName) {
+  public Response history(@PathParam("branch") String branchName) {
     throw new UnsupportedOperationException();
   }
 
@@ -83,9 +89,6 @@ public class BranchRootResource {
    * Returns the branches for a repository.
    *
    * <strong>Note:</strong> This method requires "repository" privilege.
-   *
-   * @param namespace the namespace of the repository
-   * @param name the name of the repository
    *
    */
   @GET
@@ -100,10 +103,10 @@ public class BranchRootResource {
     @ResponseCode(code = 404, condition = "not found, no repository found for the given namespace and name"),
     @ResponseCode(code = 500, condition = "internal server error")
   })
-  public Response getAll(@PathParam("namespace") String namespace, @PathParam("name") String name) throws IOException, RepositoryException {
-    try (RepositoryService repositoryService = servicefactory.create(new NamespaceAndName(namespace, name))) {
+  public Response getAll() throws IOException, RepositoryException {
+    try (RepositoryService repositoryService = servicefactory.create(repository)) {
       Branches branches = repositoryService.getBranchesCommand().getBranches();
-      return Response.ok(branchCollectionToDtoMapper.map(namespace, name, branches.getBranches())).build();
+      return Response.ok(branchCollectionToDtoMapper.map(repository.getNamespaceAndName(), branches.getBranches())).build();
     } catch (CommandNotSupportedException ex) {
       return Response.status(Response.Status.BAD_REQUEST).build();
     } catch (RepositoryNotFoundException e) {

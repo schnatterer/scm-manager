@@ -48,13 +48,12 @@ public class BranchRootResourceTest {
   @Before
   public void prepareEnvironment() throws Exception {
     BranchCollectionToDtoMapper branchCollectionToDtoMapper = new BranchCollectionToDtoMapper(branchToDtoMapper, resourceLinks);
-    BranchRootResource branchRootResource = new BranchRootResource(serviceFactory, branchToDtoMapper, branchCollectionToDtoMapper);
-    RepositoryResourceFactory repositoryResourceFactory = RepositoryResourceFactoryMock.get(null, null, null, null, MockProvider.of(branchRootResource), null, null, null);
+    BranchRootResourceFactory branchRootResourceFactory = repository -> new BranchRootResource(serviceFactory, branchToDtoMapper, branchCollectionToDtoMapper, repository);
+    RepositoryResourceFactory repositoryResourceFactory = RepositoryResourceFactoryMock.get(null, null, null, null, branchRootResourceFactory, null, null, null);
     RepositoryRootResource repositoryRootResource = new RepositoryRootResource(repositoryResourceFactory, null, repositoryManager);
     dispatcher.getRegistry().addSingletonResource(repositoryRootResource);
 
-    when(serviceFactory.create(new NamespaceAndName("space", "repo"))).thenReturn(service);
-    mockRepository("space", "repo");
+    when(serviceFactory.create(mockRepository("space", "repo"))).thenReturn(service);
     when(service.getBranchesCommand()).thenReturn(branchesCommandBuilder);
   }
 

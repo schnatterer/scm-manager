@@ -45,6 +45,8 @@ import com.google.inject.throwingproviders.ThrowingProviderBinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sonia.scm.api.rest.ObjectMapperProvider;
+import sonia.scm.api.v2.resources.BranchRootResource;
+import sonia.scm.api.v2.resources.BranchRootResourceFactory;
 import sonia.scm.api.v2.resources.GroupResource;
 import sonia.scm.api.v2.resources.GroupResourceFactory;
 import sonia.scm.api.v2.resources.RepositoryResource;
@@ -361,6 +363,9 @@ public class ScmServletModule extends ServletModule
     install(new FactoryModuleBuilder()
       .implement(UserResource.class, UserResource.class)
       .build(UserResourceFactory.class));
+    install(new FactoryModuleBuilder()
+      .implement(BranchRootResource.class, BranchRootResource.class)
+      .build(BranchRootResourceFactory.class));
   }
 
 
