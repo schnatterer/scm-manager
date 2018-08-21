@@ -224,13 +224,6 @@ public class GitChangesetConverter implements Closeable
       changeset.setParents(parentList);
     }
 
-    Modifications modifications = createModifications(treeWalk, commit);
-
-    if (modifications != null)
-    {
-      changeset.setModifications(modifications);
-    }
-
     Collection<String> tagCollection = tags.get(commit.getId());
 
     if (Util.isNotEmpty(tagCollection))
@@ -243,109 +236,6 @@ public class GitChangesetConverter implements Closeable
     changeset.setBranches(branches);
 
     return changeset;
-  }
-
-  /**
-   * TODO: copy and rename
-   *
-   *
-   * @param modifications
-   * @param entry
-   */
-  private void appendModification(Modifications modifications, DiffEntry entry)
-  {
-    switch (entry.getChangeType())
-    {
-      case ADD :
-        modifications.getAdded().add(entry.getNewPath());
-
-        break;
-
-      case MODIFY :
-        modifications.getModified().add(entry.getNewPath());
-
-        break;
-
-      case DELETE :
-        modifications.getRemoved().add(entry.getOldPath());
-
-        break;
-    }
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param treeWalk
-   * @param commit
-   *
-   * @return
-   *
-   * @throws IOException
-   */
-  private Modifications createModifications(TreeWalk treeWalk, RevCommit commit)
-    throws IOException
-  {
-    Modifications modifications = null;
-
-    treeWalk.reset();
-    treeWalk.setRecursive(true);
-
-    if (commit.getParentCount() > 0)
-    {
-      RevCommit parent = commit.getParent(0);
-      RevTree tree = parent.getTree();
-
-      if ((tree == null) && (revWalk != null))
-      {
-        revWalk.parseHeaders(parent);
-        tree = parent.getTree();
-      }
-
-      if (tree != null)
-      {
-        treeWalk.addTree(tree);
-      }
-      else
-      {
-        if (logger.isTraceEnabled())
-        {
-          logger.trace("no parent tree at position 0 for commit {}",
-            commit.getName());
-        }
-
-        treeWalk.addTree(new EmptyTreeIterator());
-      }
-    }
-    else
-    {
-      if (logger.isTraceEnabled())
-      {
-        logger.trace("no parent available for commit {}", commit.getName());
-      }
-
-      treeWalk.addTree(new EmptyTreeIterator());
-    }
-
-    treeWalk.addTree(commit.getTree());
-
-    List<DiffEntry> entries = DiffEntry.scan(treeWalk);
-
-    for (DiffEntry e : entries)
-    {
-      if (!e.getOldId().equals(e.getNewId()))
-      {
-        if (modifications == null)
-        {
-          modifications = new Modifications();
-        }
-
-        appendModification(modifications, e);
-      }
-    }
-
-    return modifications;
   }
 
   //~--- fields ---------------------------------------------------------------

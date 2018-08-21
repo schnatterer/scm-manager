@@ -108,70 +108,6 @@ public final class SvnUtil
 
   //~--- methods --------------------------------------------------------------
 
-  /**
-   * TODO: type replaced
-   *
-   *
-   * @param modifications
-   * @param entry
-   */
-  public static void appendModification(Modifications modifications,
-    SVNLogEntryPath entry)
-  {
-    appendModification(modifications, entry.getType(), entry.getPath());
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param modifications
-   * @param entry
-   */
-  public static void appendModification(Modifications modifications,
-    SVNChangeEntry entry)
-  {
-    appendModification(modifications, entry.getType(), entry.getPath());
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param modifications
-   * @param type
-   * @param path
-   */
-  public static void appendModification(Modifications modifications, char type,
-    String path)
-  {
-    if (path.startsWith("/"))
-    {
-      path = path.substring(1);
-    }
-
-    switch (type)
-    {
-      case SVNLogEntryPath.TYPE_ADDED :
-        modifications.getAdded().add(path);
-
-        break;
-
-      case SVNLogEntryPath.TYPE_DELETED :
-        modifications.getRemoved().add(path);
-
-        break;
-
-      case TYPE_UPDATED :
-      case SVNLogEntryPath.TYPE_MODIFIED :
-        modifications.getModified().add(path);
-
-        break;
-
-      default :
-        logger.debug("unknown modification type {}", type);
-    }
-  }
 
   /**
    * Method description
@@ -217,16 +153,6 @@ public final class SvnUtil
     }
 
     Map<String, SVNLogEntryPath> changeMap = entry.getChangedPaths();
-
-    if (Util.isNotEmpty(changeMap))
-    {
-      Modifications modifications = changeset.getModifications();
-
-      for (SVNLogEntryPath e : changeMap.values())
-      {
-        appendModification(modifications, e);
-      }
-    }
 
     return changeset;
   }

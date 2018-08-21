@@ -70,15 +70,7 @@ public class SvnModificationHandler implements ISVNChangeEntryHandler
   @Override
   public void handleEntry(SVNChangeEntry entry) throws SVNException
   {
-    Modifications modification = changeset.getModifications();
 
-    if (modification == null)
-    {
-      modification = new Modifications();
-      changeset.setModifications(modification);
-    }
-
-    SvnUtil.appendModification(modification, entry);
   }
 
   //~--- fields ---------------------------------------------------------------

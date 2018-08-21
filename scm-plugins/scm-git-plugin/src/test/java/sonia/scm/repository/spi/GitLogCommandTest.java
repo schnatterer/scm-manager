@@ -39,7 +39,6 @@ import org.junit.Test;
 
 import sonia.scm.repository.Changeset;
 import sonia.scm.repository.ChangesetPagingResult;
-import sonia.scm.repository.Modifications;
 import sonia.scm.repository.RepositoryException;
 
 import static org.hamcrest.Matchers.*;
@@ -213,14 +212,6 @@ public class GitLogCommandTest extends AbstractGitCommandTestBase
     assertEquals("douglas.adams@hitchhiker.com", c.getAuthor().getMail());
     assertEquals("added a and b files", c.getDescription());
 
-    Modifications mods = c.getModifications();
-
-    assertNotNull(mods);
-    assertTrue("modified list should be empty", mods.getModified().isEmpty());
-    assertTrue("removed list should be empty", mods.getRemoved().isEmpty());
-    assertFalse("added list should not be empty", mods.getAdded().isEmpty());
-    assertEquals(2, mods.getAdded().size());
-    assertThat(mods.getAdded(), contains("a.txt", "b.txt"));
   }
 
   /**

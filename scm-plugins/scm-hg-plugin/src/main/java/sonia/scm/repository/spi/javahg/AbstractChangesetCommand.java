@@ -47,7 +47,6 @@ import com.google.common.collect.Lists;
 
 import sonia.scm.repository.Changeset;
 import sonia.scm.repository.HgConfig;
-import sonia.scm.repository.Modifications;
 import sonia.scm.repository.Person;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -251,26 +250,12 @@ public abstract class AbstractChangesetCommand extends AbstractCommand
       changeset.getProperties().put(PROPERTY_CLOSE, "true");
     }
 
-    Modifications modifications = changeset.getModifications();
-
     String line = in.textUpTo('\n');
 
     while (line.length() > 0)
     {
 
-      if (line.startsWith("a "))
-      {
-        modifications.getAdded().add(line.substring(2));
-      }
-      else if (line.startsWith("m "))
-      {
-        modifications.getModified().add(line.substring(2));
-      }
-      else if (line.startsWith("d "))
-      {
-        modifications.getRemoved().add(line.substring(2));
-      }
-      else if (line.startsWith("t "))
+      if (line.startsWith("t "))
       {
         changeset.getTags().add(line.substring(2));
       }

@@ -34,7 +34,6 @@ import com.aragost.javahg.Repository;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import sonia.scm.repository.Changeset;
-import sonia.scm.repository.Modifications;
 import sonia.scm.repository.Person;
 
 /**
@@ -70,9 +69,6 @@ public class HgCommitCommand implements CommitCommand
     
     changeset.setBranches(Lists.newArrayList(c.getBranch()));
     changeset.setTags(c.tags());
-    changeset.setModifications(
-      new Modifications(c.getAddedFiles(), c.getModifiedFiles(), c.getDeletedFiles())
-    );
     return changeset;
   }
   

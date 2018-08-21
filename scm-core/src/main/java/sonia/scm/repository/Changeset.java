@@ -140,7 +140,6 @@ public class Changeset extends BasicPropertiesAware
            && Objects.equal(parents, other.parents)
            && Objects.equal(tags, other.tags)
            && Objects.equal(branches, other.branches)
-           && Objects.equal(modifications, other.modifications)
            && Objects.equal(properties, other.properties);
     //J+
   }
@@ -155,7 +154,7 @@ public class Changeset extends BasicPropertiesAware
   public int hashCode()
   {
     return Objects.hashCode(id, date, author, description, parents, tags,
-                            branches, modifications, properties);
+                            branches, properties);
   }
 
   /**
@@ -186,11 +185,6 @@ public class Changeset extends BasicPropertiesAware
     out.append("desc:").append(description).append("\n");
     out.append("branches: ").append(Util.toString(branches)).append("\n");
     out.append("tags: ").append(Util.toString(tags)).append("\n");
-
-    if (modifications != null)
-    {
-      out.append("modifications: \n").append(modifications);
-    }
 
     return out.toString();
   }
@@ -257,22 +251,6 @@ public class Changeset extends BasicPropertiesAware
   public String getId()
   {
     return id;
-  }
-
-  /**
-   * Returns the file modifications, which was done with this changeset.
-   *
-   *
-   * @return file modifications
-   */
-  public Modifications getModifications()
-  {
-    if (modifications == null)
-    {
-      modifications = new Modifications();
-    }
-
-    return modifications;
   }
 
   /**
@@ -379,17 +357,6 @@ public class Changeset extends BasicPropertiesAware
   }
 
   /**
-   * Sets the file modification of the changeset.
-   *
-   *
-   * @param modifications file modifications
-   */
-  public void setModifications(Modifications modifications)
-  {
-    this.modifications = modifications;
-  }
-
-  /**
    * Sets the parents of the changeset.
    *
    *
@@ -428,10 +395,6 @@ public class Changeset extends BasicPropertiesAware
 
   /** The changeset identification string */
   private String id;
-
-  /** List of files changed by this changeset */
-  @XmlElement(name = "modifications")
-  private Modifications modifications;
 
   /** parent changeset ids */
   private List<String> parents;

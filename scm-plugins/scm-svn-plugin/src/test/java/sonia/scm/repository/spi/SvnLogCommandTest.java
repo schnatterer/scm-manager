@@ -38,7 +38,6 @@ import org.junit.Test;
 
 import sonia.scm.repository.Changeset;
 import sonia.scm.repository.ChangesetPagingResult;
-import sonia.scm.repository.Modifications;
 import sonia.scm.repository.RepositoryException;
 
 import static org.junit.Assert.*;
@@ -177,15 +176,6 @@ public class SvnLogCommandTest extends AbstractSvnCommandTestBase
     checkDate(c.getDate());
     assertEquals("perfect", c.getAuthor().getName());
     assertNull("douglas.adams@hitchhiker.com", c.getAuthor().getMail());
-
-    Modifications mods = c.getModifications();
-
-    assertNotNull(mods);
-    assertEquals(1, mods.getModified().size());
-    assertEquals(1, mods.getRemoved().size());
-    assertTrue("added list should be empty", mods.getAdded().isEmpty());
-    assertEquals("a.txt", mods.getModified().get(0));
-    assertEquals("b.txt", mods.getRemoved().get(0));
   }
 
   /**
