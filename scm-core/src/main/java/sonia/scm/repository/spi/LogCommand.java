@@ -41,41 +41,14 @@ import sonia.scm.repository.RepositoryException;
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.io.IOException;
-
 /**
  *
  * @author Sebastian Sdorra
  * @since 1.17
  */
-public interface LogCommand
-{
+public interface LogCommand {
 
-  /**
-   * Method description
-   *
-   *
-   * @param id
-   *
-   * @return
-   *
-   * @throws IOException
-   * @throws RepositoryException
-   */
-  public Changeset getChangeset(String id)
-          throws IOException, RepositoryException;
+  Changeset getChangeset(String id) throws RepositoryException;
 
-  /**
-   * Method description
-   *
-   *
-   * @param request
-   *
-   * @return
-   *
-   * @throws IOException
-   * @throws RepositoryException
-   */
-  public ChangesetPagingResult getChangesets(LogCommandRequest request)
-          throws IOException, RepositoryException;
+  ChangesetPagingResult getChangesets(LogCommandRequest request) throws RepositoryException;
 }

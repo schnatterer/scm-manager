@@ -37,15 +37,12 @@ package sonia.scm.repository.spi;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.io.SVNRepository;
-
 import sonia.scm.repository.Changeset;
 import sonia.scm.repository.ChangesetPagingResult;
 import sonia.scm.repository.Repository;
@@ -53,12 +50,11 @@ import sonia.scm.repository.RepositoryException;
 import sonia.scm.repository.SvnUtil;
 import sonia.scm.util.Util;
 
-//~--- JDK imports ------------------------------------------------------------
-
 import java.io.IOException;
-
 import java.util.Collection;
 import java.util.List;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
@@ -105,7 +101,7 @@ public class SvnLogCommand extends AbstractSvnCommand implements LogCommand
   @Override
   @SuppressWarnings("unchecked")
   public Changeset getChangeset(String revision)
-    throws IOException, RepositoryException
+    throws RepositoryException
   {
     Changeset changeset = null;
 
@@ -148,14 +144,14 @@ public class SvnLogCommand extends AbstractSvnCommand implements LogCommand
   @Override
   @SuppressWarnings("unchecked")
   public ChangesetPagingResult getChangesets(LogCommandRequest request)
-    throws IOException, RepositoryException
+    throws RepositoryException
   {
     if (logger.isDebugEnabled())
     {
       logger.debug("fetch changesets for {}", request);
     }
 
-    ChangesetPagingResult changesets = null;
+    ChangesetPagingResult changesets;
     int start = request.getPagingStart();
     int limit = request.getPagingLimit();
     long startRevision = parseRevision(request.getStartChangeset());
