@@ -110,7 +110,7 @@ public class SvnLogCommand extends AbstractSvnCommand implements LogCommand
       logger.debug("fetch changesets for {}", request);
     }
 
-    ChangesetPagingResult changesets = null;
+    ChangesetPagingResult changesets;
     int start = request.getPagingStart();
     int limit = request.getPagingLimit();
     long startRevision = parseRevision(request.getStartChangeset());

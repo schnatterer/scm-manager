@@ -39,8 +39,6 @@ import sonia.scm.repository.Changeset;
 import sonia.scm.repository.ChangesetPagingResult;
 import sonia.scm.repository.RevisionNotFoundException;
 
-import java.io.IOException;
-
 //~--- JDK imports ------------------------------------------------------------
 
 /**
@@ -50,7 +48,7 @@ import java.io.IOException;
  */
 public interface LogCommand {
 
-  Changeset getChangeset(String id) throws IOException, RevisionNotFoundException;
+  Changeset getChangeset(String id) throws RevisionNotFoundException;
 
-  ChangesetPagingResult getChangesets(LogCommandRequest request) throws IOException, RevisionNotFoundException;
+  ChangesetPagingResult getChangesets(LogCommandRequest request) throws RevisionNotFoundException;
 }

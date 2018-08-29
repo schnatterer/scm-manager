@@ -102,8 +102,7 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
    * @return
    */
   @Override
-  public Changeset getChangeset(String revision)
-  {
+  public Changeset getChangeset(String revision) throws RevisionNotFoundException {
     if (logger.isDebugEnabled())
     {
       logger.debug("fetch changeset {}", revision);
@@ -134,6 +133,10 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
           logger.warn("could not find revision {}", revision);
         }
       }
+    }
+    catch (MissingObjectException e)
+    {
+      throw new RevisionNotFoundException(e.getObjectId().name());
     }
     catch (IOException ex)
     {
@@ -166,7 +169,7 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
       logger.debug("fetch changesets for request: {}", request);
     }
 
-    ChangesetPagingResult changesets = null;
+    ChangesetPagingResult changesets;
     GitChangesetConverter converter = null;
     RevWalk revWalk = null;
 
@@ -235,11 +238,11 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
         }
 
         changesets = new ChangesetPagingResult(counter, changesetList);
-      } else if (logger.isWarnEnabled()) {
+      } else {
         logger.warn("the repository {} seems to be empty",
           repository.getName());
 
-        changesets = new ChangesetPagingResult(0, Collections.EMPTY_LIST);
+        changesets = new ChangesetPagingResult(0, Collections.emptyList());
       }
     }
     catch (MissingObjectException e)
