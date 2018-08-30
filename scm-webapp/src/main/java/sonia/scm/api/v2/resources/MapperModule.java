@@ -28,6 +28,8 @@ public class MapperModule extends AbstractModule {
     bind(PermissionDtoToPermissionMapper.class).to(Mappers.getMapper(PermissionDtoToPermissionMapper.class).getClass());
     bind(PermissionToPermissionDtoMapper.class).to(Mappers.getMapper(PermissionToPermissionDtoMapper.class).getClass());
 
+    bind(FileObjectToFileObjectDtoMapper.class).to(Mappers.getMapper(FileObjectToFileObjectDtoMapper.class).getClass());
+
     bind(ChangesetToChangesetDtoMapper.class).to(Mappers.getMapper(ChangesetToChangesetDtoMapper.class).getClass());
     bind(ChangesetToParentDtoMapper.class).to(Mappers.getMapper(ChangesetToParentDtoMapper.class).getClass());
 
