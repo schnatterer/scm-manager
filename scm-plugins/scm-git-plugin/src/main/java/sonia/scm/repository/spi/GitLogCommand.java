@@ -50,7 +50,7 @@ import sonia.scm.repository.Changeset;
 import sonia.scm.repository.ChangesetPagingResult;
 import sonia.scm.repository.GitChangesetConverter;
 import sonia.scm.repository.GitUtil;
-import sonia.scm.repository.RepositoryException;
+import sonia.scm.repository.InternalRepositoryException;
 import sonia.scm.util.IOUtil;
 
 import java.io.IOException;
@@ -161,7 +161,6 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
   @Override
   @SuppressWarnings("unchecked")
   public ChangesetPagingResult getChangesets(LogCommandRequest request)
-    throws RepositoryException
   {
     if (logger.isDebugEnabled())
     {
@@ -264,7 +263,7 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
     }
     catch (Exception ex)
     {
-      throw new RepositoryException("could not create change log", ex);
+      throw new InternalRepositoryException("could not create change log", ex);
     }
     finally
     {

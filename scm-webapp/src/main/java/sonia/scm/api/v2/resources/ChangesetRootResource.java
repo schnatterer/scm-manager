@@ -9,8 +9,8 @@ import sonia.scm.repository.Changeset;
 import sonia.scm.repository.ChangesetPagingResult;
 import sonia.scm.repository.NamespaceAndName;
 import sonia.scm.repository.Repository;
-import sonia.scm.repository.RepositoryException;
 import sonia.scm.repository.RepositoryNotFoundException;
+import sonia.scm.repository.RevisionNotFoundException;
 import sonia.scm.repository.api.RepositoryService;
 import sonia.scm.repository.api.RepositoryServiceFactory;
 import sonia.scm.web.VndMediaType;
@@ -23,7 +23,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 
 
 @Slf4j
@@ -68,12 +67,10 @@ public class ChangesetRootResource {
     } catch (RepositoryNotFoundException e) {
       log.debug("Not found in repository {}/{}", namespace, name, e);
       return Response.status(Response.Status.NOT_FOUND).build();
-    } catch (RepositoryException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
+    } catch (RevisionNotFoundException e) {
+      log.debug("Revision not found in repository {}/{}", namespace, name, e);
+      return Response.status(Response.Status.NOT_FOUND).build();
     }
-    return Response.ok().build();
   }
 
   @GET

@@ -45,21 +45,17 @@ import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import sonia.scm.repository.Changeset;
 import sonia.scm.repository.ChangesetPagingResult;
+import sonia.scm.repository.InternalRepositoryException;
 import sonia.scm.repository.Repository;
-import sonia.scm.repository.RepositoryException;
+import sonia.scm.repository.RevisionNotFoundException;
 import sonia.scm.repository.SvnUtil;
 import sonia.scm.util.Util;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
 //~--- JDK imports ------------------------------------------------------------
 
-/**
- *
- * @author Sebastian Sdorra
- */
 public class SvnLogCommand extends AbstractSvnCommand implements LogCommand
 {
 
@@ -69,17 +65,6 @@ public class SvnLogCommand extends AbstractSvnCommand implements LogCommand
   private static final Logger logger =
     LoggerFactory.getLogger(SvnLogCommand.class);
 
-  //~--- constructors ---------------------------------------------------------
-
-  /**
-   * Constructs ...
-   *
-   *
-   *
-   * @param context
-   * @param repository
-   * @param repositoryDirectory
-   */
   SvnLogCommand(SvnContext context, Repository repository)
   {
     super(context, repository);
@@ -87,22 +72,9 @@ public class SvnLogCommand extends AbstractSvnCommand implements LogCommand
 
   //~--- get methods ----------------------------------------------------------
 
-  /**
-   * Method description
-   *
-   *
-   * @param revision
-   *
-   * @return
-   *
-   * @throws IOException
-   * @throws RepositoryException
-   */
   @Override
   @SuppressWarnings("unchecked")
-  public Changeset getChangeset(String revision)
-    throws RepositoryException
-  {
+  public Changeset getChangeset(String revision) throws RevisionNotFoundException {
     Changeset changeset = null;
 
     if (logger.isDebugEnabled())
@@ -124,28 +96,15 @@ public class SvnLogCommand extends AbstractSvnCommand implements LogCommand
     }
     catch (SVNException ex)
     {
-      throw new RepositoryException("could not open repository", ex);
+      throw new InternalRepositoryException("could not open repository", ex);
     }
 
     return changeset;
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param request
-   *
-   * @return
-   *
-   * @throws IOException
-   * @throws RepositoryException
-   */
   @Override
   @SuppressWarnings("unchecked")
-  public ChangesetPagingResult getChangesets(LogCommandRequest request)
-    throws RepositoryException
-  {
+  public ChangesetPagingResult getChangesets(LogCommandRequest request) throws RevisionNotFoundException {
     if (logger.isDebugEnabled())
     {
       logger.debug("fetch changesets for {}", request);
@@ -179,7 +138,7 @@ public class SvnLogCommand extends AbstractSvnCommand implements LogCommand
     }
     catch (SVNException ex)
     {
-      throw new RepositoryException("could not open repository", ex);
+      throw new InternalRepositoryException("could not open repository", ex);
     }
 
     return changesets;
@@ -187,18 +146,7 @@ public class SvnLogCommand extends AbstractSvnCommand implements LogCommand
 
   //~--- methods --------------------------------------------------------------
 
-  /**
-   * Method description
-   *
-   *
-   * @param v
-   *
-   * @return
-   *
-   * @throws RepositoryException
-   */
-  private long parseRevision(String v) throws RepositoryException
-  {
+  private long parseRevision(String v) throws RevisionNotFoundException {
     long result = -1l;
 
     if (!Strings.isNullOrEmpty(v))
@@ -209,8 +157,7 @@ public class SvnLogCommand extends AbstractSvnCommand implements LogCommand
       }
       catch (NumberFormatException ex)
       {
-        throw new RepositoryException(
-          String.format("could not convert revision %s", v), ex);
+        throw new RevisionNotFoundException(v);
       }
     }
 
