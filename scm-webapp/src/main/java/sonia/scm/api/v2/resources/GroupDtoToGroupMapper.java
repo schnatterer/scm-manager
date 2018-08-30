@@ -6,10 +6,8 @@ import sonia.scm.group.Group;
 
 
 @Mapper
-public abstract class GroupDtoToGroupMapper {
+public abstract class GroupDtoToGroupMapper extends BaseDtoMapper {
 
   @Mapping(target = "creationDate", ignore = true)
-  @Mapping(target = "lastModified", ignore = true)
   public abstract Group map(GroupDto groupDto);
-
 }

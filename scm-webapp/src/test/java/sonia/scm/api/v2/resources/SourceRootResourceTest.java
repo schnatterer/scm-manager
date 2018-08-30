@@ -13,8 +13,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import sonia.scm.repository.BrowserResult;
 import sonia.scm.repository.FileObject;
 import sonia.scm.repository.NamespaceAndName;
-import sonia.scm.repository.RepositoryException;
 import sonia.scm.repository.RepositoryNotFoundException;
+import sonia.scm.repository.RevisionNotFoundException;
 import sonia.scm.repository.api.BrowseCommandBuilder;
 import sonia.scm.repository.api.RepositoryService;
 import sonia.scm.repository.api.RepositoryServiceFactory;
@@ -80,7 +80,7 @@ public class SourceRootResourceTest {
   }
 
   @Test
-  public void shouldReturnSources() throws URISyntaxException, IOException, RepositoryException {
+  public void shouldReturnSources() throws URISyntaxException, IOException, RevisionNotFoundException {
     BrowserResult result = createBrowserResult();
     when(browseCommandBuilder.getBrowserResult()).thenReturn(result);
     MockHttpRequest request = MockHttpRequest.get("/" + RepositoryRootResource.REPOSITORIES_PATH_V2 + "space/repo/sources");
@@ -105,7 +105,7 @@ public class SourceRootResourceTest {
   }
 
   @Test
-  public void shouldGetResultForSingleFile() throws URISyntaxException, IOException, RepositoryException {
+  public void shouldGetResultForSingleFile() throws URISyntaxException, IOException, RevisionNotFoundException {
     BrowserResult browserResult = new BrowserResult();
     browserResult.setBranch("abc");
     browserResult.setRevision("revision");
@@ -125,7 +125,7 @@ public class SourceRootResourceTest {
   }
 
   @Test
-  public void shouldGet404ForSingleFileIfRepoNotFound() throws URISyntaxException, RepositoryException {
+  public void shouldGet404ForSingleFileIfRepoNotFound() throws URISyntaxException, RepositoryNotFoundException {
     when(serviceFactory.create(new NamespaceAndName("idont", "exist"))).thenThrow(RepositoryNotFoundException.class);
 
     MockHttpRequest request = MockHttpRequest.get("/" + RepositoryRootResource.REPOSITORIES_PATH_V2 + "idont/exist/sources/revision/fileabc");

@@ -33,9 +33,7 @@
 
 package sonia.scm.api.rest.resources;
 
-//~--- non-JDK imports --------------------------------------------------------
-
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -47,10 +45,19 @@ import com.webcohesion.enunciate.metadata.rs.TypeHint;
 import org.apache.shiro.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sonia.scm.AlreadyExistsException;
+import sonia.scm.NotFoundException;
 import sonia.scm.NotSupportedFeatuerException;
 import sonia.scm.Type;
 import sonia.scm.api.rest.RestActionUploadResult;
-import sonia.scm.repository.*;
+import sonia.scm.repository.AdvancedImportHandler;
+import sonia.scm.repository.ImportHandler;
+import sonia.scm.repository.ImportResult;
+import sonia.scm.repository.InternalRepositoryException;
+import sonia.scm.repository.Repository;
+import sonia.scm.repository.RepositoryHandler;
+import sonia.scm.repository.RepositoryManager;
+import sonia.scm.repository.RepositoryType;
 import sonia.scm.repository.api.Command;
 import sonia.scm.repository.api.RepositoryService;
 import sonia.scm.repository.api.RepositoryServiceFactory;
@@ -58,8 +65,21 @@ import sonia.scm.repository.api.UnbundleCommandBuilder;
 import sonia.scm.security.Role;
 import sonia.scm.util.IOUtil;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -74,8 +94,6 @@ import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-
-//~--- JDK imports ------------------------------------------------------------
 
 /**
  * Rest resource for importing repositories.
@@ -256,10 +274,6 @@ public class RepositoryImportResource
       service = serviceFactory.create(repository);
       service.getPullCommand().pull(request.getUrl());
     }
-    catch (RepositoryException ex)
-    {
-      handleImportFailure(ex, repository);
-    }
     catch (IOException ex)
     {
       handleImportFailure(ex, repository);
@@ -413,11 +427,6 @@ public class RepositoryImportResource
         logger.warn("exception occured durring directory import", ex);
         response = Response.serverError().build();
       }
-      catch (RepositoryException ex)
-      {
-        logger.warn("exception occured durring directory import", ex);
-        response = Response.serverError().build();
-      }
     }
     else
     {
@@ -525,15 +534,13 @@ public class RepositoryImportResource
       // TODO #8783
 //      repository = new Repository(null, type, name);
       manager.create(repository);
-    }
-    catch (RepositoryAlreadyExistsException ex)
+    } catch (AlreadyExistsException ex)
     {
       logger.warn("a {} repository with the name {} already exists", type,
         name);
 
       throw new WebApplicationException(Response.Status.CONFLICT);
-    }
-    catch (RepositoryException ex)
+    } catch (InternalRepositoryException ex)
     {
       handleGenericCreationFailure(ex, type, name);
     }
@@ -582,12 +589,7 @@ public class RepositoryImportResource
         logger.info("copied {} bytes to temp, start bundle import", length);
         service = serviceFactory.create(repository);
         service.getUnbundleCommand().setCompressed(compressed).unbundle(file);
-      }
-      catch (RepositoryException ex)
-      {
-        handleImportFailure(ex, repository);
-      }
-      catch (IOException ex)
+      } catch (InternalRepositoryException ex)
       {
         handleImportFailure(ex, repository);
       }
@@ -684,10 +686,9 @@ public class RepositoryImportResource
     try
     {
       manager.delete(repository);
-    }
-    catch (RepositoryException e)
+    } catch (InternalRepositoryException | NotFoundException e)
     {
-      logger.error("can not delete repository", e);
+      logger.error("can not delete repository after import failure", e);
     }
 
     throw new WebApplicationException(ex,
@@ -740,8 +741,7 @@ public class RepositoryImportResource
       catch (IOException ex)
       {
         throw new WebApplicationException(ex);
-      }
-      catch (RepositoryException ex)
+      } catch (InternalRepositoryException ex)
       {
         throw new WebApplicationException(ex);
       }
@@ -812,7 +812,7 @@ public class RepositoryImportResource
     public String toString()
     {
       //J-
-      return Objects.toStringHelper(this)
+      return MoreObjects.toStringHelper(this)
                     .add("name", name)
                     .add("url", url)
                     .toString();
