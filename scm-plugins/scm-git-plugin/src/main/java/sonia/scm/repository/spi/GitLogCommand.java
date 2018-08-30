@@ -254,13 +254,13 @@ public class GitLogCommand extends AbstractGitCommand implements LogCommand
 
         changesets = new ChangesetPagingResult(counter, changesetList);
       }
-      else if (logger.isWarnEnabled())
+      else
       {
         logger.warn("the repository {} seems to be empty",
           repository.getName());
 
+        changesets = new ChangesetPagingResult(0, Collections.emptyList());
       }
-      changesets = new ChangesetPagingResult(0, Collections.emptyList());
     }
     catch (Exception ex)
     {
