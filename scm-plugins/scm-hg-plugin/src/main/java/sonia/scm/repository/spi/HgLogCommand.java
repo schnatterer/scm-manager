@@ -36,19 +36,17 @@ package sonia.scm.repository.spi;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.google.common.base.Strings;
-
 import sonia.scm.repository.Changeset;
 import sonia.scm.repository.ChangesetPagingResult;
 import sonia.scm.repository.Repository;
 import sonia.scm.repository.RepositoryException;
 import sonia.scm.repository.spi.javahg.HgLogChangesetCommand;
 
-//~--- JDK imports ------------------------------------------------------------
-
 import java.io.IOException;
-
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
@@ -84,7 +82,6 @@ public class HgLogCommand extends AbstractCommand implements LogCommand
    */
   @Override
   public Changeset getChangeset(String id)
-    throws IOException, RepositoryException
   {
     com.aragost.javahg.Repository repository = open();
     HgLogChangesetCommand cmd = on(repository);
@@ -105,9 +102,8 @@ public class HgLogCommand extends AbstractCommand implements LogCommand
    */
   @Override
   public ChangesetPagingResult getChangesets(LogCommandRequest request)
-    throws IOException, RepositoryException
   {
-    ChangesetPagingResult result = null;
+    ChangesetPagingResult result;
 
     com.aragost.javahg.Repository repository = open();
 
@@ -168,7 +164,7 @@ public class HgLogCommand extends AbstractCommand implements LogCommand
       {
 
         // empty repository
-        result = new ChangesetPagingResult(0, new ArrayList<Changeset>());
+        result = new ChangesetPagingResult(0, Collections.emptyList());
       }
     }
 

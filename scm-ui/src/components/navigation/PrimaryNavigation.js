@@ -28,7 +28,13 @@ class PrimaryNavigation extends React.Component<Props> {
             match="/(group|groups)"
             label={t("primary-navigation.groups")}
           />
-          <PrimaryNavigationLink
+          < PrimaryNavigationLink
+    to = "/config"
+    label = {t("primary-navigation.config"
+  )
+  }
+    />
+    <PrimaryNavigationLink
             to="/logout"
             label={t("primary-navigation.logout")}
           />
