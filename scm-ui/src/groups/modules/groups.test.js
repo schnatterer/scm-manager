@@ -4,47 +4,48 @@ import thunk from "redux-thunk";
 import fetchMock from "fetch-mock";
 
 import reducer, {
-  fetchGroups,
-  FETCH_GROUPS,
-  FETCH_GROUPS_PENDING,
-  FETCH_GROUPS_SUCCESS,
-  FETCH_GROUPS_FAILURE,
-  fetchGroupsSuccess,
-  isPermittedToCreateGroups,
-  getGroupsFromState,
-  getFetchGroupsFailure,
-  isFetchGroupsPending,
-  selectListAsCollection,
-  fetchGroup,
-  FETCH_GROUP_PENDING,
-  FETCH_GROUP_SUCCESS,
-  FETCH_GROUP_FAILURE,
-  fetchGroupSuccess,
-  getFetchGroupFailure,
-  FETCH_GROUP,
-  isFetchGroupPending,
-  getGroupByName,
-  createGroup,
-  CREATE_GROUP_SUCCESS,
-  CREATE_GROUP_PENDING,
-  CREATE_GROUP_FAILURE,
-  isCreateGroupPending,
   CREATE_GROUP,
-  getCreateGroupFailure,
-  deleteGroup,
+  CREATE_GROUP_FAILURE,
+  CREATE_GROUP_PENDING,
+  CREATE_GROUP_SUCCESS,
+  createGroup,
+  DELETE_GROUP,
+  DELETE_GROUP_FAILURE,
   DELETE_GROUP_PENDING,
   DELETE_GROUP_SUCCESS,
-  DELETE_GROUP_FAILURE,
-  DELETE_GROUP,
+  deleteGroup,
   deleteGroupSuccess,
-  isDeleteGroupPending,
+  FETCH_GROUP,
+  FETCH_GROUP_FAILURE,
+  FETCH_GROUP_PENDING,
+  FETCH_GROUP_SUCCESS,
+  FETCH_GROUPS,
+  FETCH_GROUPS_FAILURE,
+  FETCH_GROUPS_PENDING,
+  FETCH_GROUPS_SUCCESS,
+  fetchGroup,
+  fetchGroups,
+  fetchGroupsSuccess,
+  fetchGroupSuccess,
+  getCreateGroupFailure,
   getDeleteGroupFailure,
-  modifyGroup,
+  getFetchGroupFailure,
+  getFetchGroupsFailure,
+  getGroupByName,
+  getGroupsFromState,
+  isCreateGroupPending,
+  isDeleteGroupPending,
+  isFetchGroupPending,
+  isFetchGroupsPending,
+  isPermittedToCreateGroups,
+  MODIFY_GROUP_FAILURE,
   MODIFY_GROUP_PENDING,
   MODIFY_GROUP_SUCCESS,
-  MODIFY_GROUP_FAILURE
+  modifyGroup,
+  selectListAsCollection
 } from "./groups";
-const GROUPS_URL = "/scm/api/rest/v2/groups";
+
+const GROUPS_URL = "/api/rest/v2/groups";
 
 const error = new Error("You have an error!");
 
@@ -57,13 +58,13 @@ const humanGroup = {
   members: ["userZaphod"],
   _links: {
     self: {
-      href: "http://localhost:8081/scm/api/rest/v2/groups/humanGroup"
+      href: "http://localhost:8081/api/rest/v2/groups/humanGroup"
     },
     delete: {
-      href: "http://localhost:8081/scm/api/rest/v2/groups/humanGroup"
+      href: "http://localhost:8081/api/rest/v2/groups/humanGroup"
     },
     update: {
-      href:"http://localhost:8081/scm/api/rest/v2/groups/humanGroup"
+      href: "http://localhost:8081/api/rest/v2/groups/humanGroup"
     }
   },
   _embedded: {
@@ -72,7 +73,7 @@ const humanGroup = {
         name: "userZaphod",
         _links: {
           self: {
-            href: "http://localhost:8081/scm/api/rest/v2/users/userZaphod"
+            href: "http://localhost:8081/api/rest/v2/users/userZaphod"
           }
         }
       }
@@ -89,13 +90,13 @@ const emptyGroup = {
   members: [],
   _links: {
     self: {
-      href: "http://localhost:8081/scm/api/rest/v2/groups/emptyGroup"
+      href: "http://localhost:8081/api/rest/v2/groups/emptyGroup"
     },
     delete: {
-      href: "http://localhost:8081/scm/api/rest/v2/groups/emptyGroup"
+      href: "http://localhost:8081/api/rest/v2/groups/emptyGroup"
     },
     update: {
-      href:"http://localhost:8081/scm/api/rest/v2/groups/emptyGroup"
+      href: "http://localhost:8081/api/rest/v2/groups/emptyGroup"
     }
   },
   _embedded: {
@@ -108,16 +109,16 @@ const responseBody = {
   pageTotal: 1,
   _links: {
     self: {
-      href: "http://localhost:3000/scm/api/rest/v2/groups/?page=0&pageSize=10"
+      href: "http://localhost:3000/api/rest/v2/groups/?page=0&pageSize=10"
     },
     first: {
-      href: "http://localhost:3000/scm/api/rest/v2/groups/?page=0&pageSize=10"
+      href: "http://localhost:3000/api/rest/v2/groups/?page=0&pageSize=10"
     },
     last: {
-      href: "http://localhost:3000/scm/api/rest/v2/groups/?page=0&pageSize=10"
+      href: "http://localhost:3000/api/rest/v2/groups/?page=0&pageSize=10"
     },
     create: {
-      href: "http://localhost:3000/scm/api/rest/v2/groups/"
+      href: "http://localhost:3000/api/rest/v2/groups/"
     }
   },
   _embedded: {
@@ -244,7 +245,7 @@ describe("groups fetch()", () => {
   });
 
   it("should successfully modify group", () => {
-    fetchMock.putOnce("http://localhost:8081/scm/api/rest/v2/groups/humanGroup", {
+    fetchMock.putOnce("http://localhost:8081/api/rest/v2/groups/humanGroup", {
       status: 204
     });
 
@@ -259,7 +260,7 @@ describe("groups fetch()", () => {
   })
 
   it("should call the callback after modifying group", () => {
-    fetchMock.putOnce("http://localhost:8081/scm/api/rest/v2/groups/humanGroup", {
+    fetchMock.putOnce("http://localhost:8081/api/rest/v2/groups/humanGroup", {
       status: 204
     });
 
@@ -278,7 +279,7 @@ describe("groups fetch()", () => {
   })
 
   it("should fail modifying group on HTTP 500", () => {
-    fetchMock.putOnce("http://localhost:8081/scm/api/rest/v2/groups/humanGroup", {
+    fetchMock.putOnce("http://localhost:8081/api/rest/v2/groups/humanGroup", {
       status: 500
     });
 
@@ -293,7 +294,7 @@ describe("groups fetch()", () => {
   })
 
   it("should delete successfully group humanGroup", () => {
-    fetchMock.deleteOnce("http://localhost:8081/scm/api/rest/v2/groups/humanGroup", {
+    fetchMock.deleteOnce("http://localhost:8081/api/rest/v2/groups/humanGroup", {
       status: 204
     });
 
@@ -308,7 +309,7 @@ describe("groups fetch()", () => {
   });
 
   it("should call the callback, after successful delete", () => {
-    fetchMock.deleteOnce("http://localhost:8081/scm/api/rest/v2/groups/humanGroup", {
+    fetchMock.deleteOnce("http://localhost:8081/api/rest/v2/groups/humanGroup", {
       status: 204
     });
 
@@ -324,7 +325,7 @@ describe("groups fetch()", () => {
   });
 
   it("should fail to delete group humanGroup", () => {
-    fetchMock.deleteOnce("http://localhost:8081/scm/api/rest/v2/groups/humanGroup", {
+    fetchMock.deleteOnce("http://localhost:8081/api/rest/v2/groups/humanGroup", {
       status: 500
     });
 

@@ -11,13 +11,6 @@ export const isMailValid = (mail: string) => {
   return mailRegex.test(mail);
 };
 
-export const isNumberValid = (number
-:
-string
-)
-=
->
-{
+export const isNumberValid = (number: string) => {
   return !isNaN(number);
-}
-;
+};

@@ -35,6 +35,10 @@ public class MapperModule extends AbstractModule {
 
     bind(TagToTagDtoMapper.class).to(Mappers.getMapper(TagToTagDtoMapper.class).getClass());
 
+    // no mapstruct required
+    bind(UIPluginDtoMapper.class);
+    bind(UIPluginDtoCollectionMapper.class);
+
     bind(UriInfoStore.class).in(ServletScopes.REQUEST);
   }
 }

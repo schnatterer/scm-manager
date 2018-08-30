@@ -4,29 +4,41 @@ import thunk from "redux-thunk";
 import fetchMock from "fetch-mock";
 
 import reducer, {
+  CREATE_USER,
   CREATE_USER_FAILURE,
   CREATE_USER_PENDING,
   CREATE_USER_SUCCESS,
   createUser,
+  DELETE_USER,
   DELETE_USER_FAILURE,
   DELETE_USER_PENDING,
   DELETE_USER_SUCCESS,
   deleteUser,
   deleteUserSuccess,
+  FETCH_USER,
   FETCH_USER_FAILURE,
   FETCH_USER_PENDING,
-  isFetchUserPending,
   FETCH_USER_SUCCESS,
+  FETCH_USERS,
   FETCH_USERS_FAILURE,
   FETCH_USERS_PENDING,
   FETCH_USERS_SUCCESS,
   fetchUser,
-  fetchUserSuccess,
-  getFetchUserFailure,
   fetchUsers,
   fetchUsersSuccess,
+  fetchUserSuccess,
+  getCreateUserFailure,
+  getDeleteUserFailure,
+  getFetchUserFailure,
+  getFetchUsersFailure,
+  getModifyUserFailure,
+  getUserByName,
+  getUsersFromState,
+  isCreateUserPending,
+  isDeleteUserPending,
+  isFetchUserPending,
   isFetchUsersPending,
-  selectListAsCollection,
+  isModifyUserPending,
   isPermittedToCreateUsers,
   MODIFY_USER,
   MODIFY_USER_FAILURE,
@@ -34,19 +46,7 @@ import reducer, {
   MODIFY_USER_SUCCESS,
   modifyUser,
   modifyUserSuccess,
-  getUsersFromState,
-  FETCH_USERS,
-  getFetchUsersFailure,
-  FETCH_USER,
-  CREATE_USER,
-  isCreateUserPending,
-  getCreateUserFailure,
-  getUserByName,
-  isModifyUserPending,
-  getModifyUserFailure,
-  DELETE_USER,
-  isDeleteUserPending,
-  getDeleteUserFailure
+  selectListAsCollection
 } from "./users";
 
 const userZaphod = {
@@ -61,13 +61,13 @@ const userZaphod = {
   properties: {},
   _links: {
     self: {
-      href: "http://localhost:8081/scm/api/rest/v2/users/zaphod"
+      href: "http://localhost:8081/api/rest/v2/users/zaphod"
     },
     delete: {
-      href: "http://localhost:8081/scm/api/rest/v2/users/zaphod"
+      href: "http://localhost:8081/api/rest/v2/users/zaphod"
     },
     update: {
-      href: "http://localhost:8081/scm/api/rest/v2/users/zaphod"
+      href: "http://localhost:8081/api/rest/v2/users/zaphod"
     }
   }
 };
@@ -84,13 +84,13 @@ const userFord = {
   properties: {},
   _links: {
     self: {
-      href: "http://localhost:8081/scm/api/rest/v2/users/ford"
+      href: "http://localhost:8081/api/rest/v2/users/ford"
     },
     delete: {
-      href: "http://localhost:8081/scm/api/rest/v2/users/ford"
+      href: "http://localhost:8081/api/rest/v2/users/ford"
     },
     update: {
-      href: "http://localhost:8081/scm/api/rest/v2/users/ford"
+      href: "http://localhost:8081/api/rest/v2/users/ford"
     }
   }
 };
@@ -100,16 +100,16 @@ const responseBody = {
   pageTotal: 1,
   _links: {
     self: {
-      href: "http://localhost:3000/scm/api/rest/v2/users/?page=0&pageSize=10"
+      href: "http://localhost:3000/api/rest/v2/users/?page=0&pageSize=10"
     },
     first: {
-      href: "http://localhost:3000/scm/api/rest/v2/users/?page=0&pageSize=10"
+      href: "http://localhost:3000/api/rest/v2/users/?page=0&pageSize=10"
     },
     last: {
-      href: "http://localhost:3000/scm/api/rest/v2/users/?page=0&pageSize=10"
+      href: "http://localhost:3000/api/rest/v2/users/?page=0&pageSize=10"
     },
     create: {
-      href: "http://localhost:3000/scm/api/rest/v2/users/"
+      href: "http://localhost:3000/api/rest/v2/users/"
     }
   },
   _embedded: {
@@ -122,7 +122,7 @@ const response = {
   responseBody
 };
 
-const USERS_URL = "/scm/api/rest/v2/users";
+const USERS_URL = "/api/rest/v2/users";
 
 const error = new Error("KAPUTT");
 
@@ -241,7 +241,7 @@ describe("users fetch()", () => {
   });
 
   it("successfully update user", () => {
-    fetchMock.putOnce("http://localhost:8081/scm/api/rest/v2/users/zaphod", {
+    fetchMock.putOnce("http://localhost:8081/api/rest/v2/users/zaphod", {
       status: 204
     });
 
@@ -255,7 +255,7 @@ describe("users fetch()", () => {
   });
 
   it("should call callback, after successful modified user", () => {
-    fetchMock.putOnce("http://localhost:8081/scm/api/rest/v2/users/zaphod", {
+    fetchMock.putOnce("http://localhost:8081/api/rest/v2/users/zaphod", {
       status: 204
     });
 
@@ -271,7 +271,7 @@ describe("users fetch()", () => {
   });
 
   it("should fail updating user on HTTP 500", () => {
-    fetchMock.putOnce("http://localhost:8081/scm/api/rest/v2/users/zaphod", {
+    fetchMock.putOnce("http://localhost:8081/api/rest/v2/users/zaphod", {
       status: 500
     });
 
@@ -285,7 +285,7 @@ describe("users fetch()", () => {
   });
 
   it("should delete successfully user zaphod", () => {
-    fetchMock.deleteOnce("http://localhost:8081/scm/api/rest/v2/users/zaphod", {
+    fetchMock.deleteOnce("http://localhost:8081/api/rest/v2/users/zaphod", {
       status: 204
     });
 
@@ -300,7 +300,7 @@ describe("users fetch()", () => {
   });
 
   it("should call the callback, after successful delete", () => {
-    fetchMock.deleteOnce("http://localhost:8081/scm/api/rest/v2/users/zaphod", {
+    fetchMock.deleteOnce("http://localhost:8081/api/rest/v2/users/zaphod", {
       status: 204
     });
 
@@ -316,7 +316,7 @@ describe("users fetch()", () => {
   });
 
   it("should fail to delete user zaphod", () => {
-    fetchMock.deleteOnce("http://localhost:8081/scm/api/rest/v2/users/zaphod", {
+    fetchMock.deleteOnce("http://localhost:8081/api/rest/v2/users/zaphod", {
       status: 500
     });
 

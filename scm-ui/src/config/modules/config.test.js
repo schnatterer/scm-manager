@@ -5,25 +5,25 @@ import fetchMock from "fetch-mock";
 
 import reducer, {
   FETCH_CONFIG,
+  FETCH_CONFIG_FAILURE,
   FETCH_CONFIG_PENDING,
   FETCH_CONFIG_SUCCESS,
-  FETCH_CONFIG_FAILURE,
-  MODIFY_CONFIG,
-  MODIFY_CONFIG_PENDING,
-  MODIFY_CONFIG_SUCCESS,
-  MODIFY_CONFIG_FAILURE,
   fetchConfig,
   fetchConfigSuccess,
-  getFetchConfigFailure,
-  isFetchConfigPending,
-  modifyConfig,
-  isModifyConfigPending,
-  getModifyConfigFailure,
   getConfig,
-  getConfigUpdatePermission
+  getConfigUpdatePermission,
+  getFetchConfigFailure,
+  getModifyConfigFailure,
+  isFetchConfigPending,
+  isModifyConfigPending,
+  MODIFY_CONFIG,
+  MODIFY_CONFIG_FAILURE,
+  MODIFY_CONFIG_PENDING,
+  MODIFY_CONFIG_SUCCESS,
+  modifyConfig
 } from "./config";
 
-const CONFIG_URL = "/scm/api/rest/v2/config";
+const CONFIG_URL = "/api/rest/v2/config";
 
 const error = new Error("You have an error!");
 
@@ -40,7 +40,7 @@ const config = {
   anonymousAccessEnabled: false,
   adminGroups: [],
   adminUsers: [],
-  baseUrl: "http://localhost:8081/scm",
+  baseUrl: "http://localhost:8081",
   forceBaseUrl: false,
   loginAttemptLimit: -1,
   proxyExcludes: [],
@@ -51,8 +51,8 @@ const config = {
   enabledXsrfProtection: true,
   defaultNamespaceStrategy: "sonia.scm.repository.DefaultNamespaceStrategy",
   _links: {
-    self: {href: "http://localhost:8081/scm/api/rest/v2/config"},
-    update: {href: "http://localhost:8081/scm/api/rest/v2/config"}
+    self: {href: "http://localhost:8081/api/rest/v2/config"},
+    update: {href: "http://localhost:8081/api/rest/v2/config"}
   }
 };
 
@@ -69,7 +69,7 @@ const configWithNullValues = {
   anonymousAccessEnabled: false,
   adminGroups: null,
   adminUsers: null,
-  baseUrl: "http://localhost:8081/scm",
+  baseUrl: "http://localhost:8081",
   forceBaseUrl: false,
   loginAttemptLimit: -1,
   proxyExcludes: null,
@@ -80,8 +80,8 @@ const configWithNullValues = {
   enabledXsrfProtection: true,
   defaultNamespaceStrategy: "sonia.scm.repository.DefaultNamespaceStrategy",
   _links: {
-    self: {href: "http://localhost:8081/scm/api/rest/v2/config"},
-    update: {href: "http://localhost:8081/scm/api/rest/v2/config"}
+    self: {href: "http://localhost:8081/api/rest/v2/config"},
+    update: {href: "http://localhost:8081/api/rest/v2/config"}
   }
 };
 
@@ -95,240 +95,194 @@ const response = {
   responseBody
 };
 
-describe("config fetch()", () = > {
+describe("config fetch()", () => {
   const mockStore = configureMockStore([thunk]);
-afterEach(() = > {
-  fetchMock.reset();
-fetchMock.restore();
-})
-;
-
-it("should successfully fetch config", () = > {
-  fetchMock.getOnce(CONFIG_URL, response);
-
-const expectedActions = [
-  {type: FETCH_CONFIG_PENDING},
-  {
-    type: FETCH_CONFIG_SUCCESS,
-    payload: response
-  }
-];
-
-const store = mockStore({});
-
-return store.dispatch(fetchConfig()).then(() = > {
-  expect(store.getActions()
-).
-toEqual(expectedActions);
-})
-;
-})
-;
-
-it("should fail getting config on HTTP 500", () = > {
-  fetchMock.getOnce(CONFIG_URL, {
-  status: 500
-});
-
-const store = mockStore({});
-return store.dispatch(fetchConfig()).then(() = > {
-  const actions = store.getActions();
-expect(actions[0].type).toEqual(FETCH_CONFIG_PENDING);
-expect(actions[1].type).toEqual(FETCH_CONFIG_FAILURE);
-expect(actions[1].payload).toBeDefined();
-})
-;
-})
-;
-
-it("should successfully modify config", () = > {
-  fetchMock.putOnce("http://localhost:8081/scm/api/rest/v2/config", {
-  status: 204
-});
-
-const store = mockStore({});
-
-return store.dispatch(modifyConfig(config)).then(() = > {
-  const actions = store.getActions();
-expect(actions[0].type).toEqual(MODIFY_CONFIG_PENDING);
-expect(actions[1].type).toEqual(MODIFY_CONFIG_SUCCESS);
-expect(actions[1].payload).toEqual(config);
-})
-;
-})
-;
-
-it("should call the callback after modifying config", () = > {
-  fetchMock.putOnce("http://localhost:8081/scm/api/rest/v2/config", {
-  status: 204
-});
-
-let called = false;
-const callback = () =
->
-{
-  called = true;
-}
-;
-const store = mockStore({});
-
-return store.dispatch(modifyConfig(config, callback)).then(() = > {
-  const actions = store.getActions();
-expect(actions[0].type).toEqual(MODIFY_CONFIG_PENDING);
-expect(actions[1].type).toEqual(MODIFY_CONFIG_SUCCESS);
-expect(called).toBe(true);
-})
-;
-})
-;
-
-it("should fail modifying config on HTTP 500", () = > {
-  fetchMock.putOnce("http://localhost:8081/scm/api/rest/v2/config", {
-  status: 500
-});
-
-const store = mockStore({});
-
-return store.dispatch(modifyConfig(config)).then(() = > {
-  const actions = store.getActions();
-expect(actions[0].type).toEqual(MODIFY_CONFIG_PENDING);
-expect(actions[1].type).toEqual(MODIFY_CONFIG_FAILURE);
-expect(actions[1].payload).toBeDefined();
-})
-;
-})
-;
-})
-;
-
-describe("config reducer", () = > {
-  it("should update state correctly according to FETCH_CONFIG_SUCCESS action",() =
->
-{
-  const newState = reducer({}, fetchConfigSuccess(config));
-
-  expect(newState).toEqual({
-    entries: config,
-    configUpdatePermission: true
+  afterEach(() => {
+    fetchMock.reset();
+    fetchMock.restore();
   });
-}
-)
-;
 
-it("should set configUpdatePermission to true if update link is present", () = > {
-  const newState = reducer({}, fetchConfigSuccess(config));
+  it("should successfully fetch config", () => {
+    fetchMock.getOnce(CONFIG_URL, response);
 
-expect(newState.configUpdatePermission).toBeTruthy();
-})
-;
+    const expectedActions = [
+      {type: FETCH_CONFIG_PENDING},
+      {
+        type: FETCH_CONFIG_SUCCESS,
+        payload: response
+      }
+    ];
 
-it("should update state according to FETCH_CONFIG_SUCCESS action", () = > {
-  const newState = reducer({}, fetchConfigSuccess(config));
-expect(newState.entries).toBe(config);
-})
-;
+    const store = mockStore({});
 
-it("should return empty arrays for null values", () = > {
-  const config = reducer({}, fetchConfigSuccess(configWithNullValues))
-    .entries;
-expect(config.adminUsers).toEqual([]);
-expect(config.adminGroups).toEqual([]);
-expect(config.proxyExcludes).toEqual([]);
-})
-;
-})
-;
+    return store.dispatch(fetchConfig()).then(() => {
+      expect(store.getActions()).toEqual(expectedActions);
+    });
+  });
 
-describe("selector tests", () = > {
-  it("should return true, when fetch config is pending",() =
->
-{
-  const state = {
-    pending: {
-      [FETCH_CONFIG]: true
-    }
-  };
-  expect(isFetchConfigPending(state)).toEqual(true);
-}
-)
-;
+  it("should fail getting config on HTTP 500", () => {
+    fetchMock.getOnce(CONFIG_URL, {
+      status: 500
+    });
 
-it("should return false, when fetch config is not pending", () = > {
-  expect(isFetchConfigPending({})
-).
-toEqual(false);
-})
-;
+    const store = mockStore({});
+    return store.dispatch(fetchConfig()).then(() => {
+      const actions = store.getActions();
+      expect(actions[0].type).toEqual(FETCH_CONFIG_PENDING);
+      expect(actions[1].type).toEqual(FETCH_CONFIG_FAILURE);
+      expect(actions[1].payload).toBeDefined();
+    });
+  });
 
-it("should return error when fetch config did fail", () = > {
-  const state = {
-    failure: {
-      [FETCH_CONFIG]: error
-    }
-  };
-expect(getFetchConfigFailure(state)).toEqual(error);
-})
-;
+  it("should successfully modify config", () => {
+    fetchMock.putOnce("http://localhost:8081/api/rest/v2/config", {
+      status: 204
+    });
 
-it("should return undefined when fetch config did not fail", () = > {
-  expect(getFetchConfigFailure({})
-).
-toBe(undefined);
-})
-;
+    const store = mockStore({});
 
-it("should return true, when modify group is pending", () = > {
-  const state = {
-    pending: {
-      [MODIFY_CONFIG]: true
-    }
-  };
-expect(isModifyConfigPending(state)).toEqual(true);
-})
-;
+    return store.dispatch(modifyConfig(config)).then(() => {
+      const actions = store.getActions();
+      expect(actions[0].type).toEqual(MODIFY_CONFIG_PENDING);
+      expect(actions[1].type).toEqual(MODIFY_CONFIG_SUCCESS);
+      expect(actions[1].payload).toEqual(config);
+    });
+  });
 
-it("should return false, when modify config is not pending", () = > {
-  expect(isModifyConfigPending({})
-).
-toEqual(false);
-})
-;
+  it("should call the callback after modifying config", () => {
+    fetchMock.putOnce("http://localhost:8081/api/rest/v2/config", {
+      status: 204
+    });
 
-it("should return error when modify config did fail", () = > {
-  const state = {
-    failure: {
-      [MODIFY_CONFIG]: error
-    }
-  };
-expect(getModifyConfigFailure(state)).toEqual(error);
-})
-;
+    let called = false;
+    const callback = () => {
+      called = true;
+    };
+    const store = mockStore({});
 
-it("should return undefined when modify config did not fail", () = > {
-  expect(getModifyConfigFailure({})
-).
-toBe(undefined);
-})
-;
+    return store.dispatch(modifyConfig(config, callback)).then(() => {
+      const actions = store.getActions();
+      expect(actions[0].type).toEqual(MODIFY_CONFIG_PENDING);
+      expect(actions[1].type).toEqual(MODIFY_CONFIG_SUCCESS);
+      expect(called).toBe(true);
+    });
+  });
 
-it("should return config", () = > {
-  const state = {
-    config: {
-      entries: config
-    }
-  };
-expect(getConfig(state)).toEqual(config);
-})
-;
+  it("should fail modifying config on HTTP 500", () => {
+    fetchMock.putOnce("http://localhost:8081/api/rest/v2/config", {
+      status: 500
+    });
 
-it("should return configUpdatePermission", () = > {
-  const state = {
-    config: {
+    const store = mockStore({});
+
+    return store.dispatch(modifyConfig(config)).then(() => {
+      const actions = store.getActions();
+      expect(actions[0].type).toEqual(MODIFY_CONFIG_PENDING);
+      expect(actions[1].type).toEqual(MODIFY_CONFIG_FAILURE);
+      expect(actions[1].payload).toBeDefined();
+    });
+  });
+});
+
+describe("config reducer", () => {
+  it("should update state correctly according to FETCH_CONFIG_SUCCESS action", () => {
+    const newState = reducer({}, fetchConfigSuccess(config));
+
+    expect(newState).toEqual({
+      entries: config,
       configUpdatePermission: true
-    }
-  };
-expect(getConfigUpdatePermission(state)).toEqual(true);
-})
-;
-})
-;
+    });
+  });
+
+  it("should set configUpdatePermission to true if update link is present", () => {
+    const newState = reducer({}, fetchConfigSuccess(config));
+
+    expect(newState.configUpdatePermission).toBeTruthy();
+  });
+
+  it("should update state according to FETCH_CONFIG_SUCCESS action", () => {
+    const newState = reducer({}, fetchConfigSuccess(config));
+    expect(newState.entries).toBe(config);
+  });
+
+  it("should return empty arrays for null values", () => {
+    // $FlowFixMe
+    const config = reducer({}, fetchConfigSuccess(configWithNullValues))
+      .entries;
+    expect(config.adminUsers).toEqual([]);
+    expect(config.adminGroups).toEqual([]);
+    expect(config.proxyExcludes).toEqual([]);
+  });
+});
+
+describe("selector tests", () => {
+  it("should return true, when fetch config is pending", () => {
+    const state = {
+      pending: {
+        [FETCH_CONFIG]: true
+      }
+    };
+    expect(isFetchConfigPending(state)).toEqual(true);
+  });
+
+  it("should return false, when fetch config is not pending", () => {
+    expect(isFetchConfigPending({})).toEqual(false);
+  });
+
+  it("should return error when fetch config did fail", () => {
+    const state = {
+      failure: {
+        [FETCH_CONFIG]: error
+      }
+    };
+    expect(getFetchConfigFailure(state)).toEqual(error);
+  });
+
+  it("should return undefined when fetch config did not fail", () => {
+    expect(getFetchConfigFailure({})).toBe(undefined);
+  });
+
+  it("should return true, when modify group is pending", () => {
+    const state = {
+      pending: {
+        [MODIFY_CONFIG]: true
+      }
+    };
+    expect(isModifyConfigPending(state)).toEqual(true);
+  });
+
+  it("should return false, when modify config is not pending", () => {
+    expect(isModifyConfigPending({})).toEqual(false);
+  });
+
+  it("should return error when modify config did fail", () => {
+    const state = {
+      failure: {
+        [MODIFY_CONFIG]: error
+      }
+    };
+    expect(getModifyConfigFailure(state)).toEqual(error);
+  });
+
+  it("should return undefined when modify config did not fail", () => {
+    expect(getModifyConfigFailure({})).toBe(undefined);
+  });
+
+  it("should return config", () => {
+    const state = {
+      config: {
+        entries: config
+      }
+    };
+    expect(getConfig(state)).toEqual(config);
+  });
+
+  it("should return configUpdatePermission", () => {
+    const state = {
+      config: {
+        configUpdatePermission: true
+      }
+    };
+    expect(getConfigUpdatePermission(state)).toEqual(true);
+  });
+});

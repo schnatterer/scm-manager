@@ -1,6 +1,6 @@
 //@flow
 import React from "react";
-import { translate } from "react-i18next";
+import {translate} from "react-i18next";
 import PrimaryNavigationLink from "./PrimaryNavigationLink";
 
 type Props = {
@@ -28,13 +28,11 @@ class PrimaryNavigation extends React.Component<Props> {
             match="/(group|groups)"
             label={t("primary-navigation.groups")}
           />
-          < PrimaryNavigationLink
-    to = "/config"
-    label = {t("primary-navigation.config"
-  )
-  }
-    />
-    <PrimaryNavigationLink
+          <PrimaryNavigationLink
+            to="/config"
+            label={t("primary-navigation.config")}
+          />
+          <PrimaryNavigationLink
             to="/logout"
             label={t("primary-navigation.logout")}
           />

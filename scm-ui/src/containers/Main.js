@@ -1,14 +1,14 @@
 //@flow
 import React from "react";
 
-import { Route, Redirect, withRouter } from "react-router";
+import {Redirect, Route, withRouter} from "react-router";
 
 import Overview from "../repos/containers/Overview";
 import Users from "../users/containers/Users";
 import Login from "../containers/Login";
 import Logout from "../containers/Logout";
 
-import { Switch } from "react-router-dom";
+import {Switch} from "react-router-dom";
 import ProtectedRoute from "../components/ProtectedRoute";
 import AddUser from "../users/containers/AddUser";
 import SingleUser from "../users/containers/SingleUser";
@@ -100,12 +100,12 @@ class Main extends React.Component<Props> {
             path="/groups/:page"
             component={Groups}
             authenticated={authenticated}
-    />
-    < ProtectedRoute
-    exact
-    path = "/config"
-    component = {Config}
-    authenticated = {authenticated}
+          />
+          <ProtectedRoute
+            exact
+            path="/config"
+            component={Config}
+            authenticated={authenticated}
           />
         </Switch>
       </div>

@@ -36,15 +36,13 @@ package sonia.scm.plugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//~--- JDK imports ------------------------------------------------------------
-
 import java.io.File;
-
 import java.net.MalformedURLException;
 import java.net.URL;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  * Load web resources from a plugin webapp directory.
@@ -93,7 +91,7 @@ public class PathWebResourceLoader implements WebResourceLoader
     URL resource = null;
     Path file = directory.resolve(filePath(path));
 
-    if (Files.exists(file))
+    if (Files.exists(file) && !Files.isDirectory(file))
     {
       logger.trace("found path {} at {}", path, file);
 

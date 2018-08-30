@@ -11,10 +11,8 @@ type Props = {
   onChange: string => void,
   onReturnPressed?: () => void,
   validationError: boolean,
-  errorMessage
-:
-string,
-  disabled ? : boolean
+  errorMessage: string,
+  disabled?: boolean
 };
 
 class InputField extends React.Component<Props> {
@@ -53,25 +51,23 @@ class InputField extends React.Component<Props> {
       event.preventDefault();
       onReturnPressed();
     }
-}
-;
+  };
 
   render() {
-  const {
-    type,
-    placeholder,
-    value,
-    validationError,
-    errorMessage,
-    disabled
-  } = this.props;
+    const {
+      type,
+      placeholder,
+      value,
+      validationError,
+      errorMessage,
+      disabled
+    } = this.props;
     const errorView = validationError ? "is-danger" : "";
-  const helper = validationError ? (
-    < p className = "help is-danger" > {errorMessage} < /p>
-) :
-  (
-    ""
-  );
+    const helper = validationError ? (
+      <p className="help is-danger">{errorMessage}</p>
+    ) : (
+      ""
+    );
     return (
       <div className="field">
         {this.renderLabel()}
@@ -80,15 +76,13 @@ class InputField extends React.Component<Props> {
             ref={input => {
               this.field = input;
             }}
-  className = {classNames("input", errorView
-)
-}
+            className={classNames("input", errorView)}
             type={type}
             placeholder={placeholder}
             value={value}
             onChange={this.handleInput}
             onKeyPress={this.handleKeyPress}
-  disabled = {disabled}
+            disabled={disabled}
           />
         </div>
         {helper}

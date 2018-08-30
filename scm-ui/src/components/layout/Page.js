@@ -6,7 +6,7 @@ import Title from "./Title";
 import Subtitle from "./Subtitle";
 
 type Props = {
-  title? : string,
+  title?: string,
   subtitle?: string,
   loading?: boolean,
   error?: Error,
@@ -20,12 +20,8 @@ class Page extends React.Component<Props> {
     return (
       <section className="section">
         <div className="container">
-      < Title
-    title = {title}
-    />
-    < Subtitle
-    subtitle = {subtitle}
-    />
+          <Title title={title}/>
+          <Subtitle subtitle={subtitle}/>
           <ErrorNotification error={error} />
           {this.renderContent()}
         </div>

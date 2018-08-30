@@ -4,8 +4,8 @@ import React from "react";
 type Props = {
   label?: string,
   checked: boolean,
-  onChange? : boolean = > void,
-  disabled ? : boolean
+  onChange?: boolean => void,
+  disabled?: boolean
 };
 class Checkbox extends React.Component<Props> {
   onCheckboxChange = (event: SyntheticInputEvent<HTMLInputElement>) => {
@@ -18,16 +18,12 @@ class Checkbox extends React.Component<Props> {
     return (
       <div className="field">
         <div className="control">
-    < label
-  className = "checkbox"
-  disabled = {this.props.disabled
-}>
+          <label className="checkbox" disabled={this.props.disabled}>
             <input
               type="checkbox"
               checked={this.props.checked}
               onChange={this.onCheckboxChange}
-  disabled = {this.props.disabled
-}
+              disabled={this.props.disabled}
             />
             {this.props.label}
           </label>

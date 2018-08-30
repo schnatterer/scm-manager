@@ -1,6 +1,6 @@
 //@flow
 import React from "react";
-import { translate } from "react-i18next";
+import {translate} from "react-i18next";
 import {RemoveEntryOfTableButton} from "../../components/buttons";
 
 type Props = {
@@ -24,14 +24,11 @@ class MemberNameTable extends React.Component<Props, State> {
                 <tr key={member}>
                   <td key={member}>{member}</td>
                   <td>
-      < RemoveEntryOfTableButton
-    entryname = {member}
-    removeEntry = {this.removeEntry
-  }
-    disabled = {false}
-    label = {t("remove-member-button.label"
-  )
-  }
+                    <RemoveEntryOfTableButton
+                      entryname={member}
+                      removeEntry={this.removeEntry}
+                      disabled={false}
+                      label={t("remove-member-button.label")}
                     />
                   </td>
                 </tr>
@@ -43,13 +40,7 @@ class MemberNameTable extends React.Component<Props, State> {
     );
   }
 
-  removeEntry = (membername
-:
-string
-)
-=
->
-{
+  removeEntry = (membername: string) => {
     const newMembers = this.props.members.filter(name => name !== membername);
     this.props.memberListChanged(newMembers);
   };

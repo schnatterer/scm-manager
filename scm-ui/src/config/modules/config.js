@@ -23,63 +23,37 @@ const CONTENT_TYPE_CONFIG = "application/vnd.scmm-config+json;v=2";
 
 //fetch config
 export function fetchConfig() {
-  return function (dispatch
-:
-  any
-)
-  {
+  return function (dispatch: any) {
     dispatch(fetchConfigPending());
     return apiClient
       .get(CONFIG_URL)
-      .then(response = > {
-      return response.json();
-  })
-  .
-    then(data = > {
-      dispatch(fetchConfigSuccess(data)
-  )
-    ;
-  })
-  .
-    catch(cause = > {
-      const error = new Error(`could not fetch config: ${cause.message}`);
-    dispatch(fetchConfigFailure(error));
-  })
-    ;
-  }
-  ;
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        dispatch(fetchConfigSuccess(data));
+      })
+      .catch(cause => {
+        const error = new Error(`could not fetch config: ${cause.message}`);
+        dispatch(fetchConfigFailure(error));
+      });
+  };
 }
 
-export function fetchConfigPending()
-
-:
-Action
-{
+export function fetchConfigPending(): Action {
   return {
     type: FETCH_CONFIG_PENDING
   };
 }
 
-export function fetchConfigSuccess(config
-
-:
-Config
-):
-Action
-{
+export function fetchConfigSuccess(config: Config): Action {
   return {
     type: FETCH_CONFIG_SUCCESS,
     payload: config
   };
 }
 
-export function fetchConfigFailure(error
-
-:
-Error
-):
-Action
-{
+export function fetchConfigFailure(error: Error): Action {
   return {
     type: FETCH_CONFIG_FAILURE,
     payload: {
@@ -89,80 +63,43 @@ Action
 }
 
 // modify config
-export function modifyConfig(config
-
-:
-Config, callback ? : () =
->
-void
-)
-{
-  return function (dispatch
-:
-  Dispatch
-)
-  {
+export function modifyConfig(config: Config, callback?: () => void) {
+  return function (dispatch: Dispatch) {
     dispatch(modifyConfigPending(config));
     return apiClient
       .put(config._links.update.href, config, CONTENT_TYPE_CONFIG)
-      .then(() = > {
-      dispatch(modifyConfigSuccess(config)
-  )
-    ;
-    if (callback) {
-      callback();
-    }
-  })
-  .
-    catch(cause = > {
-      dispatch(
-        modifyConfigFailure(
-      config,
-      new Error(`could not modify config: ${cause.message}`)
-    )
-  )
-    ;
-  })
-    ;
-  }
-  ;
+      .then(() => {
+        dispatch(modifyConfigSuccess(config));
+        if (callback) {
+          callback();
+        }
+      })
+      .catch(cause => {
+        dispatch(
+          modifyConfigFailure(
+            config,
+            new Error(`could not modify config: ${cause.message}`)
+          )
+        );
+      });
+  };
 }
 
-export function modifyConfigPending(config
-
-:
-Config
-):
-Action
-{
+export function modifyConfigPending(config: Config): Action {
   return {
     type: MODIFY_CONFIG_PENDING,
     payload: config
   };
 }
 
-export function modifyConfigSuccess(config
-
-:
-Config
-):
-Action
-{
+export function modifyConfigSuccess(config: Config): Action {
   return {
     type: MODIFY_CONFIG_SUCCESS,
     payload: config
   };
 }
 
-export function modifyConfigFailure(config
-
-:
-Config, error
-:
-Error
-):
-Action
-{
+export function modifyConfigFailure(config: Config, error: Error): Action {
   return {
     type: MODIFY_CONFIG_FAILURE,
     payload: {
@@ -180,12 +117,7 @@ export function modifyConfigReset() {
 
 //reducer
 
-function removeNullValues(config
-
-:
-Config
-)
-{
+function removeNullValues(config: Config) {
   if (!config.adminGroups) {
     config.adminGroups = [];
   }
@@ -198,90 +130,48 @@ Config
   return config;
 }
 
-function reducer(state
-
-:
-any = {}, action
-:
-any = {}
-)
-{
+function reducer(state: any = {}, action: any = {}) {
   switch (action.type) {
     case MODIFY_CONFIG_SUCCESS:
     case FETCH_CONFIG_SUCCESS:
       const config = removeNullValues(action.payload);
       return {
         ...state,
-        entries
-    :
-      config,
-        configUpdatePermission
-    :
-      action.payload._links.update ? true : false
+        entries: config,
+        configUpdatePermission: action.payload._links.update ? true : false
+      };
+    default:
+      return state;
   }
-  ;
-default:
-  return state;
-}
 }
 
 export default reducer;
 
 // selectors
 
-export function isFetchConfigPending(state
-
-:
-Object
-)
-{
+export function isFetchConfigPending(state: Object) {
   return isPending(state, FETCH_CONFIG);
 }
 
-export function getFetchConfigFailure(state
-
-:
-Object
-)
-{
+export function getFetchConfigFailure(state: Object) {
   return getFailure(state, FETCH_CONFIG);
 }
 
-export function isModifyConfigPending(state
-
-:
-Object
-)
-{
+export function isModifyConfigPending(state: Object) {
   return isPending(state, MODIFY_CONFIG);
 }
 
-export function getModifyConfigFailure(state
-
-:
-Object
-)
-{
+export function getModifyConfigFailure(state: Object) {
   return getFailure(state, MODIFY_CONFIG);
 }
 
-export function getConfig(state
-
-:
-Object
-)
-{
+export function getConfig(state: Object) {
   if (state.config && state.config.entries) {
     return state.config.entries;
   }
 }
 
-export function getConfigUpdatePermission(state
-
-:
-Object
-)
-{
+export function getConfigUpdatePermission(state: Object) {
   if (state.config && state.config.configUpdatePermission) {
     return state.config.configUpdatePermission;
   }

@@ -7,85 +7,50 @@ import {Navigation, NavLink, Section} from "../../components/navigation";
 import GlobalConfig from "./GlobalConfig";
 import type {History} from "history";
 
-type
-Props = {
+type Props = {
   // context objects
-  t: string = > string,
-  match
-:
-any,
-  history
-:
-History
-}
-;
+  t: string => string,
+  match: any,
+  history: History
+};
 
-class Config extends React.Component
+class Config extends React.Component<Props> {
+  stripEndingSlash = (url: string) => {
+    if (url.endsWith("/")) {
+      return url.substring(0, url.length - 2);
+    }
+    return url;
+  };
 
-<
-Props > {
-  stripEndingSlash = (url
-:
-string
-)
-=
->
-{
-  if (url.endsWith("/")) {
-    return url.substring(0, url.length - 2);
+  matchedUrl = () => {
+    return this.stripEndingSlash(this.props.match.url);
+  };
+
+  render() {
+    const {t} = this.props;
+
+    const url = this.matchedUrl();
+
+    return (
+      <Page>
+        <div className="columns">
+          <div className="column is-three-quarters">
+            <Route path={url} exact component={GlobalConfig}/>
+          </div>
+          <div className="column">
+            <Navigation>
+              <Section label={t("config.navigation-title")}>
+                <NavLink
+                  to={`${url}`}
+                  label={t("global-config.navigation-label")}
+                />
+              </Section>
+            </Navigation>
+          </div>
+        </div>
+      </Page>
+    );
   }
-  return url;
-}
-;
-
-matchedUrl = () =
->
-{
-  return this.stripEndingSlash(this.props.match.url);
-}
-;
-
-render()
-{
-  const {t} = this.props;
-
-  const url = this.matchedUrl();
-
-  return (
-    < Page >
-    < div
-  className = "columns" >
-    < div
-  className = "column is-three-quarters" >
-    < Route
-  path = {url}
-  exact
-  component = {GlobalConfig}
-  />
-  < /div>
-  < div
-  className = "column" >
-    < Navigation >
-    < Section
-  label = {t("config.navigation-title"
-)
-}>
-<
-  NavLink
-  to = {`${url}`
-}
-  label = {t("global-config.navigation-label"
-)
-}
-  />
-  < /Section>
-  < /Navigation>
-  < /div>
-  < /div>
-  < /Page>
-)
-  ;
-}
 }
 
 export default translate("config")(Config);

@@ -56,21 +56,49 @@ import sonia.scm.group.xml.XmlGroupDAO;
 import sonia.scm.io.DefaultFileSystem;
 import sonia.scm.io.FileSystem;
 import sonia.scm.net.SSLContextProvider;
-import sonia.scm.net.ahc.*;
-import sonia.scm.plugin.*;
-import sonia.scm.repository.*;
+import sonia.scm.net.ahc.AdvancedHttpClient;
+import sonia.scm.net.ahc.ContentTransformer;
+import sonia.scm.net.ahc.DefaultAdvancedHttpClient;
+import sonia.scm.net.ahc.JsonContentTransformer;
+import sonia.scm.net.ahc.XmlContentTransformer;
+import sonia.scm.plugin.DefaultPluginLoader;
+import sonia.scm.plugin.DefaultPluginManager;
+import sonia.scm.plugin.ExtensionProcessor;
+import sonia.scm.plugin.PluginLoader;
+import sonia.scm.plugin.PluginManager;
+import sonia.scm.repository.DefaultRepositoryManager;
+import sonia.scm.repository.DefaultRepositoryProvider;
+import sonia.scm.repository.HealthCheckContextListener;
+import sonia.scm.repository.NamespaceStrategy;
+import sonia.scm.repository.NamespaceStrategyProvider;
+import sonia.scm.repository.Repository;
+import sonia.scm.repository.RepositoryDAO;
+import sonia.scm.repository.RepositoryManager;
+import sonia.scm.repository.RepositoryManagerProvider;
+import sonia.scm.repository.RepositoryProvider;
 import sonia.scm.repository.api.HookContextFactory;
 import sonia.scm.repository.api.RepositoryServiceFactory;
 import sonia.scm.repository.spi.HookEventFacade;
 import sonia.scm.repository.xml.XmlRepositoryDAO;
-import sonia.scm.resources.DefaultResourceManager;
-import sonia.scm.resources.DevelopmentResourceManager;
-import sonia.scm.resources.ResourceManager;
-import sonia.scm.resources.ScriptResourceServlet;
 import sonia.scm.schedule.QuartzScheduler;
 import sonia.scm.schedule.Scheduler;
-import sonia.scm.security.*;
-import sonia.scm.store.*;
+import sonia.scm.security.AuthorizationChangedEventProducer;
+import sonia.scm.security.CipherHandler;
+import sonia.scm.security.CipherUtil;
+import sonia.scm.security.ConfigurableLoginAttemptHandler;
+import sonia.scm.security.DefaultKeyGenerator;
+import sonia.scm.security.DefaultSecuritySystem;
+import sonia.scm.security.KeyGenerator;
+import sonia.scm.security.LoginAttemptHandler;
+import sonia.scm.security.SecuritySystem;
+import sonia.scm.store.BlobStoreFactory;
+import sonia.scm.store.ConfigurationEntryStoreFactory;
+import sonia.scm.store.ConfigurationStoreFactory;
+import sonia.scm.store.DataStoreFactory;
+import sonia.scm.store.FileBlobStoreFactory;
+import sonia.scm.store.JAXBConfigurationEntryStoreFactory;
+import sonia.scm.store.JAXBConfigurationStoreFactory;
+import sonia.scm.store.JAXBDataStoreFactory;
 import sonia.scm.template.MustacheTemplateEngine;
 import sonia.scm.template.TemplateEngine;
 import sonia.scm.template.TemplateEngineFactory;
@@ -266,16 +294,6 @@ public class ScmServletModule extends ServletModule
     transformers.addBinding().to(JsonContentTransformer.class);
     bind(AdvancedHttpClient.class).to(DefaultAdvancedHttpClient.class);
 
-    // bind resourcemanager
-    if (context.getStage() == Stage.DEVELOPMENT)
-    {
-      bind(ResourceManager.class, DevelopmentResourceManager.class);
-    }
-    else
-    {
-      bind(ResourceManager.class, DefaultResourceManager.class);
-    }
-
     // bind repository service factory
     bind(RepositoryServiceFactory.class);
 
@@ -295,9 +313,6 @@ public class ScmServletModule extends ServletModule
     // debug servlet
     serve(PATTERN_DEBUG).with(DebugServlet.class);
 
-    // plugin resources
-    serve(PATTERN_PLUGIN_SCRIPT).with(ScriptResourceServlet.class);
-
     // template
     serve(PATTERN_INDEX, "/").with(TemplateServlet.class);
 
@@ -313,7 +328,7 @@ public class ScmServletModule extends ServletModule
     // bind events
     // bind(LastModifiedUpdateListener.class);
 
-
+    bind(PushStateDispatcher.class).toProvider(PushStateDispatcherProvider.class);
   }
 
 

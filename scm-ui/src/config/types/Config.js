@@ -1,9 +1,7 @@
 //@flow
 import type {Links} from "../../types/hal";
 
-export
-type
-Config = {
+export type Config = {
   proxyPassword: string | null,
   proxyPort: number,
   proxyServer: string,

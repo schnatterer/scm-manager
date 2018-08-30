@@ -1,22 +1,17 @@
 //@flow
 import React from "react";
-import { Redirect, withRouter } from "react-router-dom";
+import {Redirect, withRouter} from "react-router-dom";
 import injectSheet from "react-jss";
-import { translate } from "react-i18next";
-import {
-  login,
-  isAuthenticated,
-  isLoginPending,
-  getLoginFailure
-} from "../modules/auth";
-import { connect } from "react-redux";
+import {translate} from "react-i18next";
+import {getLoginFailure, isAuthenticated, isLoginPending, login} from "../modules/auth";
+import {connect} from "react-redux";
 
-import { InputField } from "../components/forms";
-import { SubmitButton } from "../components/buttons";
+import {InputField} from "../components/forms";
+import {SubmitButton} from "../components/buttons";
 
 import classNames from "classnames";
-import Avatar from "../images/blib.jpg";
 import ErrorNotification from "../components/ErrorNotification";
+import Image from "../components/Image";
 
 const styles = {
   avatar: {
@@ -106,9 +101,9 @@ class Login extends React.Component<Props, State> {
               <p className="subtitle">{t("login.subtitle")}</p>
               <div className={classNames("box", classes.avatarSpacing)}>
                 <figure className={classes.avatar}>
-                  <img
+                  <Image
                     className={classes.avatarImage}
-                    src={Avatar}
+                    src="/images/blib.jpg"
                     alt={t("login.logo-alt")}
                   />
                 </figure>

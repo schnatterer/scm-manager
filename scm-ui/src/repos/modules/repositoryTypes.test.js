@@ -3,7 +3,7 @@
 import fetchMock from "fetch-mock";
 import configureMockStore from "redux-mock-store";
 import thunk from "redux-thunk";
-import {
+import reducer, {
   FETCH_REPOSITORY_TYPES,
   FETCH_REPOSITORY_TYPES_FAILURE,
   FETCH_REPOSITORY_TYPES_PENDING,
@@ -15,14 +15,13 @@ import {
   isFetchRepositoryTypesPending,
   shouldFetchRepositoryTypes
 } from "./repositoryTypes";
-import reducer from "./repositoryTypes";
 
 const git = {
   name: "git",
   displayName: "Git",
   _links: {
     self: {
-      href: "http://localhost:8081/scm/api/rest/v2/repositoryTypes/git"
+      href: "http://localhost:8081/api/rest/v2/repositoryTypes/git"
     }
   }
 };
@@ -32,7 +31,7 @@ const hg = {
   displayName: "Mercurial",
   _links: {
     self: {
-      href: "http://localhost:8081/scm/api/rest/v2/repositoryTypes/hg"
+      href: "http://localhost:8081/api/rest/v2/repositoryTypes/hg"
     }
   }
 };
@@ -42,7 +41,7 @@ const svn = {
   displayName: "Subversion",
   _links: {
     self: {
-      href: "http://localhost:8081/scm/api/rest/v2/repositoryTypes/svn"
+      href: "http://localhost:8081/api/rest/v2/repositoryTypes/svn"
     }
   }
 };
@@ -53,7 +52,7 @@ const collection = {
   },
   _links: {
     self: {
-      href: "http://localhost:8081/scm/api/rest/v2/repositoryTypes"
+      href: "http://localhost:8081/api/rest/v2/repositoryTypes"
     }
   }
 };
@@ -97,7 +96,7 @@ describe("repository types caching", () => {
 });
 
 describe("repository types fetch", () => {
-  const URL = "/scm/api/rest/v2/repositoryTypes";
+  const URL = "/api/rest/v2/repositoryTypes";
   const mockStore = configureMockStore([thunk]);
 
   afterEach(() => {

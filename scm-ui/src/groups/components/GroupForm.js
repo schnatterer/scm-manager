@@ -2,9 +2,9 @@
 import React from "react";
 
 import InputField from "../../components/forms/InputField";
-import { SubmitButton } from "../../components/buttons";
-import { translate } from "react-i18next";
-import type { Group } from "../types/Group";
+import {SubmitButton} from "../../components/buttons";
+import {translate} from "react-i18next";
+import type {Group} from "../types/Group";
 import * as validator from "./groupValidation";
 import MemberNameTable from "./MemberNameTable";
 import Textarea from "../../components/forms/Textarea";
@@ -96,20 +96,13 @@ class GroupForm extends React.Component<Props, State> {
           members={this.state.group.members}
           memberListChanged={this.memberListChanged}
         />
-        < AddEntryToTableField
-  addEntry = {this.addMember
-}
-  disabled = {false}
-  buttonLabel = {t("add-member-button.label"
-)
-}
-  fieldLabel = {t("add-member-textfield.label"
-)
-}
-  errorMessage = {t("add-member-textfield.error"
-)
-}
-  />
+        <AddEntryToTableField
+          addEntry={this.addMember}
+          disabled={false}
+          buttonLabel={t("add-member-button.label")}
+          fieldLabel={t("add-member-textfield.label")}
+          errorMessage={t("add-member-textfield.error")}
+        />
         <SubmitButton
           disabled={!this.isValid()}
           label={t("group-form.submit")}

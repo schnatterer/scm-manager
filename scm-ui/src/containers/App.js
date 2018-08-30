@@ -1,23 +1,14 @@
-import React, { Component } from "react";
+import React, {Component} from "react";
 import Main from "./Main";
-import { connect } from "react-redux";
-import { translate } from "react-i18next";
-import { withRouter } from "react-router-dom";
-import {
-  fetchMe,
-  isAuthenticated,
-  getMe,
-  isFetchMePending,
-  getFetchMeFailure
-} from "../modules/auth";
+import {connect} from "react-redux";
+import {translate} from "react-i18next";
+import {withRouter} from "react-router-dom";
+import {fetchMe, getFetchMeFailure, getMe, isAuthenticated, isFetchMePending} from "../modules/auth";
 
-import "./App.css";
-import "font-awesome/css/font-awesome.css";
-import "../components/modals/ConfirmAlert.css";
-import { PrimaryNavigation } from "../components/navigation";
+import {PrimaryNavigation} from "../components/navigation";
 import Loading from "../components/Loading";
 import ErrorPage from "../components/ErrorPage";
-import { Footer, Header } from "../components/layout";
+import {Footer, Header} from "../components/layout";
 
 type Props = {
   me: Me,
