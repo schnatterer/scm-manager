@@ -1,19 +1,19 @@
 /**
  * Copyright (c) 2010, Sebastian Sdorra
  * All rights reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * <p>
  * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
+ * this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  * 3. Neither the name of SCM-Manager; nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -24,16 +24,12 @@
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * <p>
  * http://bitbucket.org/sdorra/scm-manager
- *
  */
 
 
-
 package sonia.scm.repository.spi;
-
-//~--- non-JDK imports --------------------------------------------------------
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -66,39 +62,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-//~--- JDK imports ------------------------------------------------------------
-
-/**
- *
- * @author Sebastian Sdorra
- */
 public class GitBrowseCommand extends AbstractGitCommand
-  implements BrowseCommand
-{
+  implements BrowseCommand {
 
-  /** Field description */
   public static final String PATH_MODULES = ".gitmodules";
 
-  /**
-   * the logger for GitBrowseCommand
-   */
   private static final Logger logger =
     LoggerFactory.getLogger(GitBrowseCommand.class);
 
-  //~--- constructors ---------------------------------------------------------
+  private final Map<ObjectId, Map<String, SubRepository>> subrepositoryCache = Maps.newHashMap();
 
-  /**
-   * Constructs ...
-   *
-   * @param context
-   * @param repository
-   */
-  public GitBrowseCommand(GitContext context, Repository repository)
-  {
+
+  public GitBrowseCommand(GitContext context, Repository repository) {
     super(context, repository);
   }
 
-  //~--- get methods ----------------------------------------------------------
 
   @Override
   @SuppressWarnings("unchecked")
@@ -110,58 +88,34 @@ public class GitBrowseCommand extends AbstractGitCommand
     org.eclipse.jgit.lib.Repository repo = open();
     ObjectId revId;
 
-    if (Util.isEmpty(request.getRevision()))
-    {
+    if (Util.isEmpty(request.getRevision())) {
       revId = getDefaultBranch(repo);
-    }
-    else
-    {
+    } else {
       revId = GitUtil.getRevisionId(repo, request.getRevision());
     }
 
-    if (revId != null)
-    {
+    if (revId != null) {
       result = getResult(repo, request, revId);
-    }
-    else
-    {
-      if (Util.isNotEmpty(request.getRevision()))
-      {
+    } else {
+      if (Util.isNotEmpty(request.getRevision())) {
         logger.error("could not find revision {}", request.getRevision());
-      }
-      else if (logger.isWarnEnabled())
-      {
+      } else if (logger.isWarnEnabled()) {
         logger.warn("coul not find head of repository, empty?");
       }
 
       result = new BrowserResult(Constants.HEAD, null, null,
-        Collections.EMPTY_LIST);
+        Collections.EMPTY_LIST, request.getPath());
     }
 
     return result;
   }
 
-  //~--- methods --------------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   * @param repo
-   * @param request
-   * @param revId
-   * @param treeWalk
-   *
-   * @return
-   *
-   * @throws IOException
-   */
   private FileObject createFileObject(org.eclipse.jgit.lib.Repository repo,
-    BrowseCommandRequest request, ObjectId revId, TreeWalk treeWalk)
+                                      BrowseCommandRequest request, ObjectId revId, TreeWalk treeWalk)
     throws IOException, RevisionNotFoundException {
     FileObject file;
 
-    try
-    {
+    try {
       file = new FileObject();
 
       String path = treeWalk.getPathString();
@@ -171,51 +125,40 @@ public class GitBrowseCommand extends AbstractGitCommand
 
       SubRepository sub = null;
 
-      if (!request.isDisableSubRepositoryDetection())
-      {
+      if (!request.isDisableSubRepositoryDetection()) {
         sub = getSubRepository(repo, revId, path);
       }
 
-      if (sub != null)
-      {
+      if (sub != null) {
         logger.trace("{} seems to be a sub repository", path);
         file.setDirectory(true);
         file.setSubRepository(sub);
-      }
-      else
-      {
+      } else {
         ObjectLoader loader = repo.open(treeWalk.getObjectId(0));
 
         file.setDirectory(loader.getType() == Constants.OBJ_TREE);
         file.setLength(loader.getSize());
 
         // don't show message and date for directories to improve performance
-        if (!file.isDirectory() &&!request.isDisableLastCommit())
-        {
+        if (!file.isDirectory() && !request.isDisableLastCommit()) {
           logger.trace("fetch last commit for {} at {}", path, revId.getName());
 
           RevCommit commit = getLatestCommit(repo, revId, path);
 
-          if (commit != null)
-          {
+          if (commit != null) {
             file.setLastModified(GitUtil.getCommitTime(commit));
             file.setDescription(commit.getShortMessage());
-          }
-          else if (logger.isWarnEnabled())
-          {
+          } else if (logger.isWarnEnabled()) {
             logger.warn("could not find latest commit for {} on {}", path,
               revId);
           }
         }
       }
-    }
-    catch (MissingObjectException ex)
-    {
+    } catch (MissingObjectException ex) {
       file = null;
       logger.error("could not fetch object for id {}", revId);
 
-      if (logger.isTraceEnabled())
-      {
+      if (logger.isTraceEnabled()) {
         logger.trace("could not fetch object", ex);
       }
     }
@@ -223,27 +166,12 @@ public class GitBrowseCommand extends AbstractGitCommand
     return file;
   }
 
-  //~--- get methods ----------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   *
-   * @param repo
-   * @param revId
-   * @param path
-   *
-   * @return
-   */
   private RevCommit getLatestCommit(org.eclipse.jgit.lib.Repository repo,
-    ObjectId revId, String path)
-  {
+                                    ObjectId revId, String path) {
     RevCommit result = null;
     RevWalk walk = null;
 
-    try
-    {
+    try {
       walk = new RevWalk(repo);
       walk.setTreeFilter(AndTreeFilter.create(PathFilter.create(path),
         TreeFilter.ANY_DIFF));
@@ -252,13 +180,9 @@ public class GitBrowseCommand extends AbstractGitCommand
 
       walk.markStart(commit);
       result = Util.getFirst(walk);
-    }
-    catch (IOException ex)
-    {
+    } catch (IOException ex) {
       logger.error("could not parse commit for file", ex);
-    }
-    finally
-    {
+    } finally {
       GitUtil.release(walk);
     }
 
@@ -266,16 +190,14 @@ public class GitBrowseCommand extends AbstractGitCommand
   }
 
   private BrowserResult getResult(org.eclipse.jgit.lib.Repository repo,
-    BrowseCommandRequest request, ObjectId revId)
+                                  BrowseCommandRequest request, ObjectId revId)
     throws IOException, RevisionNotFoundException {
     BrowserResult result = null;
     RevWalk revWalk = null;
     TreeWalk treeWalk = null;
 
-    try
-    {
-      if (logger.isDebugEnabled())
-      {
+    try {
+      if (logger.isDebugEnabled()) {
         logger.debug("load repository browser for revision {}", revId.name());
       }
 
@@ -285,12 +207,9 @@ public class GitBrowseCommand extends AbstractGitCommand
 
       RevTree tree = revWalk.parseTree(revId);
 
-      if (tree != null)
-      {
+      if (tree != null) {
         treeWalk.addTree(tree);
-      }
-      else
-      {
+      } else {
         logger.error("could not find tree for {}", revId.name());
       }
 
@@ -300,48 +219,36 @@ public class GitBrowseCommand extends AbstractGitCommand
 
       String path = request.getPath();
 
-      if (Util.isEmpty(path))
-      {
-        while (treeWalk.next())
-        {
+      if (Util.isEmpty(path)) {
+        while (treeWalk.next()) {
           FileObject fo = createFileObject(repo, request, revId, treeWalk);
 
-          if (fo != null)
-          {
+          if (fo != null) {
             files.add(fo);
           }
         }
-      }
-      else
-      {
+      } else {
         String[] parts = path.split("/");
         int current = 0;
         int limit = parts.length;
 
-        while (treeWalk.next())
-        {
+        while (treeWalk.next()) {
           String name = treeWalk.getNameString();
 
-          if (current >= limit)
-          {
+          if (current >= limit) {
             String p = treeWalk.getPathString();
 
-            if (p.split("/").length > limit)
-            {
+            if (p.split("/").length > limit) {
               FileObject fo = createFileObject(repo, request, revId, treeWalk);
 
-              if (fo != null)
-              {
+              if (fo != null) {
                 files.add(fo);
               }
             }
-          }
-          else if (name.equalsIgnoreCase(parts[current]))
-          {
+          } else if (name.equalsIgnoreCase(parts[current])) {
             current++;
 
-            if (!request.isRecursive())
-            {
+            if (!request.isRecursive()) {
               treeWalk.enterSubtree();
             }
           }
@@ -350,9 +257,7 @@ public class GitBrowseCommand extends AbstractGitCommand
 
       result.setFiles(files);
       result.setRevision(revId.getName());
-    }
-    finally
-    {
+    } finally {
       GitUtil.release(revWalk);
       GitUtil.release(treeWalk);
     }
@@ -363,23 +268,19 @@ public class GitBrowseCommand extends AbstractGitCommand
   @SuppressWarnings("unchecked")
   private Map<String,
     SubRepository> getSubRepositories(org.eclipse.jgit.lib.Repository repo,
-      ObjectId revision)
+                                      ObjectId revision)
     throws IOException, RevisionNotFoundException {
-    if (logger.isDebugEnabled())
-    {
+    if (logger.isDebugEnabled()) {
       logger.debug("read submodules of {} at {}", repository.getName(),
         revision);
     }
 
     Map<String, SubRepository> subRepositories;
-    try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() )
-    {
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
       new GitCatCommand(context, repository).getContent(repo, revision,
         PATH_MODULES, baos);
       subRepositories = GitSubModuleParser.parse(baos.toString());
-    }
-    catch (PathNotFoundException ex)
-    {
+    } catch (PathNotFoundException ex) {
       logger.trace("could not find .gitmodules", ex);
       subRepositories = Collections.EMPTY_MAP;
     }
@@ -388,28 +289,22 @@ public class GitBrowseCommand extends AbstractGitCommand
   }
 
   private SubRepository getSubRepository(org.eclipse.jgit.lib.Repository repo,
-    ObjectId revId, String path)
+                                         ObjectId revId, String path)
     throws IOException, RevisionNotFoundException {
     Map<String, SubRepository> subRepositories = subrepositoryCache.get(revId);
 
-    if (subRepositories == null)
-    {
+    if (subRepositories == null) {
       subRepositories = getSubRepositories(repo, revId);
       subrepositoryCache.put(revId, subRepositories);
     }
 
     SubRepository sub = null;
 
-    if (subRepositories != null)
-    {
+    if (subRepositories != null) {
       sub = subRepositories.get(path);
     }
 
     return sub;
   }
 
-  //~--- fields ---------------------------------------------------------------
-  
-  /** sub repository cache */
-  private final Map<ObjectId, Map<String, SubRepository>> subrepositoryCache = Maps.newHashMap();
 }

@@ -109,6 +109,7 @@ public class SourceRootResourceTest {
     browserResult.setBranch("abc");
     browserResult.setRevision("revision");
     browserResult.setTag("tag");
+    browserResult.setPath("fileabc");
     FileObject fileObject = new FileObject();
     fileObject.setName("File Object!");
 
@@ -121,6 +122,7 @@ public class SourceRootResourceTest {
     dispatcher.invoke(request, response);
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getContentAsString()).contains("\"revision\":\"revision\"");
+    assertThat(response.getContentAsString()).contains("\"href\":\"/" + RepositoryRootResource.REPOSITORIES_PATH_V2 + "space/repo/sources/revision/fileabc\"");
   }
 
   @Test
@@ -135,7 +137,7 @@ public class SourceRootResourceTest {
   }
 
   private BrowserResult createBrowserResult() {
-    return new BrowserResult("revision", "tag", "branch", createFileObjects());
+    return new BrowserResult("revision", "tag", "branch", createFileObjects(), "fileabc");
   }
 
   private List<FileObject> createFileObjects() {

@@ -93,9 +93,10 @@ public class BrowserResultToBrowserResultDtoMapperTest {
     browserResult.setRevision("Revision");
     browserResult.setBranch("Branch");
     browserResult.setFiles(createFileObjects());
-
+    browserResult.setPath("/foo/bar");
     return browserResult;
   }
+
 
   private List<FileObject> createFileObjects() {
     List<FileObject> fileObjects = new ArrayList<>();

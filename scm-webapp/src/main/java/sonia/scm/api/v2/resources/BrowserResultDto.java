@@ -18,6 +18,7 @@ public class BrowserResultDto extends HalRepresentation implements Iterable<File
   private String branch;
   // REVIEW files nicht embedded?
   private List<FileObjectDto> files;
+  private String path;
 
   @Override
   @SuppressWarnings("squid:S1185") // We want to have this method available in this package

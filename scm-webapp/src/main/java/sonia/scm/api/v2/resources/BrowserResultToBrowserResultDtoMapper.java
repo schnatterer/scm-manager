@@ -6,6 +6,7 @@ import sonia.scm.repository.FileObject;
 import sonia.scm.repository.NamespaceAndName;
 
 import javax.inject.Inject;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,12 +40,29 @@ public class BrowserResultToBrowserResultDtoMapper {
   }
 
   private void addLinks(BrowserResult browserResult, BrowserResultDto dto, NamespaceAndName namespaceAndName) {
-    if (browserResult.getRevision() == null) {
-      dto.add(Links.linkingTo().self(resourceLinks.source().selfWithoutRevision(namespaceAndName.getNamespace(), namespaceAndName.getName())).build());
-    } else {
-      dto.add(Links.linkingTo().self(resourceLinks.source().self(namespaceAndName.getNamespace(), namespaceAndName.getName(), browserResult.getRevision())).build());
+    String path = "";
+    if (browserResult.getPath() != null ) {
+      path = removeFirstSlash(browserResult.getPath());
     }
+
+    Links.Builder links = Links.linkingTo();
+
+    if (browserResult.getRevision() == null) {
+      links.self(addPath(resourceLinks.source().selfWithoutRevision(namespaceAndName.getNamespace(), namespaceAndName.getName(), ""), path));
+    } else {
+      links.self(addPath(resourceLinks.source().sourceWithPath(namespaceAndName.getNamespace(), namespaceAndName.getName(), browserResult.getRevision(), ""), path));
+    }
+
+    dto.add(links.build());
   }
 
+  // we have to add the file path using URI, so that path separators (aka '/') will not be encoded as '%2F'
+  private String addPath(String sourceWithPath, String path) {
+    return URI.create(sourceWithPath).resolve(path).toASCIIString();
+  }
+
+  private String removeFirstSlash(String source) {
+    return source.startsWith("/") ? source.substring(1) : source;
+  }
 
 }

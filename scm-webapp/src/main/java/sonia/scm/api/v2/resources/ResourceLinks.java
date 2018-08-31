@@ -290,11 +290,11 @@ class ResourceLinks {
       sourceLinkBuilder = new LinkBuilder(uriInfo, RepositoryRootResource.class, RepositoryResource.class, SourceRootResource.class);
     }
 
-    String self(String namespace, String name, String revision) {
+    String self(String namespace, String name, String revision, String path) {
       return sourceLinkBuilder.method("getRepositoryResource").parameters(namespace, name).method("sources").parameters().method("getAll").parameters(revision).href();
     }
 
-    String selfWithoutRevision(String namespace, String name) {
+    String selfWithoutRevision(String namespace, String name, String path) {
       return sourceLinkBuilder.method("getRepositoryResource").parameters(namespace, name).method("sources").parameters().method("getAllWithoutRevision").parameters().href();
     }
 

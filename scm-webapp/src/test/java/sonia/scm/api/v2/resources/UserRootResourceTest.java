@@ -14,6 +14,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import sonia.scm.PageResult;
+import sonia.scm.api.rest.JSONContextResolver;
+import sonia.scm.api.rest.ObjectMapperProvider;
 import sonia.scm.user.User;
 import sonia.scm.user.UserManager;
 import sonia.scm.web.VndMediaType;
@@ -64,7 +66,7 @@ public class UserRootResourceTest {
   @Before
   public void prepareEnvironment() throws Exception {
     initMocks(this);
-    User dummyUser = createDummyUser("Neo");
+    createDummyUser("Neo");
     when(userManager.create(userCaptor.capture())).thenAnswer(invocation -> invocation.getArguments()[0]);
     doNothing().when(userManager).modify(userCaptor.capture());
     doNothing().when(userManager).delete(userCaptor.capture());
@@ -77,6 +79,9 @@ public class UserRootResourceTest {
                                                              MockProvider.of(userResource));
 
     dispatcher = createDispatcher(userRootResource);
+
+    dispatcher.getProviderFactory().registerProviderInstance(new JSONContextResolver(new ObjectMapperProvider().get()));
+
   }
 
   @Test
