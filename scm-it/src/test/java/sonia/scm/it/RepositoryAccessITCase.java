@@ -16,8 +16,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static java.lang.Thread.sleep;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
 import static sonia.scm.it.RestUtil.given;
