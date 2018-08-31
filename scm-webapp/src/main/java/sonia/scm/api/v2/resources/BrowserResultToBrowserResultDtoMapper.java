@@ -48,7 +48,7 @@ public class BrowserResultToBrowserResultDtoMapper {
     Links.Builder links = Links.linkingTo();
 
     if (browserResult.getRevision() == null) {
-      links.self(addPath(resourceLinks.source().selfWithoutRevision(namespaceAndName.getNamespace(), namespaceAndName.getName(), ""), path));
+      links.self(addPath(resourceLinks.source().selfWithoutRevision(namespaceAndName.getNamespace(), namespaceAndName.getName()), path));
     } else {
       links.self(addPath(resourceLinks.source().sourceWithPath(namespaceAndName.getNamespace(), namespaceAndName.getName(), browserResult.getRevision(), ""), path));
     }
