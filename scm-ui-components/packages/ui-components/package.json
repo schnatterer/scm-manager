@@ -1,6 +1,6 @@
 {
   "name": "@scm-manager/ui-components",
-  "version": "2.0.0-SNAPSHOT",
+  "version": "2.0.0-20181105-075525",
   "description": "UI Components for SCM-Manager and its plugins",
   "main": "src/index.js",
   "files": [
@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@scm-manager/ui-extensions": "^0.1.1",
-    "@scm-manager/ui-types": "2.0.0-SNAPSHOT",
+    "@scm-manager/ui-types": "2.0.0-20181105-075525",
     "classnames": "^2.2.6",
     "moment": "^2.22.2",
     "react": "^16.5.2",

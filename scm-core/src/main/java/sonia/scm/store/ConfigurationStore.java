@@ -41,7 +41,7 @@ package sonia.scm.store;
  *
  * @param <T> type of the configuration objects
  */
-public interface ConfigurationStore<T>
+public interface ConfigurationStore<T> extends Store
 {
 
   /**

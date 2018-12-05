@@ -32,9 +32,6 @@
 
 package sonia.scm.store;
 
-
-import sonia.scm.repository.Repository;
-
 /**
  * The ConfigurationStoreFactory can be used to create new or get existing {@link ConfigurationStore} objects.
  * <br>
@@ -63,7 +60,7 @@ import sonia.scm.repository.Repository;
  * @apiviz.landmark
  * @apiviz.uses sonia.scm.store.ConfigurationStore
  */
-public interface ConfigurationStoreFactory  {
+public interface ConfigurationStoreFactory {
 
   /**
    * Creates a new or gets an existing {@link ConfigurationStore}. Instead of calling this method you should use the
@@ -80,56 +77,7 @@ public interface ConfigurationStoreFactory  {
    * @return Floating API to set the name and either specify a repository or directly build a global
    * {@link ConfigurationStore}.
    */
-  default <T> TypedFloatingConfigurationStoreParameters<T>.Builder withType(Class<T> type) {
-    return new TypedFloatingConfigurationStoreParameters<T>(this).new Builder(type);
-  }
-}
-
-final class TypedFloatingConfigurationStoreParameters<T> {
-
-  private final TypedStoreParametersImpl<T> parameters = new TypedStoreParametersImpl<>();
-  private final ConfigurationStoreFactory factory;
-
-  TypedFloatingConfigurationStoreParameters(ConfigurationStoreFactory factory) {
-    this.factory = factory;
-  }
-
-  public class Builder {
-
-    Builder(Class<T> type) {
-      parameters.setType(type);
-    }
-
-    /**
-     * Use this to set the name for the {@link ConfigurationStore}.
-     * @param name The name for the {@link ConfigurationStore}.
-     * @return Floating API to either specify a repository or directly build a global {@link ConfigurationStore}.
-     */
-    public OptionalRepositoryBuilder withName(String name) {
-      parameters.setName(name);
-      return new OptionalRepositoryBuilder();
-    }
-  }
-
-  public class OptionalRepositoryBuilder {
-
-    /**
-     * Use this to create or get a {@link ConfigurationStore} for a specific repository. This step is optional. If you
-     * want to have a global {@link ConfigurationStore}, omit this.
-     * @param repository The optional repository for the {@link ConfigurationStore}.
-     * @return Floating API to finish the call.
-     */
-    public OptionalRepositoryBuilder forRepository(Repository repository) {
-      parameters.setRepository(repository);
-      return this;
-    }
-
-    /**
-     * Creates or gets the {@link ConfigurationStore} with the given name and (if specified) the given repository. If no
-     * repository is given, the {@link ConfigurationStore} will be global.
-     */
-    public ConfigurationStore<T> build(){
-      return factory.getStore(parameters);
-    }
+  default <T> TypedFloatingStoreParameters<T, ConfigurationStore<T>>.Builder withType(Class<T> type) {
+    return new TypedFloatingStoreParameters<T, ConfigurationStore<T>>(this::getStore).new Builder(type);
   }
 }

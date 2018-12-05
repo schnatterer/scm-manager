@@ -32,8 +32,6 @@
 
 package sonia.scm.store;
 
-import sonia.scm.repository.Repository;
-
 /**
  * The DataStoreFactory can be used to create new or get existing {@link DataStore}s.
  * <br>
@@ -77,56 +75,7 @@ public interface DataStoreFactory {
    * @return Floating API to set the name and either specify a repository or directly build a global
    * {@link DataStore}.
    */
-  default <T> TypedFloatingDataStoreParameters<T>.Builder withType(Class<T> type) {
-    return new TypedFloatingDataStoreParameters<T>(this).new Builder(type);
-  }
-}
-
-final class TypedFloatingDataStoreParameters<T> {
-
-  private final TypedStoreParametersImpl<T> parameters = new TypedStoreParametersImpl<>();
-  private final DataStoreFactory factory;
-
-  TypedFloatingDataStoreParameters(DataStoreFactory factory) {
-    this.factory = factory;
-  }
-
-  public class Builder {
-
-    Builder(Class<T> type) {
-      parameters.setType(type);
-    }
-
-    /**
-     * Use this to set the name for the {@link DataStore}.
-     * @param name The name for the {@link DataStore}.
-     * @return Floating API to either specify a repository or directly build a global {@link DataStore}.
-     */
-    public OptionalRepositoryBuilder withName(String name) {
-      parameters.setName(name);
-      return new OptionalRepositoryBuilder();
-    }
-  }
-
-  public class OptionalRepositoryBuilder {
-
-    /**
-     * Use this to create or get a {@link DataStore} for a specific repository. This step is optional. If you
-     * want to have a global {@link DataStore}, omit this.
-     * @param repository The optional repository for the {@link DataStore}.
-     * @return Floating API to finish the call.
-     */
-    public OptionalRepositoryBuilder forRepository(Repository repository) {
-      parameters.setRepository(repository);
-      return this;
-    }
-
-    /**
-     * Creates or gets the {@link DataStore} with the given name and (if specified) the given repository. If no
-     * repository is given, the {@link DataStore} will be global.
-     */
-    public DataStore<T> build(){
-      return factory.getStore(parameters);
-    }
+  default <T> TypedFloatingStoreParameters<T, DataStore<T>>.Builder withType(Class<T> type) {
+    return new TypedFloatingStoreParameters<T, DataStore<T>>(this::getStore).new Builder(type);
   }
 }
