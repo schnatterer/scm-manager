@@ -2,8 +2,10 @@ package sonia.scm.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.List;
 import java.util.Map;
 
 public abstract class JsonEnricherBase implements JsonEnricher {
@@ -36,5 +38,11 @@ public abstract class JsonEnricherBase implements JsonEnricher {
 
   protected void addPropertyNode(JsonNode parent, String newKey, JsonNode child) {
     ((ObjectNode) parent).set(newKey, child);
+  }
+
+  protected void addArrayNode(JsonNode parent, String propertyKey, List<ObjectNode> objectNodes) {
+    ArrayNode arrayNode = objectMapper.createArrayNode();
+    arrayNode.addAll(objectNodes);
+    addPropertyNode(parent,propertyKey,arrayNode);
   }
 }
