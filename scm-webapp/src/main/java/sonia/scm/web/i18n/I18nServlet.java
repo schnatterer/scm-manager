@@ -78,8 +78,8 @@ public class I18nServlet extends HttpServlet {
   @VisibleForTesting
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse response) {
-      response.setCharacterEncoding("UTF-8");
-      response.setContentType("application/json");
+    response.setCharacterEncoding("UTF-8");
+    response.setContentType("application/json");
     try (PrintWriter out = response.getWriter()) {
       String path = req.getServletPath();
       Function<String, Optional<JsonNode>> jsonFileProvider = usedPath -> Optional.empty();
