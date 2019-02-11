@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -217,6 +218,33 @@ public class I18nServletTest {
     assertJson(json);
 
     verifyHeaders(response);
+  }
+
+  @Test
+  public void shouldNotFailIfOneResourceCouldNotBeParsed() throws IOException {
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getServletPath()).thenReturn("/locales/de/plugins.json");
+
+    HttpServletResponse response = mock(HttpServletResponse.class);
+
+    resources = Collections.enumeration(Lists.newArrayList(
+      createFileFromString("invalid json").toURI().toURL(),
+      createFileFromString(GIT_PLUGIN_JSON).toURI().toURL()
+    ));
+    when(classLoader.getResources("locales/de/plugins.json")).thenReturn(resources);
+
+    StringWriter stringWriter = new StringWriter();
+    PrintWriter printWriter = new PrintWriter(stringWriter);
+    when(response.getWriter()).thenReturn(printWriter);
+
+    servlet.doGet(request, response);
+
+    printWriter.flush();
+    String content = stringWriter.toString();
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    JsonNode rootNode = objectMapper.readTree(content);
+    assertThat(rootNode.has("scm-git-plugin")).isTrue();
   }
 
   @Test

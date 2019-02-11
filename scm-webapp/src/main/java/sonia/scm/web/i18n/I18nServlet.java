@@ -121,11 +121,13 @@ public class I18nServlet extends HttpServlet {
       Enumeration<URL> resources = classLoader.getResources(path.replaceFirst("/", ""));
       while (resources.hasMoreElements()) {
         URL url = resources.nextElement();
-        JsonNode jsonNode = objectMapper.readTree(url);
-        if (mergedJsonNode != null) {
-          merge(mergedJsonNode, jsonNode);
-        } else {
-          mergedJsonNode = jsonNode;
+        JsonNode jsonNode = parse(url);
+        if (jsonNode != null) {
+          if (mergedJsonNode != null) {
+            merge(mergedJsonNode, jsonNode);
+          } else {
+            mergedJsonNode = jsonNode;
+          }
         }
       }
     } catch (IOException e) {
@@ -133,6 +135,15 @@ public class I18nServlet extends HttpServlet {
       return Optional.empty();
     }
     return Optional.ofNullable(mergedJsonNode);
+  }
+
+  private JsonNode parse(URL url) {
+    try {
+      return objectMapper.readTree(url);
+    } catch (IOException ex) {
+      log.error("failed to parse json from url: " + url.toExternalForm(), ex);
+    }
+    return null;
   }
 
 
