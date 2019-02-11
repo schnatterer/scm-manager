@@ -141,9 +141,9 @@ public class I18nServlet extends HttpServlet {
     try {
       return objectMapper.readTree(url);
     } catch (IOException ex) {
-      log.error("failed to parse json from url: " + url.toExternalForm(), ex);
+      log.error("failed to parse json from url: {}", url.toExternalForm(), ex);
+      return null;
     }
-    return null;
   }
 
 
