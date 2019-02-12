@@ -93,6 +93,7 @@ public class ValidationUtilTest
     assertFalse(ValidationUtil.isMailAddressValid("s.sdorra@@ostfalia.de"));
     assertFalse(ValidationUtil.isMailAddressValid("s.sdorra@ ostfalia.de"));
     assertFalse(ValidationUtil.isMailAddressValid("s.sdorra @ostfalia.de"));
+    assertFalse(ValidationUtil.isMailAddressValid("[sdorra@ostfalia.de"));
   }
 
   /**

@@ -52,15 +52,15 @@ public final class ValidationUtil
 
   /** Field description */
   private static final String REGEX_MAIL =
-    "^[A-z0-9][\\w.-]*@[A-z0-9][\\w\\-\\.]*\\.[A-z0-9][A-z0-9-]+$";
+    "^[A-Za-z0-9][\\w.-]*@[A-Za-z0-9][\\w\\-\\.]*\\.[A-Za-z0-9][A-Za-z0-9-]+$";
 
   /** Field description */
   private static final String REGEX_NAME =
-    "^[A-z0-9\\.\\-_@]|[^ ]([A-z0-9\\.\\-_@ ]*[A-z0-9\\.\\-_@]|[^ ])?$";
+    "^[A-Za-z0-9\\.\\-_@]|[^ ]([A-Za-z0-9\\.\\-_@ ]*[A-Za-z0-9\\.\\-_@]|[^ ])?$";
 
   /** Field description */
   private static final String REGEX_REPOSITORYNAME =
-    "(?!^\\.\\.$)(?!^\\.$)(?!.*[\\\\\\[\\]])^[A-z0-9\\.][A-z0-9\\.\\-_/]*$";
+    "(?!^\\.\\.$)(?!^\\.$)(?!.*[\\\\\\[\\]])^[A-Za-z0-9\\.][A-Za-z0-9\\.\\-_/]*$";
 
   //~--- constructors ---------------------------------------------------------
 
