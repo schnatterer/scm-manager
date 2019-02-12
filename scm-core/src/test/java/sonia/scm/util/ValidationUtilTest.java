@@ -83,17 +83,19 @@ public class ValidationUtilTest
     assertTrue(ValidationUtil.isMailAddressValid("s.sdorra@example.xn--p1ai"));
     
     // issue 909
-    assertTrue(ValidationUtil.isMailAddressValid("s.sdorra@scm.solutions")); 
+    assertTrue(ValidationUtil.isMailAddressValid("s.sdorra@scm.solutions"));
+
+    // issue 1008
+    assertTrue(ValidationUtil.isMailAddressValid("s'sdorra@scm.solutions"));
+    assertTrue(ValidationUtil.isMailAddressValid("\"S Sdorra\"@scm.solutions"));
 
     // false
     assertFalse(ValidationUtil.isMailAddressValid("ostfalia.de"));
     assertFalse(ValidationUtil.isMailAddressValid("@ostfalia.de"));
     assertFalse(ValidationUtil.isMailAddressValid("s.sdorra@"));
     assertFalse(ValidationUtil.isMailAddressValid("s.sdorra@ostfalia"));
-    assertFalse(ValidationUtil.isMailAddressValid("s.sdorra@@ostfalia.de"));
     assertFalse(ValidationUtil.isMailAddressValid("s.sdorra@ ostfalia.de"));
-    assertFalse(ValidationUtil.isMailAddressValid("s.sdorra @ostfalia.de"));
-    assertFalse(ValidationUtil.isMailAddressValid("[sdorra@ostfalia.de"));
+    assertFalse(ValidationUtil.isMailAddressValid("sdorra@[ostfalia.de"));
   }
 
   /**

@@ -70,7 +70,7 @@ Sonia.user.FormPanel = Ext.extend(Sonia.rest.FormPanel,{
       fieldLabel: this.mailText,
       name: 'mail',
       allowBlank: true,
-      vtype: 'email',
+      vtype: 'scmemail',
       readOnly: this.isReadOnly(),
       helpText: this.mailHelpText
     }];

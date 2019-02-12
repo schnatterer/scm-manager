@@ -79,13 +79,15 @@ Ext.apply(Ext.form.VTypes, {
   },
   
   usernameText: 'The username is invalid.',
-  
-  emailRegex: /^[A-Za-z0-9][\w.-]*@[A-Za-z0-9][\w\-\.]*\.[A-Za-z0-9][A-Za-z0-9-]+$/,
+
+  scmemailRegex: /^[ -~]+@[A-Za-z0-9][\w\-\.]*\.[A-Za-z0-9][A-Za-z0-9-]+$/,
   
   // override extjs email format validation to match backend validation rules
   // see https://bitbucket.org/sdorra/scm-manager/issues/909/new-gtld-support
-  email: function(email) {
-    return this.emailRegex.test(email);
-  }
+  scmemail: function(email) {
+    return this.scmemailRegex.test(email);
+  },
+
+  scmemailText: 'Invalid email format'
   
 });

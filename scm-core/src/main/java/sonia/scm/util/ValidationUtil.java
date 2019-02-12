@@ -52,7 +52,7 @@ public final class ValidationUtil
 
   /** Field description */
   private static final String REGEX_MAIL =
-    "^[A-Za-z0-9][\\w.-]*@[A-Za-z0-9][\\w\\-\\.]*\\.[A-Za-z0-9][A-Za-z0-9-]+$";
+    "^[ -~]+@[A-Za-z0-9][\\w\\-\\.]*\\.[A-Za-z0-9][A-Za-z0-9-]+$";
 
   /** Field description */
   private static final String REGEX_NAME =
