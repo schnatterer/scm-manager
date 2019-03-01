@@ -49,7 +49,9 @@ class GlobalConfig extends React.Component<Props, State> {
 
   componentDidMount() {
     this.props.configReset();
-    this.props.fetchConfig(this.props.configLink);
+    if (this.props.configLink) {
+      this.props.fetchConfig(this.props.configLink);
+    }
   }
 
   modifyConfig = (config: Config) => {
