@@ -4,12 +4,12 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.credential.CredentialsMatcher;
 
-class RetryLimitPasswordMatcher implements CredentialsMatcher {
+class RetryLimitCredentialsMatcher implements CredentialsMatcher {
 
   private final LoginAttemptHandler loginAttemptHandler;
   private final CredentialsMatcher credentialsMatcher;
 
-  RetryLimitPasswordMatcher(LoginAttemptHandler loginAttemptHandler, CredentialsMatcher credentialsMatcher) {
+  RetryLimitCredentialsMatcher(LoginAttemptHandler loginAttemptHandler, CredentialsMatcher credentialsMatcher) {
     this.loginAttemptHandler = loginAttemptHandler;
     this.credentialsMatcher = credentialsMatcher;
   }

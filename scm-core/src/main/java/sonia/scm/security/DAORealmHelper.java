@@ -103,7 +103,7 @@ public final class DAORealmHelper {
    * @return wrapped credentials matcher
    */
   public CredentialsMatcher wrapCredentialsMatcher(CredentialsMatcher credentialsMatcher) {
-    return new RetryLimitPasswordMatcher(loginAttemptHandler, credentialsMatcher);
+    return new RetryLimitCredentialsMatcher(loginAttemptHandler, credentialsMatcher);
   }
 
   /**

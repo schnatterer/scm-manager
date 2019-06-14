@@ -102,7 +102,7 @@ public final class SyncingRealmHelper {
    * @return wrapped credentials matcher
    */
   public CredentialsMatcher wrapWithLimitingCredentialsMatcher(CredentialsMatcher credentialsMatcher) {
-    return new RetryLimitPasswordMatcher(loginAttemptHandler, credentialsMatcher);
+    return new RetryLimitCredentialsMatcher(loginAttemptHandler, credentialsMatcher);
   }
 
   public class AuthenticationInfoBuilder {
