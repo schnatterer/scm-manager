@@ -81,6 +81,9 @@ public class SyncingRealmHelperTest {
   @Mock
   private GroupDAO groupDAO;
 
+  @Mock
+  private LoginAttemptHandler loginAttemptHandler;
+
   private SyncingRealmHelper helper;
 
   /**
@@ -106,7 +109,7 @@ public class SyncingRealmHelperTest {
       }
     };
 
-    helper = new SyncingRealmHelper(ctx, userManager, groupManager, groupDAO);
+    helper = new SyncingRealmHelper(ctx, userManager, groupManager, groupDAO, loginAttemptHandler);
   }
 
   /**

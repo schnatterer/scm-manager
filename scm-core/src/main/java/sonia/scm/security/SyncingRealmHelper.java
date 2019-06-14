@@ -31,6 +31,7 @@ package sonia.scm.security;
 import com.google.inject.Inject;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +67,7 @@ public final class SyncingRealmHelper {
   private final UserManager userManager;
   private final GroupManager groupManager;
   private final GroupCollector groupCollector;
+  private final LoginAttemptHandler loginAttemptHandler;
 
   /**
    * Constructs a new SyncingRealmHelper.
@@ -74,13 +76,15 @@ public final class SyncingRealmHelper {
    * @param userManager user manager
    * @param groupManager group manager
    * @param groupDAO group dao
+   * @param loginAttemptHandler
    */
   @Inject
-  public SyncingRealmHelper(AdministrationContext ctx, UserManager userManager, GroupManager groupManager, GroupDAO groupDAO) {
+  public SyncingRealmHelper(AdministrationContext ctx, UserManager userManager, GroupManager groupManager, GroupDAO groupDAO, LoginAttemptHandler loginAttemptHandler) {
     this.ctx = ctx;
     this.userManager = userManager;
     this.groupManager = groupManager;
     this.groupCollector = new GroupCollector(groupDAO);
+    this.loginAttemptHandler = loginAttemptHandler;
   }
 
   /**
@@ -88,6 +92,17 @@ public final class SyncingRealmHelper {
    */
   public AuthenticationInfoBuilder.ForRealm authenticationInfo() {
     return new AuthenticationInfoBuilder().new ForRealm();
+  }
+
+  /**
+   * Wraps credentials matcher and applies login attempt policies.
+   *
+   * @param credentialsMatcher credentials matcher to wrap
+   *
+   * @return wrapped credentials matcher
+   */
+  public CredentialsMatcher wrapWithLimitingCredentialsMatcher(CredentialsMatcher credentialsMatcher) {
+    return new RetryLimitPasswordMatcher(loginAttemptHandler, credentialsMatcher);
   }
 
   public class AuthenticationInfoBuilder {
