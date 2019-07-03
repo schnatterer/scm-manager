@@ -3,9 +3,12 @@ package sonia.scm.api.v2.resources;
 import com.webcohesion.enunciate.metadata.rs.ResponseCode;
 import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 import com.webcohesion.enunciate.metadata.rs.TypeHint;
+import sonia.scm.NotFoundException;
 import sonia.scm.security.PermissionAssigner;
 import sonia.scm.security.PermissionDescriptor;
 import sonia.scm.security.PermissionPermissions;
+import sonia.scm.user.User;
+import sonia.scm.user.UserManager;
 import sonia.scm.web.VndMediaType;
 
 import javax.inject.Inject;
@@ -19,17 +22,20 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class UserPermissionResource {
 
   private final PermissionAssigner permissionAssigner;
   private final PermissionCollectionToDtoMapper permissionCollectionToDtoMapper;
+  private final UserManager userManager;
 
   @Inject
-  public UserPermissionResource(PermissionAssigner permissionAssigner, PermissionCollectionToDtoMapper permissionCollectionToDtoMapper) {
+  public UserPermissionResource(PermissionAssigner permissionAssigner, PermissionCollectionToDtoMapper permissionCollectionToDtoMapper, UserManager userManager) {
     this.permissionAssigner = permissionAssigner;
     this.permissionCollectionToDtoMapper = permissionCollectionToDtoMapper;
+    this.userManager = userManager;
   }
 
   /**
@@ -49,6 +55,9 @@ public class UserPermissionResource {
     @ResponseCode(code = 500, condition = "internal server error")
   })
   public Response getPermissions(@PathParam("id") String id) {
+    if (userManager.get(id) == null) {
+      throw new NotFoundException(User.class, id);
+    }
     PermissionPermissions.read().check();
     Collection<PermissionDescriptor> permissions = permissionAssigner.readPermissionsForUser(id);
     return Response.ok(permissionCollectionToDtoMapper.mapForUser(permissions, id)).build();

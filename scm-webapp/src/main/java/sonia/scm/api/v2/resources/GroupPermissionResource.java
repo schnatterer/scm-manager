@@ -3,9 +3,12 @@ package sonia.scm.api.v2.resources;
 import com.webcohesion.enunciate.metadata.rs.ResponseCode;
 import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 import com.webcohesion.enunciate.metadata.rs.TypeHint;
+import sonia.scm.NotFoundException;
+import sonia.scm.group.GroupManager;
 import sonia.scm.security.PermissionAssigner;
 import sonia.scm.security.PermissionDescriptor;
 import sonia.scm.security.PermissionPermissions;
+import sonia.scm.user.User;
 import sonia.scm.web.VndMediaType;
 
 import javax.inject.Inject;
@@ -24,11 +27,13 @@ public class GroupPermissionResource {
 
   private final PermissionAssigner permissionAssigner;
   private final PermissionCollectionToDtoMapper permissionCollectionToDtoMapper;
+  private final GroupManager groupManager;
 
   @Inject
-  public GroupPermissionResource(PermissionAssigner permissionAssigner, PermissionCollectionToDtoMapper permissionCollectionToDtoMapper) {
+  public GroupPermissionResource(PermissionAssigner permissionAssigner, PermissionCollectionToDtoMapper permissionCollectionToDtoMapper, GroupManager groupManager) {
     this.permissionAssigner = permissionAssigner;
     this.permissionCollectionToDtoMapper = permissionCollectionToDtoMapper;
+    this.groupManager = groupManager;
   }
 
   /**
@@ -48,6 +53,9 @@ public class GroupPermissionResource {
     @ResponseCode(code = 500, condition = "internal server error")
   })
   public Response getPermissions(@PathParam("id") String id) {
+    if (groupManager.get(id) == null) {
+      throw new NotFoundException(User.class, id);
+    }
     PermissionPermissions.read().check();
     Collection<PermissionDescriptor> permissions = permissionAssigner.readPermissionsForGroup(id);
     return Response.ok(permissionCollectionToDtoMapper.mapForGroup(permissions, id)).build();

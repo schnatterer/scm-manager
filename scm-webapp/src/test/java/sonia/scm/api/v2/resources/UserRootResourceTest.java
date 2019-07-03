@@ -94,7 +94,7 @@ public class UserRootResourceTest {
     UserCollectionToDtoMapper userCollectionToDtoMapper = new UserCollectionToDtoMapper(userToDtoMapper, resourceLinks);
     UserCollectionResource userCollectionResource = new UserCollectionResource(userManager, dtoToUserMapper,
       userCollectionToDtoMapper, resourceLinks, passwordService);
-    UserPermissionResource userPermissionResource = new UserPermissionResource(permissionAssigner, permissionCollectionToDtoMapper);
+    UserPermissionResource userPermissionResource = new UserPermissionResource(permissionAssigner, permissionCollectionToDtoMapper, userManager);
     UserResource userResource = new UserResource(dtoToUserMapper, userToDtoMapper, userManager, passwordService, userPermissionResource);
     UserRootResource userRootResource = new UserRootResource(Providers.of(userCollectionResource),
       Providers.of(userResource));
@@ -415,6 +415,17 @@ public class UserRootResourceTest {
     assertEquals(HttpServletResponse.SC_OK, response.getStatus());
 
     assertTrue(response.getContentAsString().contains("\"permissions\":[\"something:*\"]"));
+  }
+
+  @Test
+  public void shouldGetNotFoundForPermissionOfNotExistingUser() throws URISyntaxException, UnsupportedEncodingException {
+    when(permissionAssigner.readPermissionsForUser("Neo")).thenReturn(singletonList(new PermissionDescriptor("something:*")));
+    MockHttpRequest request = MockHttpRequest.get("/" + UserRootResource.USERS_PATH_V2 + "none/permissions");
+    MockHttpResponse response = new MockHttpResponse();
+
+    dispatcher.invoke(request, response);
+
+    assertEquals(HttpServletResponse.SC_NOT_FOUND, response.getStatus());
   }
 
   @Test

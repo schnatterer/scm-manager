@@ -87,7 +87,7 @@ public class GroupRootResourceTest {
 
     GroupCollectionToDtoMapper groupCollectionToDtoMapper = new GroupCollectionToDtoMapper(groupToDtoMapper, resourceLinks);
     GroupCollectionResource groupCollectionResource = new GroupCollectionResource(groupManager, dtoToGroupMapper, groupCollectionToDtoMapper, resourceLinks);
-    GroupPermissionResource groupPermissionResource = new GroupPermissionResource(permissionAssigner, permissionCollectionToDtoMapper);
+    GroupPermissionResource groupPermissionResource = new GroupPermissionResource(permissionAssigner, permissionCollectionToDtoMapper, groupManager);
     GroupResource groupResource = new GroupResource(groupManager, groupToDtoMapper, dtoToGroupMapper, groupPermissionResource);
     GroupRootResource groupRootResource = new GroupRootResource(Providers.of(groupCollectionResource), Providers.of(groupResource));
 
@@ -362,6 +362,17 @@ public class GroupRootResourceTest {
     assertEquals(HttpServletResponse.SC_OK, response.getStatus());
 
     assertTrue(response.getContentAsString().contains("\"permissions\":[\"something:*\"]"));
+  }
+
+  @Test
+  public void shouldGetNotFoundForPermissionOfNotExistingGroup() throws URISyntaxException, UnsupportedEncodingException {
+    when(permissionAssigner.readPermissionsForGroup("admin")).thenReturn(singletonList(new PermissionDescriptor("something:*")));
+    MockHttpRequest request = MockHttpRequest.get("/" + GroupRootResource.GROUPS_PATH_V2 + "none/permissions");
+    MockHttpResponse response = new MockHttpResponse();
+
+    dispatcher.invoke(request, response);
+
+    assertEquals(HttpServletResponse.SC_NOT_FOUND, response.getStatus());
   }
 
   @Test
