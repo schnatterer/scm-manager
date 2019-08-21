@@ -4,11 +4,11 @@ import com.webcohesion.enunciate.metadata.rs.ResponseCode;
 import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 import com.webcohesion.enunciate.metadata.rs.TypeHint;
 import sonia.scm.NotFoundException;
+import sonia.scm.group.Group;
 import sonia.scm.group.GroupManager;
 import sonia.scm.security.PermissionAssigner;
 import sonia.scm.security.PermissionDescriptor;
 import sonia.scm.security.PermissionPermissions;
-import sonia.scm.user.User;
 import sonia.scm.web.VndMediaType;
 
 import javax.inject.Inject;
@@ -54,7 +54,7 @@ public class GroupPermissionResource {
   })
   public Response getPermissions(@PathParam("id") String id) {
     if (groupManager.get(id) == null) {
-      throw new NotFoundException(User.class, id);
+      throw new NotFoundException(Group.class, id);
     }
     PermissionPermissions.read().check();
     Collection<PermissionDescriptor> permissions = permissionAssigner.readPermissionsForGroup(id);
