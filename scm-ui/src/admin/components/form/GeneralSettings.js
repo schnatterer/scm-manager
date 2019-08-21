@@ -7,6 +7,7 @@ import NamespaceStrategySelect from "./NamespaceStrategySelect";
 
 type Props = {
   realmDescription: string,
+  loginInfoUrl: string,
   enableRepositoryArchive: boolean,
   disableGroupingGrid: boolean,
   dateFormat: string,
@@ -27,6 +28,8 @@ class GeneralSettings extends React.Component<Props> {
     const {
       t,
       realmDescription,
+      loginInfoUrl,
+      pluginUrl,
       enabledXsrfProtection,
       namespaceStrategy,
       hasUpdatePermission,
@@ -58,6 +61,15 @@ class GeneralSettings extends React.Component<Props> {
         </div>
         <div className="columns">
           <div className="column is-half">
+            <InputField
+              label={t("general-settings.login-info-url")}
+              onChange={this.handleLoginInfoUrlChange}
+              value={loginInfoUrl}
+              disabled={!hasUpdatePermission}
+              helpText={t("help.loginInfoUrlHelpText")}
+            />
+          </div>
+          <div className="column is-half">
             <Checkbox
               checked={enabledXsrfProtection}
               label={t("general-settings.enabled-xsrf-protection")}
@@ -67,10 +79,24 @@ class GeneralSettings extends React.Component<Props> {
             />
           </div>
         </div>
+        <div className="columns">
+          <div className="column is-half">
+            <InputField
+              label={t("general-settings.plugin-url")}
+              onChange={this.handlePluginCenterUrlChange}
+              value={pluginUrl}
+              disabled={!hasUpdatePermission}
+              helpText={t("help.pluginUrlHelpText")}
+            />
+          </div>
+        </div>
       </div>
     );
   }
 
+  handleLoginInfoUrlChange = (value: string) => {
+    this.props.onChange(true, value, "loginInfoUrl");
+  };
   handleRealmDescriptionChange = (value: string) => {
     this.props.onChange(true, value, "realmDescription");
   };
@@ -79,6 +105,9 @@ class GeneralSettings extends React.Component<Props> {
   };
   handleNamespaceStrategyChange = (value: string) => {
     this.props.onChange(true, value, "namespaceStrategy");
+  };
+  handlePluginCenterUrlChange = (value: string) => {
+    this.props.onChange(true, value, "pluginUrl");
   };
 }
 

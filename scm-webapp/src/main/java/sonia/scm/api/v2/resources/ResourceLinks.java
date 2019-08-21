@@ -651,6 +651,74 @@ class ResourceLinks {
     }
   }
 
+  public InstalledPluginLinks installedPlugin() {
+    return new InstalledPluginLinks(scmPathInfoStore.get());
+  }
+
+  static class InstalledPluginLinks {
+    private final LinkBuilder installedPluginLinkBuilder;
+
+    InstalledPluginLinks(ScmPathInfo pathInfo) {
+      installedPluginLinkBuilder = new LinkBuilder(pathInfo, PluginRootResource.class, InstalledPluginResource.class);
+    }
+
+    String self(String id) {
+      return installedPluginLinkBuilder.method("installedPlugins").parameters().method("getInstalledPlugin").parameters(id).href();
+    }
+  }
+
+  public InstalledPluginCollectionLinks installedPluginCollection() {
+    return new InstalledPluginCollectionLinks(scmPathInfoStore.get());
+  }
+
+  static class InstalledPluginCollectionLinks {
+    private final LinkBuilder installedPluginCollectionLinkBuilder;
+
+    InstalledPluginCollectionLinks(ScmPathInfo pathInfo) {
+      installedPluginCollectionLinkBuilder = new LinkBuilder(pathInfo, PluginRootResource.class, InstalledPluginResource.class);
+    }
+
+    String self() {
+      return installedPluginCollectionLinkBuilder.method("installedPlugins").parameters().method("getInstalledPlugins").parameters().href();
+    }
+  }
+
+  public AvailablePluginLinks availablePlugin() {
+    return new AvailablePluginLinks(scmPathInfoStore.get());
+  }
+
+  static class AvailablePluginLinks {
+    private final LinkBuilder availablePluginLinkBuilder;
+
+    AvailablePluginLinks(ScmPathInfo pathInfo) {
+      availablePluginLinkBuilder = new LinkBuilder(pathInfo, PluginRootResource.class, AvailablePluginResource.class);
+    }
+
+    String self(String name, String version) {
+      return availablePluginLinkBuilder.method("availablePlugins").parameters().method("getAvailablePlugin").parameters(name, version).href();
+    }
+
+    String install(String name, String version) {
+      return availablePluginLinkBuilder.method("availablePlugins").parameters().method("installPlugin").parameters(name, version).href();
+    }
+  }
+
+  public AvailablePluginCollectionLinks availablePluginCollection() {
+    return new AvailablePluginCollectionLinks(scmPathInfoStore.get());
+  }
+
+  static class AvailablePluginCollectionLinks {
+    private final LinkBuilder availablePluginCollectionLinkBuilder;
+
+    AvailablePluginCollectionLinks(ScmPathInfo pathInfo) {
+      availablePluginCollectionLinkBuilder = new LinkBuilder(pathInfo, PluginRootResource.class, AvailablePluginResource.class);
+    }
+
+    String self() {
+      return availablePluginCollectionLinkBuilder.method("availablePlugins").parameters().method("getAvailablePlugins").parameters().href();
+    }
+  }
+
   public AuthenticationLinks authentication() {
     return new AuthenticationLinks(scmPathInfoStore.get());
   }
