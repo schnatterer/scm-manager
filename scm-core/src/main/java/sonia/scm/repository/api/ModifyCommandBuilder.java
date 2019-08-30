@@ -43,7 +43,7 @@ import java.util.function.Consumer;
  * </pre>
  * </p>
  */
-public class ModifyCommandBuilder {
+public class ModifyCommandBuilder implements AutoCloseable {
 
   private static final Logger LOG = LoggerFactory.getLogger(ModifyCommandBuilder.class);
 
@@ -119,16 +119,8 @@ public class ModifyCommandBuilder {
    * @return The revision of the new commit.
    */
   public String execute() {
-    try {
-      Preconditions.checkArgument(request.isValid(), "commit message, branch and at least one request are required");
-      return command.execute(request);
-    } finally {
-      try {
-        IOUtil.delete(workdir);
-      } catch (IOException e) {
-        LOG.warn("could not delete temporary workdir '{}'", workdir, e);
-      }
-    }
+    Preconditions.checkArgument(request.isValid(), "commit message, branch and at least one request are required");
+    return command.execute(request);
   }
 
   /**
@@ -156,6 +148,15 @@ public class ModifyCommandBuilder {
   public ModifyCommandBuilder setBranch(String branch) {
     request.setBranch(branch);
     return this;
+  }
+
+  @Override
+  public void close() {
+    try {
+      IOUtil.delete(workdir);
+    } catch (IOException e) {
+      LOG.warn("could not delete temporary workdir '{}'", workdir, e);
+    }
   }
 
   public interface ContentLoader {

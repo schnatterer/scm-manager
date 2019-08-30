@@ -1,7 +1,6 @@
 package sonia.scm.repository.api;
 
 import com.google.common.io.ByteSource;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -198,9 +197,11 @@ class ModifyCommandBuilderTest {
     ArgumentCaptor<File> fileCaptor = ArgumentCaptor.forClass(File.class);
     doNothing().when(worker).modify(nameCaptor.capture(), fileCaptor.capture());
 
-    initCommand()
-      .modifyFile("toBeModified").withData(ByteSource.wrap("content".getBytes()))
-      .execute();
+    try (ModifyCommandBuilder command = initCommand()) {
+      command
+        .modifyFile("toBeModified").withData(ByteSource.wrap("content".getBytes()))
+        .execute();
+    }
 
     assertThat(Files.list(temp)).isEmpty();
   }
