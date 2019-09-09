@@ -44,8 +44,11 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.PushResult;
+import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sonia.scm.ConcurrentModificationException;
 import sonia.scm.repository.GitUtil;
 import sonia.scm.repository.GitWorkdirFactory;
 import sonia.scm.repository.InternalRepositoryException;
@@ -232,7 +235,8 @@ class AbstractGitCommand
 
     void push() {
       try {
-        clone.push().call();
+        Iterable<PushResult> pushResults = clone.push().call();
+        evaluatePushResults(pushResults);
       } catch (GitAPIException e) {
         throw new IntegrateChangesFromWorkdirException(repository,
           "could not push changes into central repository", e);
@@ -255,6 +259,23 @@ class AbstractGitCommand
       } else {
         return author;
       }
+    }
+
+    private void evaluatePushResults(Iterable<PushResult> pushResults) {
+      pushResults.forEach(
+        result -> {
+          result.getRemoteUpdates().forEach(
+            update -> {
+              if (update.getStatus() == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD) {
+                throw new ConcurrentModificationException(
+                  entity("branch", update.getRemoteName())
+                    .in(sonia.scm.repository.Repository.class, repository.getNamespaceAndName().toString())
+                );
+              }
+            }
+          );
+        }
+      );
     }
   }
 

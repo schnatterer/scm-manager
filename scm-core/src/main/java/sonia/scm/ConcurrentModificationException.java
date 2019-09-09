@@ -17,6 +17,10 @@ public class ConcurrentModificationException extends ExceptionWithContext {
     this(Collections.singletonList(new ContextEntry(type, id)));
   }
 
+  public ConcurrentModificationException(ContextEntry.ContextBuilder context) {
+    this(context.build());
+  }
+
   private ConcurrentModificationException(List<ContextEntry> context) {
     super(context, createMessage(context));
   }
