@@ -22,6 +22,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 
@@ -63,6 +64,8 @@ public class GitModifyCommand extends AbstractGitCommand implements ModifyComman
     @Override
     String run() throws IOException {
       getClone().getRepository().getFullBranch();
+      System.out.println("ls clone dir:");
+      Arrays.stream(getClone().getRepository().getDirectory().list()).forEach(System.out::println);
       if (!StringUtils.isEmpty(request.getExpectedRevision())) {
         if (!request.getExpectedRevision().equals(getCurrentRevision().getName())) {
           throw new ConcurrentModificationException("branch", request.getBranch() == null? "default": request.getBranch());
