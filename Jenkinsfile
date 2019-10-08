@@ -29,11 +29,10 @@ node('docker') {
       }
 
       stage('Build and test') {
-        mvn 'clean install -Pdoc -pl :scm-git-plugin -am'
+        mvn 'clean install -DskipTests -pl :scm-git-plugin,:scm-ui,:scm-ui-components -am'
+        mvn 'clean test -pl :scm-git-plugin'
       }
 
-      def commitHash = getCommitHash()
-      def dockerImageTag = "2.0.0-dev-${commitHash.substring(0,7)}-${BUILD_NUMBER}"
 
     }
 
