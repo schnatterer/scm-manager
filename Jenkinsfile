@@ -29,8 +29,8 @@ node('docker') {
       }
 
       stage('Build and test') {
-        mvn 'clean install -DskipTests -pl :scm-git-plugin,:scm-ui,:scm-ui-components -am'
-        mvn 'clean test -pl :scm-git-plugin'
+        mvn 'clean install -DskipTests -pl :scm-git-plugin,:scm-ui-components -am'
+        mvn 'test -pl :scm-git-plugin'
       }
 
 
