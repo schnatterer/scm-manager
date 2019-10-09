@@ -76,7 +76,7 @@ public class GitModifyCommand_LFSTest extends AbstractGitCommandTestBase {
       assertThat(lastCommit.getAuthorIdent().getName()).isEqualTo("Dirk Gently");
       assertThat(newRef).isEqualTo(lastCommit.toObjectId().name());
     }
-
+    assertThat(outputStream.size()).isGreaterThan(0);
     assertThat(outputStream.toString()).isEqualTo("more content");
   }
 
