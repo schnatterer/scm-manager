@@ -65,7 +65,7 @@ public class GitModifyCommand extends AbstractGitCommand implements ModifyComman
     String run() throws IOException {
       getClone().getRepository().getFullBranch();
       System.out.println("ls clone dir:");
-      Arrays.stream(getClone().getRepository().getDirectory().list()).forEach(System.out::println);
+      Arrays.stream(getClone().getRepository().getWorkTree().list()).forEach(System.out::println);
       if (!StringUtils.isEmpty(request.getExpectedRevision())) {
         if (!request.getExpectedRevision().equals(getCurrentRevision().getName())) {
           throw new ConcurrentModificationException("branch", request.getBranch() == null? "default": request.getBranch());
