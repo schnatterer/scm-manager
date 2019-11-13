@@ -1,19 +1,19 @@
 /**
  * Copyright (c) 2014, Sebastian Sdorra
  * All rights reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * <p>
  * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
+ * this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  * 3. Neither the name of SCM-Manager; nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -24,9 +24,8 @@
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * <p>
  * http://bitbucket.org/sdorra/scm-manager
- *
  */
 package sonia.scm.security;
 
@@ -35,7 +34,10 @@ import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sonia.scm.EagerSingleton;
+import sonia.scm.HandlerEventType;
 import sonia.scm.ModificationHandlerEvent;
+import sonia.scm.SCMContext;
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.event.HandlerEvent;
 import sonia.scm.event.ScmEventBus;
 import sonia.scm.group.Group;
@@ -48,6 +50,7 @@ import sonia.scm.user.User;
 import sonia.scm.user.UserEvent;
 import sonia.scm.user.UserModificationEvent;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
@@ -65,11 +68,14 @@ public class AuthorizationChangedEventProducer {
    * the logger for AuthorizationChangedEventProducer
    */
   private static final Logger logger = LoggerFactory.getLogger(AuthorizationChangedEventProducer.class);
+  private ScmConfiguration scmConfiguration;
 
   /**
    * Constructs a new instance.
    */
-  public AuthorizationChangedEventProducer() {
+  @Inject
+  public AuthorizationChangedEventProducer(ScmConfiguration scmConfiguration) {
+    this.scmConfiguration = scmConfiguration;
   }
 
   /**
@@ -85,6 +91,9 @@ public class AuthorizationChangedEventProducer {
    */
   @Subscribe
   public void onEvent(UserEvent event) {
+    if (isNotAllowedToDeletedAnonymousUser(event)) {
+      throw new IllegalStateException("_anonymous user can not be deleted if anonymous access is enabled");
+    }
     if (event.getEventType().isPost()) {
       if (isModificationEvent(event)) {
         handleUserModificationEvent((UserModificationEvent) event);
@@ -92,6 +101,17 @@ public class AuthorizationChangedEventProducer {
         handleUserEvent(event);
       }
     }
+  }
+
+  private boolean isNotAllowedToDeletedAnonymousUser(UserEvent event) {
+    return event.getItem().getName().equals(SCMContext.USER_ANONYMOUS)
+      && scmConfiguration.isAnonymousAccessEnabled()
+      && isDeletionEvent(event);
+  }
+
+  private boolean isDeletionEvent(UserEvent event) {
+    return event.getEventType() == HandlerEventType.DELETE
+      || event.getEventType() == HandlerEventType.BEFORE_DELETE;
   }
 
   private boolean isModificationEvent(HandlerEvent<?> event) {
@@ -176,7 +196,7 @@ public class AuthorizationChangedEventProducer {
     sendEvent(AuthorizationChangedEvent.createForEveryUser());
   }
 
-  private void handleRepositoryEvent(RepositoryEvent event){
+  private void handleRepositoryEvent(RepositoryEvent event) {
     logger.debug(
       "fire authorization changed event, because of received {} event for repository {}",
       event.getEventType(), event.getItem().getName()
@@ -212,8 +232,8 @@ public class AuthorizationChangedEventProducer {
 
   private void handleUserPermissionChange(AssignedPermission permission) {
     logger.debug(
-        "fire authorization changed event for user {}, because permission {} has changed",
-        permission.getName(), permission.getPermission()
+      "fire authorization changed event for user {}, because permission {} has changed",
+      permission.getName(), permission.getPermission()
     );
     fireEventForUser(permission.getName());
   }
@@ -256,7 +276,7 @@ public class AuthorizationChangedEventProducer {
     return !group.getMembers().equals(beforeModification.getMembers());
   }
 
-  private void handleGroupEvent(GroupEvent event){
+  private void handleGroupEvent(GroupEvent event) {
     logger.debug(
       "fire authorization changed event, because of received group event {} for group {}",
       event.getEventType(),

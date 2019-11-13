@@ -35,6 +35,7 @@ import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import sonia.scm.HandlerEventType;
+import sonia.scm.config.ScmConfiguration;
 import sonia.scm.group.Group;
 import sonia.scm.group.GroupEvent;
 import sonia.scm.group.GroupModificationEvent;
@@ -67,7 +68,7 @@ public class AuthorizationChangedEventProducerTest {
 
   @Before
   public void setUpProducer() {
-     producer = new StoringAuthorizationChangedEventProducer();
+     producer = new StoringAuthorizationChangedEventProducer(null);
   }
 
   /**
@@ -261,6 +262,15 @@ public class AuthorizationChangedEventProducerTest {
   private static class StoringAuthorizationChangedEventProducer extends AuthorizationChangedEventProducer {
 
     private AuthorizationChangedEvent event;
+
+    /**
+     * Constructs a new instance.
+     *
+     * @param scmConfiguration
+     */
+    public StoringAuthorizationChangedEventProducer(ScmConfiguration scmConfiguration) {
+      super(scmConfiguration);
+    }
 
     @Override
     protected void sendEvent(AuthorizationChangedEvent event) {
