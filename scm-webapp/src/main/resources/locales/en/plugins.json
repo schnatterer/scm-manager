@@ -195,6 +195,18 @@
     "1yRiASshD1": {
       "displayName": "Error deleting the anonymous user",
       "description": "The anonymous user cannot be deleted since the anonymous access is still enabled in the configuration."
+    },
+    "DURjbJVOb1": {
+      "displayName": "Wrong checksum",
+      "description": "The checksum of the downloaded plugin does not match the expected checksum from the plugin center. Please check the plugin center configuration."
+    },
+    "8lRjbIQM51": {
+      "displayName": "Error downloading plugin",
+      "description": "The plugin could not be downloaded. Please check the log for further information."
+    },
+    "G1RjbJAJV1": {
+      "displayName": "Error in cleanup",
+      "description": "There were errors during the plugin installation. The plugin directory could not be cleaned up afterwards. A restart could result in unpredictable results. Please check the log for further information."
     }
   },
   "namespaceStrategies": {

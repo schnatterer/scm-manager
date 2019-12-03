@@ -1,12 +1,21 @@
 package sonia.scm.plugin;
 
-public class PluginInstallException extends RuntimeException {
+import sonia.scm.ExceptionWithContext;
 
-  public PluginInstallException(String message) {
-    super(message);
+import static java.util.Collections.emptyList;
+import static sonia.scm.ContextEntry.ContextBuilder.entity;
+
+abstract class PluginInstallException extends ExceptionWithContext {
+
+  PluginInstallException(String message, PluginInformation information) {
+    super(entity("Plugin", information.getId()).build(), message);
   }
 
-  public PluginInstallException(String message, Throwable cause) {
-    super(message, cause);
+  PluginInstallException(String message, Exception cause) {
+    super(emptyList(), message, cause);
+  }
+
+  PluginInstallException(PluginInformation information, String message, Exception cause) {
+    super(entity("Plugin", information.getId()).build(), message, cause);
   }
 }

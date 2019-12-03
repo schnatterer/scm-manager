@@ -37,7 +37,7 @@ class PluginInstaller {
       return new PendingPluginInstallation(plugin.install(), file);
     } catch (IOException ex) {
       cleanup(file);
-      throw new PluginDownloadException("failed to download plugin", ex);
+      throw new PluginDownloadException(plugin.getDescriptor().getInformation(), ex);
     }
   }
 
@@ -47,7 +47,7 @@ class PluginInstaller {
         Files.deleteIfExists(file);
       }
     } catch (IOException e) {
-      throw new PluginInstallException("failed to cleanup, after broken installation");
+      throw new PluginCleanupException(e);
     }
   }
 
@@ -57,9 +57,7 @@ class PluginInstaller {
       String calculatedChecksum = hash.toString();
       if (!checksum.get().equalsIgnoreCase(calculatedChecksum)) {
         cleanup(file);
-        throw new PluginChecksumMismatchException(
-          String.format("downloaded plugin checksum %s does not match expected %s", calculatedChecksum, checksum.get())
-        );
+        throw new PluginChecksumMismatchException(plugin.getDescriptor().getInformation(), calculatedChecksum, checksum.get());
       }
     }
   }

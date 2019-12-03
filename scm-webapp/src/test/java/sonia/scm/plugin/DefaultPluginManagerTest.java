@@ -234,7 +234,9 @@ class DefaultPluginManagerTest {
       PendingPluginInstallation pendingMail = mock(PendingPluginInstallation.class);
       doReturn(pendingMail).when(installer).install(mail);
 
-      doThrow(new PluginChecksumMismatchException("checksum does not match")).when(installer).install(review);
+      PluginInformation pluginInformation = mock(PluginInformation.class);
+      when(pluginInformation.getId()).thenReturn("plugin");
+      doThrow(new PluginChecksumMismatchException(pluginInformation, "checksum 1", "checksum 2")).when(installer).install(review);
 
       assertThrows(PluginInstallException.class, () -> manager.install("scm-review-plugin", false));
 
