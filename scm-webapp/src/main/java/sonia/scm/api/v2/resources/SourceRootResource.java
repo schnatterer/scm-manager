@@ -63,7 +63,7 @@ public class SourceRootResource {
       BrowserResult browserResult = browseCommand.getBrowserResult();
 
       if (browserResult != null) {
-        return Response.ok(browserResultToFileObjectDtoMapper.map(browserResult, namespaceAndName)).build();
+        return Response.ok(browserResultToFileObjectDtoMapper.map(browserResult, repositoryService.getRepository())).build();
       } else {
         throw notFound(entity("Source", path).in("Revision", revision).in(namespaceAndName));
       }

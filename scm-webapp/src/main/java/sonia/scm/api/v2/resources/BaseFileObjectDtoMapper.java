@@ -9,6 +9,7 @@ import org.mapstruct.ObjectFactory;
 import sonia.scm.repository.BrowserResult;
 import sonia.scm.repository.FileObject;
 import sonia.scm.repository.NamespaceAndName;
+import sonia.scm.repository.Repository;
 import sonia.scm.repository.SubRepository;
 
 import javax.inject.Inject;
@@ -30,9 +31,10 @@ abstract class BaseFileObjectDtoMapper extends HalAppenderMapper implements Inst
   abstract SubRepositoryDto mapSubrepository(SubRepository subRepository);
 
   @ObjectFactory
-  FileObjectDto createDto(@Context NamespaceAndName namespaceAndName, @Context BrowserResult browserResult, FileObject fileObject) {
+  FileObjectDto createDto(@Context Repository repository, @Context BrowserResult browserResult, FileObject fileObject) {
     String path = removeFirstSlash(fileObject.getPath());
     Links.Builder links = Links.linkingTo();
+    NamespaceAndName namespaceAndName = repository.getNamespaceAndName();
     if (fileObject.isDirectory()) {
       links.self(resourceLinks.source().sourceWithPath(namespaceAndName.getNamespace(), namespaceAndName.getName(), browserResult.getRevision(), path));
     } else {
@@ -41,12 +43,12 @@ abstract class BaseFileObjectDtoMapper extends HalAppenderMapper implements Inst
     }
 
     Embedded.Builder embeddedBuilder = embeddedBuilder();
-    applyEnrichers(links, embeddedBuilder, namespaceAndName, browserResult, fileObject);
+    applyEnrichers(links, embeddedBuilder, repository, browserResult, fileObject);
 
     return new FileObjectDto(links.build(), embeddedBuilder.build());
   }
 
-  abstract void applyEnrichers(Links.Builder links, Embedded.Builder embeddedBuilder, NamespaceAndName namespaceAndName, BrowserResult browserResult, FileObject fileObject);
+  abstract void applyEnrichers(Links.Builder links, Embedded.Builder embeddedBuilder, Repository repository, BrowserResult browserResult, FileObject fileObject);
 
   private String removeFirstSlash(String source) {
     return source.startsWith("/") ? source.substring(1) : source;

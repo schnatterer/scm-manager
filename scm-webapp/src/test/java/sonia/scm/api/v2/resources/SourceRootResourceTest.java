@@ -13,6 +13,7 @@ import sonia.scm.NotFoundException;
 import sonia.scm.repository.BrowserResult;
 import sonia.scm.repository.FileObject;
 import sonia.scm.repository.NamespaceAndName;
+import sonia.scm.repository.Repository;
 import sonia.scm.repository.api.BrowseCommandBuilder;
 import sonia.scm.repository.api.RepositoryService;
 import sonia.scm.repository.api.RepositoryServiceFactory;
@@ -49,6 +50,7 @@ public class SourceRootResourceTest extends RepositoryTestBase {
     browserResultToFileObjectDtoMapper.setResourceLinks(resourceLinks);
     when(serviceFactory.create(new NamespaceAndName("space", "repo"))).thenReturn(service);
     when(service.getBrowseCommand()).thenReturn(browseCommandBuilder);
+    when(service.getRepository()).thenReturn(new Repository("1", "git", "space", "repo"));
 
     SourceRootResource sourceRootResource = new SourceRootResource(serviceFactory, browserResultToFileObjectDtoMapper);
     super.sourceRootResource = Providers.of(sourceRootResource);

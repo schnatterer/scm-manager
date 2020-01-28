@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.mapstruct.factory.Mappers;
 import sonia.scm.repository.BrowserResult;
 import sonia.scm.repository.FileObject;
-import sonia.scm.repository.NamespaceAndName;
+import sonia.scm.repository.Repository;
 
 import java.net.URI;
 
@@ -19,6 +19,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class BrowserResultToFileObjectDtoMapperTest {
+
+  private static final Repository REPOSITORY = new Repository("1", "git", "foo", "bar");
 
   private final URI baseUri = URI.create("http://example.com/base/");
   private final ResourceLinks resourceLinks = ResourceLinksMock.createMock(baseUri);
@@ -66,7 +68,7 @@ public class BrowserResultToFileObjectDtoMapperTest {
   public void shouldMapAttributesCorrectly() {
     BrowserResult browserResult = createBrowserResult();
 
-    FileObjectDto dto = mapper.map(browserResult, new NamespaceAndName("foo", "bar"));
+    FileObjectDto dto = mapper.map(browserResult, REPOSITORY);
 
     assertEqualAttributes(browserResult, dto);
   }
@@ -74,9 +76,8 @@ public class BrowserResultToFileObjectDtoMapperTest {
   @Test
   public void shouldDelegateToFileObjectsMapper() {
     BrowserResult browserResult = createBrowserResult();
-    NamespaceAndName namespaceAndName = new NamespaceAndName("foo", "bar");
 
-    FileObjectDto dto = mapper.map(browserResult, namespaceAndName);
+    FileObjectDto dto = mapper.map(browserResult, REPOSITORY);
 
     assertThat(dto.getEmbedded().getItemsBy("children")).hasSize(2);
   }
@@ -84,10 +85,10 @@ public class BrowserResultToFileObjectDtoMapperTest {
   @Test
   public void shouldSetLinksCorrectly() {
     BrowserResult browserResult = createBrowserResult();
-    NamespaceAndName namespaceAndName = new NamespaceAndName("foo", "bar");
 
-    FileObjectDto dto = mapper.map(browserResult, namespaceAndName);
+    FileObjectDto dto = mapper.map(browserResult, REPOSITORY);
 
+    assertThat(dto.getLinks().getLinkBy("self")).isPresent();
     assertThat(dto.getLinks().getLinkBy("self").get().getHref()).contains("path");
   }
 
