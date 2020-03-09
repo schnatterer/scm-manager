@@ -1,5 +1,6 @@
 package sonia.scm.it;
 
+import io.restassured.response.Response;
 import org.apache.http.HttpStatus;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.util.Lists;
@@ -242,9 +243,21 @@ public class DiffITCase {
   }
 
   private String getDiff(Changeset svnChangeset, ScmRequests.RepositoryResponse<ScmRequests.IndexResponse> svnRepositoryResponse) {
-    return svnRepositoryResponse.requestChangesets()
+    return getDiff(svnChangeset, svnRepositoryResponse, 0);
+  }
+
+  /**
+   * From time to time we see failing diff tests in Jenkins. At least once the diff could not be read correctly
+   * from the server. If this happens again, we want to retry.
+   */
+  private String getDiff(Changeset svnChangeset, ScmRequests.RepositoryResponse<ScmRequests.IndexResponse> svnRepositoryResponse, int retryCount) {
+    Response response = svnRepositoryResponse.requestChangesets()
       .requestDiffInGitFormat(svnChangeset.getId())
-      .getResponse()
+      .getResponse();
+    if (response.statusCode() != 200 && retryCount < 3) {
+      return getDiff(svnChangeset, svnRepositoryResponse, retryCount + 1);
+    }
+    return response
       .body()
       .asString();
   }
