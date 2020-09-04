@@ -137,3 +137,15 @@ Guice provider inject any type of instances which can be injected.
 
 ### RequestScoped
 `@RequestScoped` is applied to implementation classes when you want one instance per request.
+
+## TODOs
+- REST API
+- Store API (Persistence)
+- Build Process
+- Single Page Application (React, Redux)
+- Authentication
+- Authorization (Shiro)
+- Packaging
+- Templating
+- ProtocolCommand SPI
+- DataMigration (UpdateStep API)
