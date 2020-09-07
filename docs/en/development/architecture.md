@@ -1,6 +1,6 @@
 # Architecture
 
-## SCM-Annotation-Processor
+## Annotations
 
 ### Introduction
 
@@ -13,6 +13,9 @@ There are actually two modules for this which are included in the SCM-Manager ma
 Firstly we need to clarify why we need this self written annotation processor.
 In the build process of the SCM-Manager core and plugins the SCM-Annotations are getting collected.
 Some part of the provided information is appended to the `plugin.xml` respectively `module.xml`.
+
+The SCM-Annotation-Processor processes the annotations `Subscribe`, `PluginAnnotation`, `Requires`, `Path` and `Provider`.
+
 This information could look like this in the `plugin.xml`:
 
 - The `extension` that should be bound to an existing `extension-point`:
@@ -85,11 +88,11 @@ If the extension point is defined to not accept multiple extensions by `multi=fa
 ### JAX-RS
 
 With the JAX-RS annotation we define our rest resources.
-Also we use the `@Provider` annotation to extend the JAX-RS runtime outside of the resources.
+Also we use the `javax.ws.rs.ext.@Provider` annotation to extend the JAX-RS runtime outside of the resources.
 
 ### Legman
 
-Our event bus is based on legman. We use the `@Subscribe` annotation to create event subscriber which listen to events fired by the legman event bus.
+Our event bus is based on legman. We use the `com.github.legman.@Subscribe` annotation to create event subscriber which listen to events fired by the legman event bus.
 On default the event subscriber class reference is weak which means the java garbage collector will remove it if unused.
 Also on default the subscriber is executed asynchronously. Both can be changed by attributes.
 
@@ -102,13 +105,13 @@ our business objects to data transfer objects (DTOs). Our DTOs always contains a
 
 To persist the data of SCM-Manager we use a file based storage api.
 [JAXB](https://www.baeldung.com/jaxb) is for marshalling and unmarshalling the data fields to xml.
-This means all objects which should be persisted need the JAXB annotations like `@XMLRootElement`
-or `@XmlAccessorType(XmlAccessType.FIELD)` depending on the structure.
+This means all objects which should be persisted need the JAXB annotations like `javax.xml.bind.annotation@XMLRootElement`
+or `javax.xml.bind.annotation@XmlAccessorType(XmlAccessType.FIELD)` depending on the structure.
 
 ### Shiro
 
 SCM-Manager uses a fine-grained permission model with Shiro.
-To create permissions on business objects we use the `@StaticPermission` annotation.
+To create permissions on business objects we use the `com.github.sdorra.ssp.@StaticPermission` annotation.
 
 Example:
 
@@ -127,16 +130,16 @@ For dependency management we use [Google Guice](https://www.baeldung.com/guice).
 The implementations are bound to the interfaces in classes named `Module` like `BootstrapModule.java`.
 
 ### Singleton
-`@Singleton` to mark classes as singletons. This means the class will only be instantiated once by guice.
+`javax.inject.@Singleton` to mark classes as singletons. This means the class will only be instantiated once by guice.
 
 ### Inject
-`@Inject` to inject class instances into fields or constructors.
+`javax.inject.@Inject` to inject class instances into fields or constructors.
 
 ### Provider
 Guice provider inject any type of instances which can be injected.
 
 ### RequestScoped
-`@RequestScoped` is applied to implementation classes when you want one instance per request.
+`com.google.inject.servlet.@RequestScoped` is applied to implementation classes when you want one instance per request.
 
 ## TODOs
 - REST API
