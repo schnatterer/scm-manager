@@ -142,6 +142,7 @@ Guice provider inject any type of instances which can be injected.
 `com.google.inject.servlet.@RequestScoped` is applied to implementation classes when you want one instance per request.
 
 ## TODOs
+- Overview Architecture (with PlantUML)
 - REST API
 - Store API (Persistence)
 - Build Process
