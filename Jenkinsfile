@@ -27,6 +27,17 @@ node('docker') {
         checkout scm
       }
 
+      stage('Apply Cache') {
+        def exists = fileExists '.m2'
+        if (!exists) {
+          googleStorageDownload bucketUri: 'gs://scm-manager/cache/m2.tar.gz', credentialsId: 'ces-demo-instances', localDirectory: '.'
+          sh 'tar xfz cache/m2.tar.gz'
+          sh 'rm -rf cache'
+        } else {
+          echo "there is already a .m2 we keep using this one"
+        }
+      }
+
       if (isReleaseBranch()) {
         stage('Set Version') {
           String releaseVersion = getReleaseVersion();
@@ -183,6 +194,13 @@ node('docker') {
           }
         }
       }
+
+      // TODO do this only on develop builds
+      stage('Upload Cache') {
+        sh "tar cfz m2.tar.gz .m2"
+        googleStorageUpload bucket: 'gs://scm-manager/cache', credentialsId: 'ces-operations-internal', pattern: 'm2.tar.gz'
+      }
+
     }
 
     mailIfStatusChanged(git.commitAuthorEmail)
