@@ -215,6 +215,7 @@ Maven setupMavenBuild() {
 
   // disable logging durring the build
   def logConf = "scm-webapp/src/main/resources/logback.ci.xml"
+  mvn.additionalArgs += " -Dbuildtime.output.log=true"
   mvn.additionalArgs += " -Dlogback.configurationFile=${logConf}"
   mvn.additionalArgs += " -Dscm-it.logbackConfiguration=${logConf}"
   mvn.additionalArgs += " -Dsonar.coverage.exclusions=**/*.test.ts,**/*.test.tsx,**/*.stories.tsx"
