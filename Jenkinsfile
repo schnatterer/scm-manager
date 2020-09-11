@@ -21,7 +21,7 @@ node('docker') {
 
     catchError {
 
-      Maven mvn = setupMavenBuild()
+      Maven mvn = setupMavenBuild("default")
 
       stage('Checkout') {
         checkout scm
@@ -73,29 +73,37 @@ node('docker') {
       }
 
       stage('Build') {
-        mvn "clean install -DskipTests"
+        def buildMvn = setupMavenBuild("build")
+        buildMvn "clean install -DskipTests"
+        archiveArtifacts 'target/buildtime-build.csv'
       }
 
       parallel(
         unitTest: {
           stage('Unit Test') {
-            mvn 'test -DskipFrontendBuild -DskipTypecheck -Pcoverage -pl !scm-it -Dmaven.test.failure.ignore=true'
+            def testMvn = setupMavenBuild("unit-test")
+            testMvn 'test -DskipFrontendBuild -DskipTypecheck -Pcoverage -pl !scm-it -Dmaven.test.failure.ignore=true'
             junit allowEmptyResults: true, testResults: '**/target/surefire-reports/TEST-*.xml,**/target/jest-reports/TEST-*.xml'
+            archiveArtifacts 'target/buildtime-unit-test.csv'
           }
         },
         integrationTest: {
           stage('Integration Test') {
-            mvn 'verify -Pit -DskipUnitTests -pl :scm-webapp,:scm-it -Dmaven.test.failure.ignore=true'
+            def testMvn = setupMavenBuild("integration-test")
+            testMvn 'verify -Pit -DskipUnitTests -pl :scm-webapp,:scm-it -Dmaven.test.failure.ignore=true'
             junit allowEmptyResults: true, testResults: '**/target/failsafe-reports/TEST-*.xml,**/target/cypress-reports/TEST-*.xml'
             archiveArtifacts allowEmptyArchive: true, artifacts: 'scm-ui/e2e-tests/cypress/videos/*.mp4'
             archiveArtifacts allowEmptyArchive: true, artifacts: 'scm-ui/e2e-tests/cypress/screenshots/**/*.png'
+            archiveArtifacts 'target/buildtime-integration-test.csv'
           }
         }
       )
 
       stage('SonarQube') {
+        def sonarMvn = setupMavenBuild("sonar-test")
         def sonarQube = new SonarCloud(this, [sonarQubeEnv: 'sonarcloud.io-scm', sonarOrganization: 'scm-manager', integrationBranch: 'develop'])
-        sonarQube.analyzeWith(mvn)
+        sonarQube.analyzeWith(sonarMvn)
+        archiveArtifacts 'target/buildtime-sonar-test.csv'
       }
 
       if (isBuildSuccessful() && (isMainBranch() || isReleaseBranch())) {
@@ -209,7 +217,7 @@ node('docker') {
 
 String mainBranch
 
-Maven setupMavenBuild() {
+Maven setupMavenBuild(String stageName) {
   MavenWrapperInDocker mvn = new MavenWrapperInDocker(this, "scmmanager/java-build:11.0.8_10")
   mvn.enableDockerHost = true
 
@@ -219,6 +227,10 @@ Maven setupMavenBuild() {
   mvn.additionalArgs += " -Dlogback.configurationFile=${logConf}"
   mvn.additionalArgs += " -Dscm-it.logbackConfiguration=${logConf}"
   mvn.additionalArgs += " -Dsonar.coverage.exclusions=**/*.test.ts,**/*.test.tsx,**/*.stories.tsx"
+
+  if (stageName != null) {
+    mvn.additionalArgs += " -Dbuildtime.output.csv=true -Dbuildtime.output.csv.file=buildtime-${stageName}.csv"
+  }
 
   if (isMainBranch() || isReleaseBranch()) {
     // Release starts javadoc, which takes very long, so do only for certain branches
