@@ -74,30 +74,13 @@ node('docker') {
 
       stage('Build') {
         def buildMvn = setupMavenBuild("build")
-        buildMvn "clean install -DskipTests"
+        buildMvn "clean install -Pcoverage -Pit -Dmaven.test.failure.ignore=true"
         archiveArtifacts 'target/buildtime-build.csv'
-      }
 
-      parallel(
-        unitTest: {
-          stage('Unit Test') {
-            def testMvn = setupMavenBuild("unit-test")
-            testMvn 'test -DskipFrontendBuild -DskipTypecheck -Pcoverage -pl !scm-it -Dmaven.test.failure.ignore=true'
-            junit allowEmptyResults: true, testResults: '**/target/surefire-reports/TEST-*.xml,**/target/jest-reports/TEST-*.xml'
-            archiveArtifacts 'target/buildtime-unit-test.csv'
-          }
-        },
-        integrationTest: {
-          stage('Integration Test') {
-            def testMvn = setupMavenBuild("integration-test")
-            testMvn 'verify -Pit -DskipUnitTests -pl :scm-webapp,:scm-it -Dmaven.test.failure.ignore=true'
-            junit allowEmptyResults: true, testResults: '**/target/failsafe-reports/TEST-*.xml,**/target/cypress-reports/TEST-*.xml'
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'scm-ui/e2e-tests/cypress/videos/*.mp4'
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'scm-ui/e2e-tests/cypress/screenshots/**/*.png'
-            archiveArtifacts 'target/buildtime-integration-test.csv'
-          }
-        }
-      )
+        junit allowEmptyResults: true, testResults: '**/target/surefire-reports/TEST-*.xml,**/target/failsafe-reports/TEST-*.xml,**/target/cypress-reports/TEST-*.xml,**/target/jest-reports/TEST-*.xml'
+        archiveArtifacts allowEmptyArchive: true, artifacts: 'scm-ui/e2e-tests/cypress/videos/*.mp4'
+        archiveArtifacts allowEmptyArchive: true, artifacts: 'scm-ui/e2e-tests/cypress/screenshots/**/*.png'
+      }
 
       stage('SonarQube') {
         def sonarMvn = setupMavenBuild("sonar-test")
