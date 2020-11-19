@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-    
+
 package sonia.scm.repository;
 
 import com.github.sdorra.ssp.PermissionActionCheck;
@@ -72,10 +72,8 @@ public final class HealthChecker {
   public void checkAll() {
     logger.debug("check health of all repositories");
 
-    PermissionActionCheck<Repository> check = RepositoryPermissions.healthCheck();
-
     for (Repository repository : repositoryManager.getAll()) {
-      if (check.isPermitted(repository)) {
+      if (RepositoryPermissions.healthCheck().isPermitted(repository)) {
         try {
           check(repository);
         } catch (NotFoundException ex) {

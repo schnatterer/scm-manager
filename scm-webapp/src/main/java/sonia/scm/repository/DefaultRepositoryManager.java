@@ -284,12 +284,10 @@ public class DefaultRepositoryManager extends AbstractRepositoryManager {
   public Collection<Repository> getAll(Predicate<Repository> filter, Comparator<Repository> comparator) {
     List<Repository> repositories = Lists.newArrayList();
 
-    PermissionActionCheck<Repository> check = RepositoryPermissions.read();
-
     for (Repository repository : repositoryDAO.getAll()) {
       if (handlerMap.containsKey(repository.getType())
         && filter.test(repository)
-        && check.isPermitted(repository)) {
+        && RepositoryPermissions.read().isPermitted(repository)) {
         Repository r = repository.clone();
 
         repositories.add(r);
@@ -312,14 +310,12 @@ public class DefaultRepositoryManager extends AbstractRepositoryManager {
   @Override
   public Collection<Repository> getAll(Comparator<Repository> comparator,
                                        int start, int limit) {
-    final PermissionActionCheck<Repository> check =
-      RepositoryPermissions.read();
 
     return Util.createSubCollection(repositoryDAO.getAll(), comparator,
       new CollectionAppender<Repository>() {
         @Override
         public void append(Collection<Repository> collection, Repository item) {
-          if (check.isPermitted(item)) {
+          if (RepositoryPermissions.read().isPermitted(item)) {
             collection.add(item.clone());
           }
         }
